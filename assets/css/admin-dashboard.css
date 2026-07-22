@@ -1,0 +1,1622 @@
+/**
+ * WPU Admin Dashboard — Premium Enterprise HR Theme
+ * Scoped to body.admin-dashboard
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+body.admin-dashboard {
+    --dash-primary: #0056D2;
+    --dash-primary-dark: #0041a8;
+    --dash-secondary: #0F4C81;
+    --dash-accent: #FFC107;
+    --dash-success: #16A34A;
+    --dash-warning: #F59E0B;
+    --dash-danger: #DC2626;
+    --dash-bg: #F8FAFC;
+    --dash-card: #ffffff;
+    --dash-card-muted: #f1f5f9;
+    --dash-text: #0f172a;
+    --dash-text-muted: #64748b;
+    --dash-border: rgba(148, 163, 184, 0.25);
+    --dash-glass: rgba(255, 255, 255, 0.72);
+    --dash-glass-border: rgba(255, 255, 255, 0.45);
+    --dash-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+    --dash-shadow-hover: 0 12px 40px rgba(15, 23, 42, 0.12);
+    --dash-radius: 20px;
+    --dash-radius-sm: 12px;
+    --dash-sidebar-width: 280px;
+    --dash-sidebar-collapsed: 80px;
+    --dash-space: 8px;
+    --dash-transition: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--dash-bg);
+    color: var(--dash-text);
+}
+
+body.admin-dashboard[data-theme="dark"] {
+    --dash-bg: #0b1220;
+    --dash-card: #111827;
+    --dash-card-muted: #1e293b;
+    --dash-text: #f1f5f9;
+    --dash-text-muted: #94a3b8;
+    --dash-border: rgba(148, 163, 184, 0.12);
+    --dash-glass: rgba(17, 24, 39, 0.82);
+    --dash-glass-border: rgba(255, 255, 255, 0.08);
+    --dash-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+    --dash-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+/* ── Sidebar ── */
+body.admin-dashboard .sidebar {
+    width: var(--dash-sidebar-width);
+    background: var(--dash-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid var(--dash-glass-border);
+    box-shadow: 4px 0 24px rgba(15, 23, 42, 0.04);
+    transition: width var(--dash-transition), transform var(--dash-transition);
+}
+
+body.admin-dashboard.sidebar-collapsed .sidebar {
+    width: var(--dash-sidebar-collapsed);
+}
+
+body.admin-dashboard.sidebar-collapsed .sidebar-brand span,
+body.admin-dashboard.sidebar-collapsed .sidebar-nav-label,
+body.admin-dashboard.sidebar-collapsed .sidebar-nav-section-title,
+body.admin-dashboard.sidebar-collapsed .sidebar-user-info,
+body.admin-dashboard.sidebar-collapsed .sidebar-collapse-btn span {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+body.admin-dashboard .sidebar-header {
+    padding: calc(var(--dash-space) * 3);
+    border-bottom: 1px solid var(--dash-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(var(--dash-space) * 1);
+}
+
+body.admin-dashboard .sidebar-brand {
+    color: var(--dash-primary);
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: -0.02em;
+}
+
+body.admin-dashboard .sidebar-brand span {
+    transition: opacity var(--dash-transition);
+}
+
+body.admin-dashboard .sidebar-collapse-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 10px;
+    background: var(--dash-card-muted);
+    color: var(--dash-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--dash-transition);
+}
+
+body.admin-dashboard .sidebar-collapse-btn:hover {
+    background: var(--dash-primary);
+    color: #fff;
+    transform: rotate(180deg);
+}
+
+body.admin-dashboard .sidebar-nav {
+    padding: calc(var(--dash-space) * 2) calc(var(--dash-space) * 1.5);
+}
+
+body.admin-dashboard .sidebar-nav-section {
+    margin-bottom: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .sidebar-nav-section-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dash-text-muted);
+    padding: calc(var(--dash-space) * 1) calc(var(--dash-space) * 2);
+    transition: opacity var(--dash-transition);
+}
+
+body.admin-dashboard .sidebar-nav-item {
+    position: relative;
+    border-left: none;
+    border-radius: 14px;
+    margin-bottom: calc(var(--dash-space) * 0.5);
+    padding: calc(var(--dash-space) * 1.5) calc(var(--dash-space) * 2);
+    color: var(--dash-text-muted);
+    font-weight: 500;
+    overflow: hidden;
+}
+
+body.admin-dashboard .sidebar-nav-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) scaleY(0);
+    width: 4px;
+    height: 60%;
+    background: linear-gradient(180deg, var(--dash-primary), var(--dash-secondary));
+    border-radius: 0 4px 4px 0;
+    transition: transform var(--dash-transition);
+}
+
+body.admin-dashboard .sidebar-nav-item.active::before {
+    transform: translateY(-50%) scaleY(1);
+}
+
+body.admin-dashboard .sidebar-nav-item.active {
+    background: linear-gradient(135deg, rgba(0, 86, 210, 0.12), rgba(15, 76, 129, 0.08));
+    color: var(--dash-primary);
+    font-weight: 600;
+}
+
+body.admin-dashboard .sidebar-nav-item:hover {
+    background: rgba(0, 86, 210, 0.06);
+    color: var(--dash-primary);
+    transform: translateX(4px);
+}
+
+body.admin-dashboard .sidebar-nav-item i {
+    width: 22px;
+    transition: transform var(--dash-transition);
+}
+
+body.admin-dashboard .sidebar-nav-item:hover i {
+    transform: scale(1.1);
+}
+
+body.admin-dashboard .sidebar-footer {
+    padding: calc(var(--dash-space) * 2);
+    border-top: 1px solid var(--dash-border);
+}
+
+body.admin-dashboard .sidebar-user {
+    background: var(--dash-glass);
+    border: 1px solid var(--dash-border);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
+}
+
+body.admin-dashboard .sidebar-logout {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 1.5);
+    padding: calc(var(--dash-space) * 1.5) calc(var(--dash-space) * 2);
+    margin-top: calc(var(--dash-space) * 1);
+    border-radius: 14px;
+    color: var(--dash-danger);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all var(--dash-transition);
+}
+
+body.admin-dashboard .sidebar-logout:hover {
+    background: rgba(220, 38, 38, 0.08);
+}
+
+/* ── Main wrapper ── */
+body.admin-dashboard .main-wrapper {
+    margin-left: var(--dash-sidebar-width);
+    transition: margin-left var(--dash-transition);
+}
+
+body.admin-dashboard.sidebar-collapsed .main-wrapper {
+    margin-left: var(--dash-sidebar-collapsed);
+}
+
+/* ── Topbar ── */
+body.admin-dashboard .topbar {
+    background: var(--dash-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--dash-border);
+    padding: 0 calc(var(--dash-space) * 3);
+    height: 72px;
+    gap: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 2);
+    flex: 1;
+    min-width: 0;
+}
+
+body.admin-dashboard .topbar-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 1);
+    font-size: 0.875rem;
+    color: var(--dash-text-muted);
+}
+
+body.admin-dashboard .topbar-breadcrumb a {
+    color: var(--dash-text-muted);
+    text-decoration: none;
+}
+
+body.admin-dashboard .topbar-breadcrumb a:hover {
+    color: var(--dash-primary);
+}
+
+body.admin-dashboard .topbar-breadcrumb .current {
+    color: var(--dash-text);
+    font-weight: 600;
+}
+
+body.admin-dashboard .topbar-search {
+    position: relative;
+    flex: 1;
+    max-width: 420px;
+}
+
+body.admin-dashboard .topbar-search input {
+    width: 100%;
+    height: 44px;
+    padding: 0 calc(var(--dash-space) * 5) 0 calc(var(--dash-space) * 5);
+    border: 1px solid var(--dash-border);
+    border-radius: 14px;
+    background: var(--dash-glass);
+    backdrop-filter: blur(12px);
+    color: var(--dash-text);
+    font-size: 0.875rem;
+    transition: all var(--dash-transition);
+}
+
+body.admin-dashboard .topbar-search input:focus {
+    outline: none;
+    border-color: var(--dash-primary);
+    box-shadow: 0 0 0 3px rgba(0, 86, 210, 0.15);
+}
+
+body.admin-dashboard .topbar-search .search-icon {
+    position: absolute;
+    left: calc(var(--dash-space) * 2);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--dash-text-muted);
+    pointer-events: none;
+}
+
+body.admin-dashboard .topbar-search kbd {
+    position: absolute;
+    right: calc(var(--dash-space) * 1.5);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: var(--dash-card-muted);
+    border: 1px solid var(--dash-border);
+    color: var(--dash-text-muted);
+    font-family: inherit;
+}
+
+body.admin-dashboard .topbar-center {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .topbar-datetime {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: 0.75rem;
+    color: var(--dash-text-muted);
+    line-height: 1.3;
+}
+
+body.admin-dashboard .topbar-datetime .time {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--dash-text);
+}
+
+body.admin-dashboard .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 1);
+}
+
+body.admin-dashboard .topbar-btn,
+body.admin-dashboard .notification-bell {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--dash-glass);
+    border: 1px solid var(--dash-border);
+    backdrop-filter: blur(12px);
+    color: var(--dash-text-muted);
+    transition: all var(--dash-transition);
+}
+
+body.admin-dashboard .topbar-btn:hover,
+body.admin-dashboard .notification-bell:hover {
+    background: rgba(0, 86, 210, 0.1);
+    color: var(--dash-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--dash-shadow);
+}
+
+body.admin-dashboard .topbar-btn:focus-visible,
+body.admin-dashboard .notification-bell:focus-visible,
+body.admin-dashboard .profile-trigger:focus-visible {
+    outline: 2px solid var(--dash-primary);
+    outline-offset: 2px;
+}
+
+body.admin-dashboard .lang-select {
+    height: 44px;
+    padding: 0 calc(var(--dash-space) * 1.5);
+    border-radius: 14px;
+    border: 1px solid var(--dash-border);
+    background: var(--dash-glass);
+    color: var(--dash-text);
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+body.admin-dashboard .profile-menu {
+    position: relative;
+}
+
+body.admin-dashboard .profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 1);
+    padding: 6px 12px 6px 6px;
+    border-radius: 14px;
+    border: 1px solid var(--dash-border);
+    background: var(--dash-glass);
+    cursor: pointer;
+    transition: all var(--dash-transition);
+}
+
+body.admin-dashboard .profile-trigger:hover {
+    box-shadow: var(--dash-shadow);
+}
+
+body.admin-dashboard .profile-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--dash-primary), var(--dash-secondary));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+body.admin-dashboard .profile-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--dash-success);
+    border: 2px solid var(--dash-card);
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+body.admin-dashboard .profile-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 240px;
+    background: var(--dash-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius-sm);
+    box-shadow: var(--dash-shadow-hover);
+    padding: calc(var(--dash-space) * 1);
+    display: none;
+    z-index: 1100;
+}
+
+body.admin-dashboard .profile-dropdown.show {
+    display: block;
+    animation: dashSlideDown 0.25s ease;
+}
+
+body.admin-dashboard .profile-dropdown-header {
+    padding: calc(var(--dash-space) * 1.5);
+    border-bottom: 1px solid var(--dash-border);
+}
+
+body.admin-dashboard .profile-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 1.5);
+    padding: calc(var(--dash-space) * 1.5);
+    border-radius: 10px;
+    color: var(--dash-text);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: background var(--dash-transition);
+}
+
+body.admin-dashboard .profile-dropdown-item:hover {
+    background: rgba(0, 86, 210, 0.08);
+}
+
+body.admin-dashboard .notification-dropdown {
+    background: var(--dash-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius-sm);
+    box-shadow: var(--dash-shadow-hover);
+    width: 400px;
+}
+
+/* ── Content ── */
+body.admin-dashboard .content {
+    padding: calc(var(--dash-space) * 3);
+    max-width: 1600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* ── Hero ── */
+body.admin-dashboard .dash-hero {
+    position: relative;
+    border-radius: var(--dash-radius);
+    padding: calc(var(--dash-space) * 4);
+    margin-bottom: calc(var(--dash-space) * 3);
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--dash-primary) 0%, var(--dash-secondary) 100%);
+    color: #fff;
+    box-shadow: var(--dash-shadow-hover);
+}
+
+body.admin-dashboard .dash-hero-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+body.admin-dashboard .dash-hero-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.4;
+    animation: dashOrbFloat 8s ease-in-out infinite;
+}
+
+body.admin-dashboard .dash-hero-orb:nth-child(1) {
+    width: 300px;
+    height: 300px;
+    background: var(--dash-accent);
+    top: -100px;
+    right: -50px;
+}
+
+body.admin-dashboard .dash-hero-orb:nth-child(2) {
+    width: 200px;
+    height: 200px;
+    background: #60a5fa;
+    bottom: -80px;
+    left: 20%;
+    animation-delay: -3s;
+}
+
+body.admin-dashboard .dash-hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+body.admin-dashboard .dash-hero-greeting {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: calc(var(--dash-space) * 0.5);
+}
+
+body.admin-dashboard .dash-hero-title {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 800;
+    margin-bottom: calc(var(--dash-space) * 3);
+    letter-spacing: -0.02em;
+}
+
+body.admin-dashboard .dash-hero-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: calc(var(--dash-space) * 2);
+    margin-bottom: calc(var(--dash-space) * 3);
+}
+
+body.admin-dashboard .dash-hero-stat {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .dash-hero-stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+body.admin-dashboard .dash-hero-stat-label {
+    font-size: 0.75rem;
+    opacity: 0.85;
+    margin-top: calc(var(--dash-space) * 0.5);
+}
+
+body.admin-dashboard .dash-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--dash-space) * 1.5);
+}
+
+body.admin-dashboard .dash-hero-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 1);
+    padding: calc(var(--dash-space) * 1.5) calc(var(--dash-space) * 2.5);
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+    transition: all var(--dash-transition);
+    border: none;
+    cursor: pointer;
+}
+
+body.admin-dashboard .dash-hero-btn-primary {
+    background: #fff;
+    color: var(--dash-primary);
+}
+
+body.admin-dashboard .dash-hero-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+body.admin-dashboard .dash-hero-btn-ghost {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+body.admin-dashboard .dash-hero-btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+/* ── KPI Cards ── */
+body.admin-dashboard .dash-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: calc(var(--dash-space) * 2);
+    margin-bottom: calc(var(--dash-space) * 3);
+}
+
+body.admin-dashboard .dash-kpi-card {
+    background: var(--dash-card);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius);
+    padding: calc(var(--dash-space) * 2.5);
+    box-shadow: var(--dash-shadow);
+    transition: all var(--dash-transition);
+    position: relative;
+    overflow: hidden;
+}
+
+body.admin-dashboard .dash-kpi-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--kpi-accent, var(--dash-primary));
+    opacity: 0;
+    transition: opacity var(--dash-transition);
+}
+
+body.admin-dashboard .dash-kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--dash-shadow-hover);
+}
+
+body.admin-dashboard .dash-kpi-card:hover::after {
+    opacity: 1;
+}
+
+body.admin-dashboard .dash-kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: calc(var(--dash-space) * 1.5);
+}
+
+body.admin-dashboard .dash-kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #fff;
+    background: var(--kpi-accent, var(--dash-primary));
+    box-shadow: 0 4px 12px rgba(0, 86, 210, 0.3);
+}
+
+body.admin-dashboard .dash-kpi-trend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 20px;
+}
+
+body.admin-dashboard .dash-kpi-trend.up {
+    background: rgba(22, 163, 74, 0.12);
+    color: var(--dash-success);
+}
+
+body.admin-dashboard .dash-kpi-trend.down {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--dash-danger);
+}
+
+body.admin-dashboard .dash-kpi-trend.neutral {
+    background: var(--dash-card-muted);
+    color: var(--dash-text-muted);
+}
+
+body.admin-dashboard .dash-kpi-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: calc(var(--dash-space) * 0.5);
+}
+
+body.admin-dashboard .dash-kpi-label {
+    font-size: 0.8rem;
+    color: var(--dash-text-muted);
+    font-weight: 500;
+}
+
+body.admin-dashboard .dash-kpi-sparkline {
+    height: 40px;
+    margin-top: calc(var(--dash-space) * 1.5);
+}
+
+/* ── Section layout ── */
+body.admin-dashboard .dash-section {
+    margin-bottom: calc(var(--dash-space) * 3);
+}
+
+body.admin-dashboard .dash-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: calc(var(--dash-space) * 2);
+    flex-wrap: wrap;
+    gap: calc(var(--dash-space) * 1);
+}
+
+body.admin-dashboard .dash-section-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 1);
+    margin: 0;
+}
+
+body.admin-dashboard .dash-card {
+    background: var(--dash-card);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius);
+    box-shadow: var(--dash-shadow);
+    overflow: hidden;
+    transition: all var(--dash-transition);
+}
+
+body.admin-dashboard .dash-card:hover {
+    box-shadow: var(--dash-shadow-hover);
+}
+
+body.admin-dashboard .dash-card-header {
+    padding: calc(var(--dash-space) * 2.5);
+    border-bottom: 1px solid var(--dash-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+body.admin-dashboard .dash-card-body {
+    padding: calc(var(--dash-space) * 2.5);
+}
+
+body.admin-dashboard .dash-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .dash-grid-3-1 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .dash-grid-charts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .chart-container {
+    position: relative;
+    height: 280px;
+}
+
+body.admin-dashboard .chart-container-sm {
+    height: 200px;
+}
+
+body.admin-dashboard .chart-skeleton {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--dash-card-muted) 25%, var(--dash-card) 50%, var(--dash-card-muted) 75%);
+    background-size: 200% 100%;
+    animation: dashShimmer 1.5s infinite;
+    border-radius: var(--dash-radius-sm);
+}
+
+body.admin-dashboard .chart-loaded .chart-skeleton {
+    display: none;
+}
+
+/* ── Pipeline ── */
+body.admin-dashboard .dash-pipeline {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: calc(var(--dash-space) * 1);
+}
+
+body.admin-dashboard .dash-pipeline-stage {
+    background: var(--dash-glass);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius-sm);
+    padding: calc(var(--dash-space) * 2);
+    text-align: center;
+    transition: all var(--dash-transition);
+    position: relative;
+}
+
+body.admin-dashboard .dash-pipeline-stage:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--dash-shadow);
+}
+
+body.admin-dashboard .dash-pipeline-stage::after {
+    content: '→';
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--dash-text-muted);
+    font-size: 1rem;
+    z-index: 1;
+}
+
+body.admin-dashboard .dash-pipeline-stage:last-child::after {
+    display: none;
+}
+
+body.admin-dashboard .dash-pipeline-count {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: calc(var(--dash-space) * 0.5);
+}
+
+body.admin-dashboard .dash-pipeline-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--dash-text-muted);
+    margin-bottom: calc(var(--dash-space) * 1);
+}
+
+body.admin-dashboard .dash-pipeline-bar {
+    height: 4px;
+    background: var(--dash-card-muted);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+body.admin-dashboard .dash-pipeline-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease;
+}
+
+/* ── Application cards ── */
+body.admin-dashboard .dash-app-list {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--dash-space) * 1.5);
+}
+
+body.admin-dashboard .dash-app-card {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 2);
+    padding: calc(var(--dash-space) * 2);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius-sm);
+    background: var(--dash-glass);
+    backdrop-filter: blur(8px);
+    transition: all var(--dash-transition);
+}
+
+body.admin-dashboard .dash-app-card:hover {
+    transform: translateX(4px);
+    box-shadow: var(--dash-shadow);
+    border-color: rgba(0, 86, 210, 0.3);
+}
+
+body.admin-dashboard .dash-app-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--dash-primary), var(--dash-secondary));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+body.admin-dashboard .dash-app-info {
+    flex: 1;
+    min-width: 0;
+}
+
+body.admin-dashboard .dash-app-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+body.admin-dashboard .dash-app-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--dash-space) * 1.5);
+    font-size: 0.8rem;
+    color: var(--dash-text-muted);
+}
+
+body.admin-dashboard .dash-app-actions {
+    display: flex;
+    gap: calc(var(--dash-space) * 0.5);
+    flex-shrink: 0;
+}
+
+body.admin-dashboard .dash-app-action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--dash-border);
+    background: var(--dash-card);
+    color: var(--dash-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all var(--dash-transition);
+    cursor: pointer;
+}
+
+body.admin-dashboard .dash-app-action-btn:hover {
+    background: var(--dash-primary);
+    color: #fff;
+    border-color: var(--dash-primary);
+    transform: scale(1.05);
+}
+
+body.admin-dashboard .dash-app-action-btn.danger:hover {
+    background: var(--dash-danger);
+    border-color: var(--dash-danger);
+}
+
+body.admin-dashboard .dash-app-action-btn.success:hover {
+    background: var(--dash-success);
+    border-color: var(--dash-success);
+}
+
+/* ── Status badges ── */
+body.admin-dashboard .dash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+body.admin-dashboard .dash-badge-pending {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.08));
+    color: var(--dash-warning);
+}
+
+body.admin-dashboard .dash-badge-approved {
+    background: linear-gradient(135deg, rgba(22, 163, 74, 0.15), rgba(22, 163, 74, 0.08));
+    color: var(--dash-success);
+}
+
+body.admin-dashboard .dash-badge-rejected {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(220, 38, 38, 0.08));
+    color: var(--dash-danger);
+}
+
+body.admin-dashboard .dash-badge-interview {
+    background: linear-gradient(135deg, rgba(0, 86, 210, 0.15), rgba(0, 86, 210, 0.08));
+    color: var(--dash-primary);
+}
+
+body.admin-dashboard .dash-badge-pulse {
+    animation: dashBadgePulse 2s ease-in-out infinite;
+}
+
+/* ── Position cards ── */
+body.admin-dashboard .dash-pos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .dash-pos-card {
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius);
+    padding: calc(var(--dash-space) * 2.5);
+    background: var(--dash-glass);
+    backdrop-filter: blur(8px);
+    transition: all var(--dash-transition);
+}
+
+body.admin-dashboard .dash-pos-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--dash-shadow-hover);
+}
+
+body.admin-dashboard .dash-pos-title {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: calc(var(--dash-space) * 1);
+}
+
+body.admin-dashboard .dash-pos-dept {
+    font-size: 0.8rem;
+    color: var(--dash-text-muted);
+    margin-bottom: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .dash-pos-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: calc(var(--dash-space) * 1);
+    margin-bottom: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .dash-pos-stat {
+    text-align: center;
+    padding: calc(var(--dash-space) * 1);
+    background: var(--dash-card-muted);
+    border-radius: 10px;
+}
+
+body.admin-dashboard .dash-pos-stat-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+body.admin-dashboard .dash-pos-stat-label {
+    font-size: 0.65rem;
+    color: var(--dash-text-muted);
+    text-transform: uppercase;
+}
+
+body.admin-dashboard .dash-progress {
+    height: 8px;
+    background: var(--dash-card-muted);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: calc(var(--dash-space) * 1);
+}
+
+body.admin-dashboard .dash-progress-fill {
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--dash-primary), var(--dash-secondary));
+    transition: width 1s ease;
+}
+
+/* ── Quick actions ── */
+body.admin-dashboard .dash-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .dash-action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: calc(var(--dash-space) * 3);
+    border-radius: var(--dash-radius);
+    border: 1px solid var(--dash-border);
+    background: var(--dash-card);
+    text-decoration: none;
+    color: var(--dash-text);
+    transition: all var(--dash-transition);
+    position: relative;
+    overflow: hidden;
+}
+
+body.admin-dashboard .dash-action-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--action-gradient, linear-gradient(135deg, var(--dash-primary), var(--dash-secondary)));
+    opacity: 0;
+    transition: opacity var(--dash-transition);
+}
+
+body.admin-dashboard .dash-action-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: var(--dash-shadow-hover);
+    color: #fff;
+}
+
+body.admin-dashboard .dash-action-card:hover::before {
+    opacity: 1;
+}
+
+body.admin-dashboard .dash-action-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+body.admin-dashboard .dash-action-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: calc(var(--dash-space) * 1.5);
+    background: var(--dash-card-muted);
+    color: var(--dash-primary);
+    transition: all var(--dash-transition);
+}
+
+body.admin-dashboard .dash-action-card:hover .dash-action-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    transform: rotate(-5deg) scale(1.1);
+}
+
+body.admin-dashboard .dash-action-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* ── Calendar ── */
+body.admin-dashboard .dash-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    text-align: center;
+}
+
+body.admin-dashboard .dash-cal-header {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--dash-text-muted);
+    padding: calc(var(--dash-space) * 0.5);
+}
+
+body.admin-dashboard .dash-cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: default;
+    position: relative;
+}
+
+body.admin-dashboard .dash-cal-day.other-month {
+    color: var(--dash-text-muted);
+    opacity: 0.4;
+}
+
+body.admin-dashboard .dash-cal-day.today {
+    background: var(--dash-primary);
+    color: #fff;
+    font-weight: 700;
+}
+
+body.admin-dashboard .dash-cal-day.has-event::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--dash-accent);
+}
+
+body.admin-dashboard .dash-agenda-list {
+    margin-top: calc(var(--dash-space) * 2);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--dash-space) * 1);
+}
+
+body.admin-dashboard .dash-agenda-item {
+    display: flex;
+    gap: calc(var(--dash-space) * 1.5);
+    padding: calc(var(--dash-space) * 1.5);
+    border-radius: 10px;
+    background: var(--dash-card-muted);
+    font-size: 0.8rem;
+}
+
+body.admin-dashboard .dash-agenda-time {
+    font-weight: 700;
+    color: var(--dash-primary);
+    min-width: 50px;
+}
+
+/* ── Timeline ── */
+body.admin-dashboard .dash-timeline {
+    position: relative;
+    padding-left: calc(var(--dash-space) * 3);
+}
+
+body.admin-dashboard .dash-timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--dash-border);
+}
+
+body.admin-dashboard .dash-timeline-item {
+    position: relative;
+    padding-bottom: calc(var(--dash-space) * 2.5);
+}
+
+body.admin-dashboard .dash-timeline-dot {
+    position: absolute;
+    left: calc(var(--dash-space) * -3 + 4px);
+    top: 4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--dash-primary);
+    border: 3px solid var(--dash-card);
+    box-shadow: 0 0 0 2px var(--dash-primary);
+}
+
+body.admin-dashboard .dash-timeline-content {
+    background: var(--dash-card-muted);
+    border-radius: var(--dash-radius-sm);
+    padding: calc(var(--dash-space) * 1.5);
+}
+
+body.admin-dashboard .dash-timeline-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+body.admin-dashboard .dash-timeline-time {
+    font-size: 0.75rem;
+    color: var(--dash-text-muted);
+    margin-top: 4px;
+}
+
+/* ── Widgets ── */
+body.admin-dashboard .dash-widgets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .dash-widget {
+    padding: calc(var(--dash-space) * 2);
+    border-radius: var(--dash-radius-sm);
+    border: 1px solid var(--dash-border);
+    background: var(--dash-glass);
+}
+
+body.admin-dashboard .dash-widget-status {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 1);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+body.admin-dashboard .dash-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: dashBadgePulse 2s ease-in-out infinite;
+}
+
+body.admin-dashboard .dash-status-dot.ok { background: var(--dash-success); }
+body.admin-dashboard .dash-status-dot.warn { background: var(--dash-warning); }
+body.admin-dashboard .dash-status-dot.error { background: var(--dash-danger); }
+
+/* ── Empty state ── */
+body.admin-dashboard .dash-empty {
+    text-align: center;
+    padding: calc(var(--dash-space) * 6) calc(var(--dash-space) * 3);
+}
+
+body.admin-dashboard .dash-empty-icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto calc(var(--dash-space) * 3);
+    background: linear-gradient(135deg, rgba(0, 86, 210, 0.1), rgba(15, 76, 129, 0.05));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: var(--dash-primary);
+}
+
+body.admin-dashboard .dash-empty h3 {
+    font-size: 1.25rem;
+    margin-bottom: calc(var(--dash-space) * 1);
+}
+
+body.admin-dashboard .dash-empty p {
+    color: var(--dash-text-muted);
+    margin-bottom: calc(var(--dash-space) * 3);
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ── Footer ── */
+body.admin-dashboard .dash-footer {
+    margin-top: calc(var(--dash-space) * 4);
+    padding: calc(var(--dash-space) * 3);
+    border-top: 1px solid var(--dash-border);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: calc(var(--dash-space) * 2);
+    font-size: 0.8rem;
+    color: var(--dash-text-muted);
+}
+
+body.admin-dashboard .dash-footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .dash-footer-links a {
+    color: var(--dash-text-muted);
+    text-decoration: none;
+}
+
+body.admin-dashboard .dash-footer-links a:hover {
+    color: var(--dash-primary);
+}
+
+/* ── Search modal ── */
+body.admin-dashboard .search-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 15vh;
+}
+
+body.admin-dashboard .search-modal-overlay.show {
+    display: flex;
+    animation: dashFadeIn 0.2s ease;
+}
+
+body.admin-dashboard .search-modal {
+    width: 90%;
+    max-width: 560px;
+    background: var(--dash-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius);
+    box-shadow: var(--dash-shadow-hover);
+    overflow: hidden;
+}
+
+body.admin-dashboard .search-modal input {
+    width: 100%;
+    padding: calc(var(--dash-space) * 2.5);
+    border: none;
+    background: transparent;
+    font-size: 1.1rem;
+    color: var(--dash-text);
+    outline: none;
+}
+
+body.admin-dashboard .search-modal-results {
+    max-height: 320px;
+    overflow-y: auto;
+    border-top: 1px solid var(--dash-border);
+}
+
+body.admin-dashboard .search-result-item {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 1.5);
+    padding: calc(var(--dash-space) * 1.5) calc(var(--dash-space) * 2.5);
+    text-decoration: none;
+    color: var(--dash-text);
+    transition: background var(--dash-transition);
+}
+
+body.admin-dashboard .search-result-item:hover,
+body.admin-dashboard .search-result-item.focused {
+    background: rgba(0, 86, 210, 0.08);
+}
+
+body.admin-dashboard .search-result-type {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--dash-primary);
+    padding: 2px 8px;
+    background: rgba(0, 86, 210, 0.1);
+    border-radius: 6px;
+}
+
+/* ── Buttons ── */
+body.admin-dashboard .dash-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 1);
+    padding: calc(var(--dash-space) * 1) calc(var(--dash-space) * 2);
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all var(--dash-transition);
+    position: relative;
+    overflow: hidden;
+}
+
+body.admin-dashboard .dash-btn-primary {
+    background: var(--dash-primary);
+    color: #fff;
+}
+
+body.admin-dashboard .dash-btn-primary:hover {
+    background: var(--dash-primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 86, 210, 0.35);
+}
+
+body.admin-dashboard .dash-btn-outline {
+    background: transparent;
+    border: 1px solid var(--dash-border);
+    color: var(--dash-text);
+}
+
+body.admin-dashboard .dash-btn-outline:hover {
+    border-color: var(--dash-primary);
+    color: var(--dash-primary);
+}
+
+body.admin-dashboard .dash-btn-ripple::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+    transform: scale(0);
+    opacity: 0;
+    transition: transform 0.5s, opacity 0.5s;
+}
+
+body.admin-dashboard .dash-btn-ripple:active::after {
+    transform: scale(2);
+    opacity: 1;
+    transition: 0s;
+}
+
+/* ── Priority banner ── */
+body.admin-dashboard .dash-priority-banner {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--dash-space) * 2);
+    padding: calc(var(--dash-space) * 2);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(220, 38, 38, 0.08));
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: var(--dash-radius-sm);
+    margin-bottom: calc(var(--dash-space) * 2);
+}
+
+body.admin-dashboard .dash-priority-banner i {
+    font-size: 1.5rem;
+    color: var(--dash-warning);
+}
+
+/* ── Animations ── */
+@keyframes dashOrbFloat {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(20px, -20px); }
+}
+
+@keyframes dashShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@keyframes dashSlideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes dashFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes dashBadgePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+body.admin-dashboard .dash-animate-in {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: dashSlideUp 0.5s ease forwards;
+}
+
+@keyframes dashSlideUp {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+body.admin-dashboard .dash-animate-in:nth-child(1) { animation-delay: 0.05s; }
+body.admin-dashboard .dash-animate-in:nth-child(2) { animation-delay: 0.1s; }
+body.admin-dashboard .dash-animate-in:nth-child(3) { animation-delay: 0.15s; }
+body.admin-dashboard .dash-animate-in:nth-child(4) { animation-delay: 0.2s; }
+body.admin-dashboard .dash-animate-in:nth-child(5) { animation-delay: 0.25s; }
+body.admin-dashboard .dash-animate-in:nth-child(6) { animation-delay: 0.3s; }
+
+/* ── Responsive ── */
+@media (max-width: 1280px) {
+    body.admin-dashboard .dash-grid-charts {
+        grid-template-columns: 1fr;
+    }
+    body.admin-dashboard .dash-pipeline {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    body.admin-dashboard .dash-pipeline-stage::after {
+        display: none;
+    }
+}
+
+@media (max-width: 1024px) {
+    body.admin-dashboard .dash-grid-3-1,
+    body.admin-dashboard .dash-grid-2 {
+        grid-template-columns: 1fr;
+    }
+    body.admin-dashboard .topbar-search {
+        display: none;
+    }
+    body.admin-dashboard .topbar-datetime {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    body.admin-dashboard .main-wrapper {
+        margin-left: 0 !important;
+    }
+    body.admin-dashboard .sidebar {
+        transform: translateX(-100%);
+    }
+    body.admin-dashboard .sidebar.active {
+        transform: translateX(0);
+    }
+    body.admin-dashboard .dash-hero-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    body.admin-dashboard .dash-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    body.admin-dashboard .dash-pipeline {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    body.admin-dashboard .dash-app-card {
+        flex-wrap: wrap;
+    }
+    body.admin-dashboard .dash-app-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    body.admin-dashboard .topbar-breadcrumb {
+        display: none;
+    }
+    body.admin-dashboard .lang-select {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    body.admin-dashboard .dash-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+    body.admin-dashboard .dash-hero-actions {
+        flex-direction: column;
+    }
+    body.admin-dashboard .dash-hero-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.admin-dashboard *,
+    body.admin-dashboard *::before,
+    body.admin-dashboard *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

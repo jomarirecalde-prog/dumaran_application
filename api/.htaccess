@@ -1,0 +1,53 @@
+# API Directory Security and Configuration
+
+# Enable rewrite engine
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Use relative path instead of hardcoded RewriteBase for port forwarding compatibility
+    # RewriteBase will be automatically determined from the request
+    
+    # Block access to sensitive files
+    RewriteRule ^controllers/ - [F,L]
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+# Set default charset
+AddDefaultCharset UTF-8
+
+# CORS headers (adjust origins as needed for port forwarding)
+# Note: Access-Control-Allow-Origin is handled by ApiController.php
+# We only set default headers here, the controller will set the origin dynamically
+<IfModule mod_headers.c>
+    # Set default CORS headers (origin will be set by ApiController based on request)
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-CSRF-TOKEN, X-Requested-With"
+    Header set Access-Control-Allow-Credentials "true"
+    Header set Access-Control-Max-Age "86400"
+</IfModule>
+
+# PHP settings
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+</IfModule>
+
+# Deny access to .php files in controllers directory
+<Files "ApiController.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# Cache control for API responses
+<IfModule mod_expires.c>
+    ExpiresActive Off
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+</IfModule>

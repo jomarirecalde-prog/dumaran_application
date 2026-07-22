@@ -1,0 +1,8 @@
+# Protect cache directory
+Order Deny,Allow
+Deny from all
+
+<FilesMatch "\.(cache)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>

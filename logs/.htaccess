@@ -1,0 +1,10 @@
+# Protect logs directory
+Order Deny,Allow
+Deny from all
+
+# Only allow access from localhost (for development)
+# Remove this in production or use proper authentication
+<FilesMatch "\.(log)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>

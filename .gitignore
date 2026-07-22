@@ -1,0 +1,45 @@
+# Email configuration with SMTP credentials
+config/email.php
+
+# Vendor directory
+vendor/
+
+# Composer files
+composer.lock
+
+# Log files
+logs/*.log
+
+# Uploaded files
+applicant/pages/uploads/resumes/*
+applicant/pages/uploads/documents/*
+!applicant/pages/uploads/resumes/.htaccess
+!applicant/pages/uploads/documents/.htaccess
+
+# Cache files
+cache/*
+!cache/.htaccess
+
+# Environment files
+.env
+.env.local
+
+# OAuth configuration
+config/oauth.php
+config/google_credentials.json
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# PHPMailer zip
+phpmailer.zip
+
+# Backup files
+*_backup.php
+*_old.php
+*.bak

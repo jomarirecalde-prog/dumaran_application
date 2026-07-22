@@ -1,0 +1,1666 @@
+/**
+ * WPU Admin Settings — Enterprise Settings Dashboard
+ * Scoped to body.admin-dashboard on settings page
+ */
+
+body.admin-dashboard.settings-page {
+    --set-radius: 18px;
+    --set-radius-sm: 12px;
+    --set-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+    --set-shadow-hover: 0 16px 48px rgba(15, 23, 42, 0.12);
+    --set-accent: var(--dash-primary, #0056D2);
+    --set-success: var(--dash-success, #16A34A);
+    --set-danger: var(--dash-danger, #DC2626);
+    --set-warning: var(--dash-warning, #F59E0B);
+    --set-muted: var(--dash-text-muted, #64748b);
+    --set-border: var(--dash-border, rgba(148, 163, 184, 0.25));
+    --set-transition: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Page Header ── */
+body.admin-dashboard.settings-page .settings-page-header {
+    margin-bottom: 28px;
+    animation: settingsFadeIn 0.5s ease both;
+}
+
+body.admin-dashboard.settings-page .settings-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--set-muted);
+    margin-bottom: 12px;
+}
+
+body.admin-dashboard.settings-page .settings-breadcrumb a {
+    color: var(--set-accent);
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .settings-breadcrumb a:hover {
+    opacity: 0.8;
+}
+
+body.admin-dashboard.settings-page .settings-breadcrumb .current {
+    color: var(--dash-text);
+    font-weight: 600;
+}
+
+body.admin-dashboard.settings-page .settings-header-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+body.admin-dashboard.settings-page .settings-header-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--set-accent), #3b82f6);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+    box-shadow: 0 8px 24px rgba(0, 86, 210, 0.25);
+}
+
+body.admin-dashboard.settings-page .settings-header-text h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 6px;
+    color: var(--dash-text);
+}
+
+body.admin-dashboard.settings-page .settings-header-text p {
+    margin: 0;
+    color: var(--set-muted);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    max-width: 640px;
+}
+
+/* ── Navigation Tabs ── */
+body.admin-dashboard.settings-page .settings-nav-wrap {
+    margin-bottom: 28px;
+    animation: settingsFadeIn 0.55s ease both;
+}
+
+body.admin-dashboard.settings-page .settings-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 6px;
+    background: var(--dash-card-muted, #f1f5f9);
+    border-radius: var(--set-radius);
+    border: 1px solid var(--set-border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+body.admin-dashboard.settings-page .settings-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+body.admin-dashboard.settings-page .settings-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-radius: var(--set-radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--set-muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all var(--set-transition);
+    position: relative;
+    border-bottom: none;
+}
+
+body.admin-dashboard.settings-page .settings-tab i {
+    font-size: 0.95rem;
+    transition: transform var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .settings-tab:hover {
+    color: var(--set-accent);
+    background: rgba(0, 86, 210, 0.06);
+    border-bottom-color: transparent;
+}
+
+body.admin-dashboard.settings-page .settings-tab:hover i {
+    transform: scale(1.08);
+}
+
+body.admin-dashboard.settings-page .settings-tab.active {
+    color: #fff;
+    background: linear-gradient(135deg, var(--set-accent), #2563eb);
+    box-shadow: 0 4px 16px rgba(0, 86, 210, 0.3);
+    border-bottom-color: transparent;
+}
+
+/* ── Cards ── */
+body.admin-dashboard.settings-page .settings-card {
+    background: var(--dash-card, #fff);
+    border-radius: var(--set-radius);
+    border: 1px solid var(--set-border);
+    box-shadow: var(--set-shadow);
+    transition: box-shadow var(--set-transition), transform var(--set-transition), border-color var(--set-transition);
+    animation: settingsFadeIn 0.6s ease both;
+    overflow: hidden;
+}
+
+body.admin-dashboard.settings-page .settings-card:hover {
+    box-shadow: var(--set-shadow-hover);
+    border-color: rgba(0, 86, 210, 0.15);
+}
+
+body.admin-dashboard.settings-page .settings-card-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--set-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+body.admin-dashboard.settings-page .settings-card-header h2,
+body.admin-dashboard.settings-page .settings-card-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--dash-text);
+}
+
+body.admin-dashboard.settings-page .settings-card-header h2 i,
+body.admin-dashboard.settings-page .settings-card-header h3 i {
+    color: var(--set-accent);
+    font-size: 0.95rem;
+}
+
+body.admin-dashboard.settings-page .settings-card-body {
+    padding: 24px;
+}
+
+body.admin-dashboard.settings-page .settings-section {
+    margin-bottom: 32px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--set-border);
+}
+
+body.admin-dashboard.settings-page .settings-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+body.admin-dashboard.settings-page .settings-label {
+    font-weight: 700;
+    color: var(--dash-text);
+    margin-bottom: 18px;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: -0.01em;
+}
+
+body.admin-dashboard.settings-page .settings-label i {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: rgba(0, 86, 210, 0.08);
+    color: var(--set-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+}
+
+/* ── Info Cards (System Information) ── */
+body.admin-dashboard.settings-page .info-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+body.admin-dashboard.settings-page .info-card {
+    padding: 20px;
+    border-radius: var(--set-radius-sm);
+    background: linear-gradient(145deg, var(--dash-card-muted, #f8fafc), var(--dash-card, #fff));
+    border: 1px solid var(--set-border);
+    transition: transform var(--set-transition), box-shadow var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--set-shadow);
+}
+
+body.admin-dashboard.settings-page .info-card-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--set-muted);
+    margin-bottom: 8px;
+}
+
+body.admin-dashboard.settings-page .info-card-value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--dash-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+body.admin-dashboard.settings-page .info-card-value .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--set-success);
+    box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.2);
+    animation: settingsPulse 2s infinite;
+}
+
+/* ── Modern Inputs ── */
+body.admin-dashboard.settings-page .input-icon-wrap {
+    position: relative;
+}
+
+body.admin-dashboard.settings-page .input-icon-wrap > i.field-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--set-muted);
+    font-size: 0.9rem;
+    pointer-events: none;
+    transition: color var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .input-icon-wrap .form-control {
+    padding-left: 42px;
+    padding-right: 42px;
+    border-radius: var(--set-radius-sm);
+    border: 1.5px solid var(--set-border);
+    transition: border-color var(--set-transition), box-shadow var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .input-icon-wrap .form-control:focus {
+    border-color: var(--set-accent);
+    box-shadow: 0 0 0 4px rgba(0, 86, 210, 0.12);
+}
+
+body.admin-dashboard.settings-page .input-icon-wrap .form-control:focus + .field-icon,
+body.admin-dashboard.settings-page .input-icon-wrap:focus-within > i.field-icon {
+    color: var(--set-accent);
+}
+
+body.admin-dashboard.settings-page .input-icon-wrap .field-validation {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .input-icon-wrap.valid .field-validation {
+    opacity: 1;
+    color: var(--set-success);
+}
+
+body.admin-dashboard.settings-page .input-icon-wrap.invalid .field-validation {
+    opacity: 1;
+    color: var(--set-danger);
+}
+
+body.admin-dashboard.settings-page .field-helper {
+    font-size: 0.8rem;
+    color: var(--set-muted);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.admin-dashboard.settings-page .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+body.admin-dashboard.settings-page .form-group {
+    margin-bottom: 18px;
+}
+
+body.admin-dashboard.settings-page .form-label {
+    font-weight: 600;
+    font-size: 0.88rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--dash-text);
+}
+
+body.admin-dashboard.settings-page .form-label .tooltip-trigger {
+    color: var(--set-muted);
+    cursor: help;
+    font-size: 0.8rem;
+}
+
+/* ── Toggle Switch ── */
+body.admin-dashboard.settings-page .toggle-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-radius: var(--set-radius-sm);
+    border: 1.5px solid var(--set-border);
+    background: var(--dash-card-muted, #f8fafc);
+    gap: 16px;
+}
+
+body.admin-dashboard.settings-page .toggle-control-info strong {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+body.admin-dashboard.settings-page .toggle-control-info span {
+    font-size: 0.8rem;
+    color: var(--set-muted);
+}
+
+body.admin-dashboard.settings-page .toggle-switch {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+body.admin-dashboard.settings-page .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+body.admin-dashboard.settings-page .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: #cbd5e1;
+    border-radius: 28px;
+    cursor: pointer;
+    transition: background var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform var(--set-transition);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+body.admin-dashboard.settings-page .toggle-switch input:checked + .toggle-slider {
+    background: var(--set-accent);
+}
+
+body.admin-dashboard.settings-page .toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(24px);
+}
+
+body.admin-dashboard.settings-page .toggle-switch input:focus-visible + .toggle-slider {
+    outline: 2px solid var(--set-accent);
+    outline-offset: 2px;
+}
+
+/* ── Number Stepper ── */
+body.admin-dashboard.settings-page .stepper-control {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--set-border);
+    border-radius: var(--set-radius-sm);
+    overflow: hidden;
+    background: var(--dash-card, #fff);
+}
+
+body.admin-dashboard.settings-page .stepper-control button {
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: var(--dash-card-muted, #f1f5f9);
+    color: var(--dash-text);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .stepper-control button:hover {
+    background: rgba(0, 86, 210, 0.1);
+    color: var(--set-accent);
+}
+
+body.admin-dashboard.settings-page .stepper-control input {
+    flex: 1;
+    border: none;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1rem;
+    min-width: 0;
+    padding: 10px;
+    background: transparent;
+}
+
+body.admin-dashboard.settings-page .stepper-control input:focus {
+    outline: none;
+}
+
+/* ── Sticky Save Bar ── */
+body.admin-dashboard.settings-page .settings-save-bar {
+    position: sticky;
+    bottom: 24px;
+    z-index: 50;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 24px;
+    pointer-events: none;
+}
+
+body.admin-dashboard.settings-page .settings-save-btn {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--set-accent), #2563eb);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    box-shadow: 0 8px 32px rgba(0, 86, 210, 0.35);
+    transition: transform var(--set-transition), box-shadow var(--set-transition), opacity var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .settings-save-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 86, 210, 0.45);
+}
+
+body.admin-dashboard.settings-page .settings-save-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+body.admin-dashboard.settings-page .settings-save-btn .spinner {
+    display: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: settingsSpin 0.7s linear infinite;
+}
+
+body.admin-dashboard.settings-page .settings-save-btn.is-saving .spinner {
+    display: inline-block;
+}
+
+body.admin-dashboard.settings-page .settings-save-btn.is-saving .btn-label-default {
+    display: none;
+}
+
+body.admin-dashboard.settings-page .settings-save-btn .btn-label-saving {
+    display: none;
+}
+
+body.admin-dashboard.settings-page .settings-save-btn.is-saving .btn-label-saving {
+    display: inline;
+}
+
+/* ── Admin Accounts Layout ── */
+body.admin-dashboard.settings-page .admin-grid {
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.6fr);
+    gap: 24px;
+    align-items: start;
+}
+
+body.admin-dashboard.settings-page .admin-left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+body.admin-dashboard.settings-page .quick-actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+body.admin-dashboard.settings-page .quick-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--set-radius-sm);
+    border: 1px solid var(--set-border);
+    background: var(--dash-card, #fff);
+    color: var(--dash-text);
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all var(--set-transition);
+    text-decoration: none;
+}
+
+body.admin-dashboard.settings-page .quick-action-btn:hover {
+    border-color: var(--set-accent);
+    background: rgba(0, 86, 210, 0.04);
+    color: var(--set-accent);
+    transform: translateX(4px);
+}
+
+body.admin-dashboard.settings-page .quick-action-btn i {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(0, 86, 210, 0.08);
+    color: var(--set-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+body.admin-dashboard.settings-page .security-tips {
+    padding: 16px;
+    border-radius: var(--set-radius-sm);
+    background: linear-gradient(135deg, rgba(0, 86, 210, 0.06), rgba(59, 130, 246, 0.04));
+    border: 1px solid rgba(0, 86, 210, 0.12);
+}
+
+body.admin-dashboard.settings-page .security-tips h4 {
+    margin: 0 0 10px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--set-accent);
+}
+
+body.admin-dashboard.settings-page .security-tips ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.82rem;
+    color: var(--set-muted);
+    line-height: 1.6;
+}
+
+/* ── Avatar Preview ── */
+body.admin-dashboard.settings-page .avatar-preview-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: var(--set-radius-sm);
+    background: var(--dash-card-muted, #f8fafc);
+    border: 1px dashed var(--set-border);
+    margin-bottom: 20px;
+}
+
+body.admin-dashboard.settings-page .avatar-preview {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--set-accent), #6366f1);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    transition: transform var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .avatar-preview-text {
+    font-size: 0.85rem;
+    color: var(--set-muted);
+}
+
+body.admin-dashboard.settings-page .avatar-preview-text strong {
+    display: block;
+    color: var(--dash-text);
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+}
+
+/* ── Password Strength ── */
+body.admin-dashboard.settings-page .password-strength-wrap {
+    margin-top: 10px;
+}
+
+body.admin-dashboard.settings-page .password-strength-bar {
+    height: 4px;
+    border-radius: 4px;
+    background: #e2e8f0;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+body.admin-dashboard.settings-page .password-strength-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 4px;
+    transition: width 0.3s ease, background 0.3s ease;
+}
+
+body.admin-dashboard.settings-page .password-strength-fill.weak { width: 25%; background: var(--set-danger); }
+body.admin-dashboard.settings-page .password-strength-fill.medium { width: 50%; background: var(--set-warning); }
+body.admin-dashboard.settings-page .password-strength-fill.strong { width: 75%; background: #3b82f6; }
+body.admin-dashboard.settings-page .password-strength-fill.very-strong { width: 100%; background: var(--set-success); }
+
+body.admin-dashboard.settings-page .password-strength-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--set-muted);
+}
+
+body.admin-dashboard.settings-page .password-requirements {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+body.admin-dashboard.settings-page .password-req {
+    font-size: 0.78rem;
+    color: var(--set-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .password-req.met {
+    color: var(--set-success);
+}
+
+body.admin-dashboard.settings-page .password-req i {
+    font-size: 0.7rem;
+}
+
+body.admin-dashboard.settings-page .password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--set-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color var(--set-transition), background var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .password-toggle-btn:hover {
+    color: var(--set-accent);
+    background: rgba(0, 86, 210, 0.08);
+}
+
+/* ── Admin Stats ── */
+body.admin-dashboard.settings-page .admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+body.admin-dashboard.settings-page .admin-stat-card {
+    padding: 18px;
+    border-radius: var(--set-radius-sm);
+    background: var(--dash-card, #fff);
+    border: 1px solid var(--set-border);
+    transition: transform var(--set-transition), box-shadow var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .admin-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--set-shadow);
+}
+
+body.admin-dashboard.settings-page .admin-stat-card .stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+body.admin-dashboard.settings-page .admin-stat-card .stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+body.admin-dashboard.settings-page .admin-stat-card .stat-label {
+    font-size: 0.78rem;
+    color: var(--set-muted);
+    font-weight: 500;
+}
+
+body.admin-dashboard.settings-page .admin-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+body.admin-dashboard.settings-page .admin-search-wrap {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+}
+
+body.admin-dashboard.settings-page .admin-search-wrap i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--set-muted);
+}
+
+body.admin-dashboard.settings-page .admin-search-wrap input {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    border-radius: var(--set-radius-sm);
+    border: 1.5px solid var(--set-border);
+    font-size: 0.88rem;
+    background: var(--dash-card, #fff);
+    transition: border-color var(--set-transition), box-shadow var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .admin-search-wrap input:focus {
+    outline: none;
+    border-color: var(--set-accent);
+    box-shadow: 0 0 0 4px rgba(0, 86, 210, 0.1);
+}
+
+body.admin-dashboard.settings-page .admin-filter-select {
+    padding: 10px 14px;
+    border-radius: var(--set-radius-sm);
+    border: 1.5px solid var(--set-border);
+    font-size: 0.88rem;
+    background: var(--dash-card, #fff);
+    min-width: 160px;
+}
+
+/* ── Admin Profile Cards ── */
+body.admin-dashboard.settings-page .admin-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+body.admin-dashboard.settings-page .admin-item {
+    padding: 20px;
+    border: 1px solid var(--set-border);
+    border-radius: var(--set-radius-sm);
+    background: var(--dash-card, #fff);
+    transition: all var(--set-transition);
+    animation: settingsFadeIn 0.5s ease both;
+}
+
+body.admin-dashboard.settings-page .admin-item:hover {
+    box-shadow: var(--set-shadow-hover);
+    transform: translateY(-3px);
+    border-color: rgba(0, 86, 210, 0.2);
+}
+
+body.admin-dashboard.settings-page .admin-item-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+body.admin-dashboard.settings-page .admin-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+body.admin-dashboard.settings-page .admin-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--set-accent), #6366f1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 86, 210, 0.25);
+}
+
+body.admin-dashboard.settings-page .admin-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--dash-text);
+    margin-bottom: 4px;
+}
+
+body.admin-dashboard.settings-page .admin-meta {
+    color: var(--set-muted);
+    font-size: 0.82rem;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.admin-dashboard.settings-page .admin-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+body.admin-dashboard.settings-page .admin-item-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--set-border);
+    font-size: 0.8rem;
+    color: var(--set-muted);
+}
+
+body.admin-dashboard.settings-page .admin-item-footer span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.admin-dashboard.settings-page .badge-you {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+body.admin-dashboard.settings-page .badge-status-active {
+    background: rgba(22, 163, 74, 0.1);
+    color: var(--set-success);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+body.admin-dashboard.settings-page .badge-status-inactive {
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--set-danger);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+body.admin-dashboard.settings-page .admin-empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--set-muted);
+}
+
+body.admin-dashboard.settings-page .admin-empty-state i {
+    font-size: 3rem;
+    opacity: 0.35;
+    margin-bottom: 16px;
+}
+
+/* ── System Health Dashboard ── */
+body.admin-dashboard.settings-page .health-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+body.admin-dashboard.settings-page .health-card {
+    padding: 20px;
+    border-radius: var(--set-radius-sm);
+    border: 1px solid var(--set-border);
+    background: var(--dash-card, #fff);
+    transition: all var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .health-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--set-shadow);
+}
+
+body.admin-dashboard.settings-page .health-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    font-size: 1rem;
+}
+
+body.admin-dashboard.settings-page .health-card-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--set-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+}
+
+body.admin-dashboard.settings-page .health-card-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--dash-text);
+    margin-bottom: 10px;
+}
+
+body.admin-dashboard.settings-page .health-progress {
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+body.admin-dashboard.settings-page .health-progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+}
+
+body.admin-dashboard.settings-page .health-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+body.admin-dashboard.settings-page .health-badge.ok {
+    background: rgba(22, 163, 74, 0.1);
+    color: var(--set-success);
+}
+
+body.admin-dashboard.settings-page .health-badge.warn {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--set-warning);
+}
+
+/* ── Database Status ── */
+body.admin-dashboard.settings-page .db-status-card {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    padding: 20px;
+    border-radius: var(--set-radius-sm);
+    background: linear-gradient(135deg, rgba(22, 163, 74, 0.06), rgba(22, 163, 74, 0.02));
+    border: 1px solid rgba(22, 163, 74, 0.2);
+    margin-bottom: 24px;
+}
+
+body.admin-dashboard.settings-page .db-status-item .label {
+    font-size: 0.78rem;
+    color: var(--set-muted);
+    margin-bottom: 4px;
+}
+
+body.admin-dashboard.settings-page .db-status-item .value {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+body.admin-dashboard.settings-page .db-connected {
+    color: var(--set-success);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── Maintenance Action Cards ── */
+body.admin-dashboard.settings-page .maintenance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+body.admin-dashboard.settings-page .maintenance-card {
+    padding: 22px;
+    border-radius: var(--set-radius-sm);
+    border: 1px solid var(--set-border);
+    background: var(--dash-card, #fff);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .maintenance-card:hover {
+    border-color: var(--set-accent);
+    box-shadow: var(--set-shadow);
+    transform: translateY(-2px);
+}
+
+body.admin-dashboard.settings-page .maintenance-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+body.admin-dashboard.settings-page .maintenance-card h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+body.admin-dashboard.settings-page .maintenance-card p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--set-muted);
+    line-height: 1.5;
+    flex: 1;
+}
+
+body.admin-dashboard.settings-page .maintenance-card-meta {
+    font-size: 0.78rem;
+    color: var(--set-muted);
+    padding: 8px 12px;
+    background: var(--dash-card-muted, #f8fafc);
+    border-radius: 8px;
+}
+
+body.admin-dashboard.settings-page .maintenance-card .btn-run {
+    align-self: flex-start;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all var(--set-transition);
+}
+
+/* ── System Details ── */
+body.admin-dashboard.settings-page .info-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+body.admin-dashboard.settings-page .info-table tr {
+    border-bottom: 1px solid var(--set-border);
+}
+
+body.admin-dashboard.settings-page .info-table tr:last-child {
+    border-bottom: none;
+}
+
+body.admin-dashboard.settings-page .info-table td {
+    padding: 14px 12px;
+    font-size: 0.88rem;
+}
+
+body.admin-dashboard.settings-page .info-table td:first-child {
+    font-weight: 600;
+    color: var(--set-muted);
+    width: 35%;
+}
+
+/* ── Activity Logs ── */
+body.admin-dashboard.settings-page .logs-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 14px;
+    background: var(--dash-card-muted, #f8fafc);
+    border-radius: var(--set-radius-sm);
+    border: 1px solid var(--set-border);
+}
+
+body.admin-dashboard.settings-page .logs-toolbar-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+body.admin-dashboard.settings-page .logs-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--set-border);
+    background: var(--dash-card, #fff);
+    color: var(--dash-text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--set-transition);
+    text-decoration: none;
+}
+
+body.admin-dashboard.settings-page .logs-toolbar-btn:hover {
+    border-color: var(--set-accent);
+    color: var(--set-accent);
+    background: rgba(0, 86, 210, 0.04);
+}
+
+body.admin-dashboard.settings-page .logs-view-toggle {
+    margin-left: auto;
+    display: flex;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--set-border);
+}
+
+body.admin-dashboard.settings-page .logs-view-toggle button {
+    padding: 8px 14px;
+    border: none;
+    background: var(--dash-card, #fff);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--set-muted);
+    transition: all var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .logs-view-toggle button.active {
+    background: var(--set-accent);
+    color: #fff;
+}
+
+body.admin-dashboard.settings-page .logs-quick-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+body.admin-dashboard.settings-page .log-filter-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--set-border);
+    background: var(--dash-card, #fff);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--set-muted);
+    cursor: pointer;
+    transition: all var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .log-filter-chip:hover,
+body.admin-dashboard.settings-page .log-filter-chip.active {
+    border-color: var(--set-accent);
+    background: rgba(0, 86, 210, 0.08);
+    color: var(--set-accent);
+}
+
+body.admin-dashboard.settings-page .logs-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+    padding: 18px;
+    background: var(--dash-card-muted, #f8fafc);
+    border-radius: var(--set-radius-sm);
+    border: 1px solid var(--set-border);
+}
+
+body.admin-dashboard.settings-page .logs-container {
+    max-height: 560px;
+    overflow: auto;
+    border: 1px solid var(--set-border);
+    border-radius: var(--set-radius-sm);
+    background: var(--dash-card, #fff);
+}
+
+body.admin-dashboard.settings-page .logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0;
+}
+
+body.admin-dashboard.settings-page .logs-table th {
+    background: var(--dash-card-muted, #f8fafc);
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--set-muted);
+    padding: 14px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+body.admin-dashboard.settings-page .logs-table th:hover {
+    color: var(--set-accent);
+}
+
+body.admin-dashboard.settings-page .logs-table th .sort-icon {
+    margin-left: 4px;
+    opacity: 0.4;
+    font-size: 0.7rem;
+}
+
+body.admin-dashboard.settings-page .logs-table th.sorted .sort-icon {
+    opacity: 1;
+    color: var(--set-accent);
+}
+
+body.admin-dashboard.settings-page .logs-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--set-border);
+    font-size: 0.85rem;
+    vertical-align: top;
+}
+
+body.admin-dashboard.settings-page .logs-table tr:hover td {
+    background: rgba(0, 86, 210, 0.02);
+}
+
+body.admin-dashboard.settings-page .log-action-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+body.admin-dashboard.settings-page .log-action-login { background: rgba(22, 163, 74, 0.1); color: var(--set-success); }
+body.admin-dashboard.settings-page .log-action-logout { background: rgba(100, 116, 139, 0.12); color: #64748b; }
+body.admin-dashboard.settings-page .log-action-delete { background: rgba(220, 38, 38, 0.1); color: var(--set-danger); }
+body.admin-dashboard.settings-page .log-action-update,
+body.admin-dashboard.settings-page .log-action-password_changed { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
+body.admin-dashboard.settings-page .log-action-create,
+body.admin-dashboard.settings-page .log-action-admin_created,
+body.admin-dashboard.settings-page .log-action-register { background: rgba(139, 92, 246, 0.1); color: #7c3aed; }
+body.admin-dashboard.settings-page .log-action-error { background: rgba(245, 158, 11, 0.12); color: var(--set-warning); }
+body.admin-dashboard.settings-page .log-action-default { background: rgba(0, 86, 210, 0.08); color: var(--set-accent); }
+
+body.admin-dashboard.settings-page .admin-details {
+    flex: 1;
+    min-width: 0;
+}
+
+body.admin-dashboard.settings-page .log-user {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+body.admin-dashboard.settings-page .log-action {
+    font-weight: 600;
+    color: var(--set-accent);
+}
+
+    font-size: 0.85rem;
+    color: var(--dash-text);
+    white-space: nowrap;
+}
+
+body.admin-dashboard.settings-page .log-user-name {
+    font-weight: 600;
+    color: var(--dash-text);
+}
+
+body.admin-dashboard.settings-page .log-user-meta {
+    font-size: 0.78rem;
+    color: var(--set-muted);
+}
+
+body.admin-dashboard.settings-page .log-ip {
+    font-family: 'SF Mono', 'Consolas', monospace;
+    font-size: 0.78rem;
+    color: var(--set-muted);
+}
+
+/* Timeline View */
+body.admin-dashboard.settings-page .logs-timeline {
+    display: none;
+    padding: 20px;
+}
+
+body.admin-dashboard.settings-page .logs-timeline.active {
+    display: block;
+}
+
+body.admin-dashboard.settings-page .logs-table-view.hidden {
+    display: none;
+}
+
+body.admin-dashboard.settings-page .timeline-item {
+    display: flex;
+    gap: 16px;
+    padding-bottom: 24px;
+    position: relative;
+}
+
+body.admin-dashboard.settings-page .timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 32px;
+    bottom: 0;
+    width: 2px;
+    background: var(--set-border);
+}
+
+body.admin-dashboard.settings-page .timeline-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    z-index: 1;
+}
+
+body.admin-dashboard.settings-page .timeline-content {
+    flex: 1;
+    padding: 14px 18px;
+    border-radius: var(--set-radius-sm);
+    border: 1px solid var(--set-border);
+    background: var(--dash-card, #fff);
+    transition: box-shadow var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .timeline-content:hover {
+    box-shadow: var(--set-shadow);
+}
+
+body.admin-dashboard.settings-page .timeline-time {
+    font-size: 0.78rem;
+    color: var(--set-muted);
+    margin-bottom: 6px;
+}
+
+body.admin-dashboard.settings-page .timeline-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+body.admin-dashboard.settings-page .timeline-desc {
+    font-size: 0.82rem;
+    color: var(--set-muted);
+}
+
+/* Pagination */
+body.admin-dashboard.settings-page .logs-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-top: 20px;
+    padding: 16px 20px;
+    background: var(--dash-card-muted, #f8fafc);
+    border-radius: var(--set-radius-sm);
+    border: 1px solid var(--set-border);
+}
+
+body.admin-dashboard.settings-page .logs-pagination-info {
+    color: var(--set-muted);
+    font-size: 0.85rem;
+}
+
+body.admin-dashboard.settings-page .logs-pagination-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+body.admin-dashboard.settings-page .logs-pagination-controls a,
+body.admin-dashboard.settings-page .logs-pagination-controls span {
+    min-width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all var(--set-transition);
+}
+
+body.admin-dashboard.settings-page .logs-pagination-controls a {
+    background: var(--dash-card, #fff);
+    border: 1px solid var(--set-border);
+    color: var(--dash-text);
+}
+
+body.admin-dashboard.settings-page .logs-pagination-controls a:hover {
+    border-color: var(--set-accent);
+    color: var(--set-accent);
+}
+
+body.admin-dashboard.settings-page .logs-pagination-controls span.btn-primary,
+body.admin-dashboard.settings-page .logs-pagination-controls span.active-page {
+    background: var(--set-accent);
+    color: #fff;
+    border: none;
+}
+
+body.admin-dashboard.settings-page .logs-page-jump {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--set-muted);
+}
+
+body.admin-dashboard.settings-page .logs-page-jump input {
+    width: 60px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--set-border);
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+body.admin-dashboard.settings-page .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: rgba(22, 163, 74, 0.1);
+    color: var(--set-success);
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* ── Alerts ── */
+body.admin-dashboard.settings-page .settings-alert {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: var(--set-radius-sm);
+    margin-bottom: 20px;
+    animation: settingsFadeIn 0.4s ease both;
+}
+
+/* ── Animations ── */
+@keyframes settingsFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes settingsPulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.2); }
+    50% { box-shadow: 0 0 0 8px rgba(22, 163, 74, 0.1); }
+}
+
+@keyframes settingsSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 992px) {
+    body.admin-dashboard.settings-page .admin-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body.admin-dashboard.settings-page .health-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    body.admin-dashboard.settings-page .settings-header-text h1 {
+        font-size: 1.4rem;
+    }
+
+    body.admin-dashboard.settings-page .settings-tabs {
+        border-radius: 14px;
+        padding: 4px;
+    }
+
+    body.admin-dashboard.settings-page .settings-tab {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+    }
+
+    body.admin-dashboard.settings-page .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    body.admin-dashboard.settings-page .password-requirements {
+        grid-template-columns: 1fr;
+    }
+
+    body.admin-dashboard.settings-page .maintenance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body.admin-dashboard.settings-page .health-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    body.admin-dashboard.settings-page .logs-table th:nth-child(5),
+    body.admin-dashboard.settings-page .logs-table td:nth-child(5),
+    body.admin-dashboard.settings-page .logs-table th:nth-child(6),
+    body.admin-dashboard.settings-page .logs-table td:nth-child(6) {
+        display: none;
+    }
+
+    body.admin-dashboard.settings-page .logs-pagination {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    body.admin-dashboard.settings-page .logs-view-toggle {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    body.admin-dashboard.settings-page .logs-view-toggle button {
+        flex: 1;
+    }
+
+    body.admin-dashboard.settings-page .settings-save-bar {
+        bottom: 80px;
+    }
+
+    body.admin-dashboard.settings-page .settings-save-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    body.admin-dashboard.settings-page .admin-stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    body.admin-dashboard.settings-page .health-grid,
+    body.admin-dashboard.settings-page .admin-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body.admin-dashboard.settings-page .settings-card-body {
+        padding: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.admin-dashboard.settings-page *,
+    body.admin-dashboard.settings-page *::before,
+    body.admin-dashboard.settings-page *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
