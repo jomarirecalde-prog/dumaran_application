@@ -56,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['restore_application']
 
 // Get all archived applications with details
 $applications = $applicationModel->getArchivedApplicationsWithDetails();
+$totalArchivedAll = count($applications);
 
 // Get filter parameters
 $filterStatus = $_GET['status'] ?? 'all';
@@ -97,6 +98,17 @@ $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $perPage = 5;
 $offset = ($page - 1) * $perPage;
 
+// Statistics for hero (filtered set, before pagination)
+$statsPending = count(array_filter($applications, function ($a) {
+    return $a['status'] === STATUS_PENDING;
+}));
+$statsApproved = count(array_filter($applications, function ($a) {
+    return $a['status'] === STATUS_APPROVED;
+}));
+$statsRejected = count(array_filter($applications, function ($a) {
+    return $a['status'] === STATUS_REJECTED;
+}));
+
 // Calculate pagination
 $totalApplications_filtered = count($applications);
 $totalPages = ceil($totalApplications_filtered / $perPage);
@@ -118,6 +130,47 @@ if (!function_exists('formatFileSize')) {
         $bytes /= pow(1024, $pow);
 
         return round($bytes, $precision) . ' ' . $units[$pow];
+    }
+}
+
+if (!function_exists('getApplicantInitials')) {
+    function getApplicantInitials($name)
+    {
+        $parts = preg_split('/\s+/', trim((string) $name));
+        if (count($parts) >= 2) {
+            return strtoupper(substr($parts[0], 0, 1) . substr(end($parts), 0, 1));
+        }
+
+        return strtoupper(substr((string) $name, 0, 2));
+    }
+}
+
+if (!function_exists('formatRelativeArchiveTime')) {
+    function formatRelativeArchiveTime($datetime)
+    {
+        if (empty($datetime)) {
+            return '';
+        }
+
+        $ts = strtotime($datetime);
+        if ($ts === false) {
+            return '';
+        }
+
+        $diff = time() - $ts;
+        if ($diff < 86400) {
+            return 'today';
+        }
+        if ($diff < 604800) {
+            $days = (int) floor($diff / 86400);
+            return $days . ' day' . ($days === 1 ? '' : 's') . ' ago';
+        }
+        if ($diff < 2592000) {
+            $weeks = (int) floor($diff / 604800);
+            return $weeks . ' week' . ($weeks === 1 ? '' : 's') . ' ago';
+        }
+
+        return date('M j, Y', $ts);
     }
 }
 
@@ -154,497 +207,31 @@ $documentExtensionIcons = [
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="../../assets/css/office-theme.css" rel="stylesheet">
     <link href="../../assets/css/admin-dashboard.css" rel="stylesheet">
-    <style>
-        .application-item {
-            padding: 20px;
-            margin-bottom: 16px;
-            border: 1px solid var(--gray-200);
-            border-radius: 12px;
-            background: #fff;
-            transition: box-shadow 0.2s ease, transform 0.2s ease;
-            opacity: 0.95;
-        }
-
-        body.modal-open {
-            overflow: hidden;
-        }
-
-        .application-item:hover {
-            box-shadow: 0 14px 30px -18px rgba(20, 57, 99, 0.35);
-            transform: translateY(-2px);
-            opacity: 1;
-        }
-
-        .application-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .application-header {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 20px;
-        }
-
-        .application-meta {
-            flex: 1 1 320px;
-        }
-
-        .application-name {
-            margin: 0;
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: var(--gray-900);
-        }
-
-        .application-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 6px 0 12px;
-            font-size: 0.85rem;
-            color: var(--gray-600);
-        }
-
-        .application-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .application-summary {
-            font-size: 0.92rem;
-            line-height: 1.6;
-            color: var(--gray-700);
-            max-width: 60ch;
-        }
-
-        .documents-section {
-            margin-top: 14px;
-            padding: 14px;
-            border-radius: 8px;
-            background: var(--gray-50);
-        }
-
-        .documents-section.collapsed {
-            display: none;
-        }
-
-        .documents-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 8px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--gray-700);
-        }
-
-        .document-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .document-badges .badge {
-            text-decoration: none;
-            padding: 6px 10px;
-            font-size: 0.8rem;
-        }
-        .documents-section.empty {
-            background: var(--gray-100);
-            border: 1px dashed var(--gray-200);
-        }
-
-        .documents-title {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .documents-count {
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--gray-500);
-        }
-
-        .document-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .document-item {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-radius: 8px;
-            background: #fff;
-            border: 1px solid var(--gray-200);
-        }
-
-        .document-meta {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-width: 200px;
-        }
-
-        .document-meta i {
-            font-size: 1.2rem;
-            color: var(--primary-blue);
-        }
-
-        .document-name {
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: var(--gray-800);
-        }
-
-        .document-ext {
-            font-weight: 500;
-            color: var(--gray-500);
-            margin-left: 4px;
-        }
-
-        .document-extra {
-            font-size: 0.8rem;
-            color: var(--gray-500);
-        }
-
-        .document-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .document-actions .btn {
-            min-width: 110px;
-        }
-
-        .documents-empty-message {
-            margin: 0;
-            font-size: 0.85rem;
-            color: var(--gray-600);
-        }
-
-        .badge-primary {
-            background: var(--primary-blue);
-            color: #fff;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        }
-
-        .badge-primary:hover {
-            background: var(--secondary-blue);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
-        }
-
-        .status-badge {
-            flex: 0 0 auto;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.875rem;
-        }
-
-        .quick-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 18px;
-        }
-
-        .quick-actions .btn {
-            min-width: 140px;
-        }
-
-        .filter-section {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 12px;
-            width: 100%;
-        }
-
-        .filter-select {
-            flex: 0 0 auto;
-            min-width: 180px;
-            width: auto;
-        }
-
-        .filter-search {
-            flex: 1 1 260px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--gray-300);
-            background: #fff;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .filter-section .btn {
-            flex: 0 0 auto;
-        }
-
-        .filter-section .form-select {
-            width: auto;
-        }
-
-        .filter-search input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 0.95rem;
-            background: transparent;
-            color: var(--gray-800);
-        }
-
-        .filter-search:focus-within {
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.12);
-        }
-
-        .filter-search i {
-            color: var(--gray-500);
-        }
-
-        .applications-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--gray-200);
-        }
-
-        .applications-toolbar h3 {
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.05rem;
-            font-weight: 600;
-            color: var(--gray-800);
-        }
-
-        .applications-count {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            color: var(--gray-600);
-        }
-
-        .empty-state {
-            padding: 48px 24px;
-            text-align: center;
-            color: var(--gray-600);
-        }
-
-        .empty-state i {
-            display: block;
-            font-size: 2.5rem;
-            margin-bottom: 16px;
-            color: var(--gray-300);
-        }
-
-        .empty-state h3 {
-            margin: 0 0 8px;
-            color: var(--gray-800);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-content {
-            background-color: #fff;
-            margin: 5% auto;
-            padding: 0;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 600px;
-            box-shadow: 0 14px 30px -18px rgba(20, 57, 99, 0.35);
-        }
-
-        .modal-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--gray-200);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--gray-800);
-            margin: 0;
-        }
-
-        .close {
-            color: var(--gray-500);
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            background: none;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-        }
-
-        .close:hover {
-            color: var(--gray-800);
-            background: var(--gray-100);
-        }
-
-        .modal-body {
-            padding: 24px;
-            max-height: calc(100vh - 250px);
-            overflow-y: auto;
-        }
-
-        .modal-footer {
-            padding: 16px 24px;
-            border-top: 1px solid var(--gray-200);
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: var(--gray-700);
-            font-size: 0.875rem;
-        }
-
-        .form-control,
-        .form-select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--gray-300);
-            border-radius: 6px;
-            font-size: 0.95rem;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
-        }
-
-        .btn[disabled] {
-            opacity: 0.6;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .archived-badge {
-            background: var(--gray-500);
-            color: #fff;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        @media (max-width: 768px) {
-            .modal-content {
-                width: 95%;
-                margin: 20px auto;
-            }
-
-            .modal-body {
-                padding: 18px;
-                max-height: calc(100vh - 180px);
-            }
-
-            .application-item {
-                padding: 16px;
-            }
-
-            .applications-toolbar {
-                padding: 16px;
-            }
-
-            .filter-section {
-                gap: 8px;
-                flex-wrap: nowrap;
-                align-items: center;
-                overflow-x: auto;
-                padding-bottom: 4px;
-            }
-
-            .filter-section .filter-search,
-            .filter-section .form-select,
-            .filter-section .btn {
-                flex: 0 0 auto;
-                width: auto;
-            }
-
-            .filter-section .filter-search {
-                flex: 1 0 240px;
-                min-width: 200px;
-            }
-        }
-    </style>
+    <link href="../../assets/css/applications-module.css" rel="stylesheet">
+    <link href="../../assets/css/application-history.css" rel="stylesheet">
 </head>
-<body class="admin-dashboard">
+<body class="admin-dashboard applications-module application-history-page">
     <?php $adminSidebarActive = 'application_history'; require __DIR__ . '/_admin_sidebar.php'; ?>
 
-<!-- Main Content Wrapper -->
     <div class="main-wrapper">
-        <!-- Top Bar -->
         <div class="topbar">
-            <button class="mobile-menu-toggle">
+            <button class="mobile-menu-toggle" aria-label="Open menu">
                 <i class="fas fa-bars"></i>
             </button>
             <h1 class="topbar-title">Application History</h1>
             <div class="topbar-actions">
-                <a href="applications.php" class="topbar-btn" title="Active Applications">
+                <a href="applications.php" class="topbar-btn" title="Active Applications" aria-label="Active Applications">
                     <i class="fas fa-file-alt"></i>
                 </a>
-                <a href="settings.php" class="topbar-btn">
+                <a href="settings.php" class="topbar-btn" aria-label="Settings">
                     <i class="fas fa-cog"></i>
                 </a>
-                <a href="../../auth/logout.php" class="topbar-btn confirm-logout" title="Logout">
+                <a href="../../auth/logout.php" class="topbar-btn confirm-logout" title="Logout" aria-label="Logout">
                     <i class="fas fa-sign-out-alt"></i>
                 </a>
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="content">
             <?php if (isset($_SESSION['success_message'])): ?>
             <script>
@@ -679,87 +266,116 @@ $documentExtensionIcons = [
             ?>
             <?php endif; ?>
 
-            <!-- Info Alert -->
-            <div class="card" style="margin-bottom: 24px; border-left: 4px solid var(--primary-blue);">
-                <div class="card-body">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <i class="fas fa-info-circle" style="color: var(--primary-blue); font-size: 1.5rem;"></i>
-                        <div>
-                            <h3 style="margin: 0 0 4px 0; font-size: 1rem; color: var(--gray-800);">Application History</h3>
-                            <p style="margin: 0; color: var(--gray-600); font-size: 0.9rem;">
-                                This page shows all archived applications that have been removed from the active applications list. 
-                                You can restore applications back to the active list if needed.
-                            </p>
+            <!-- Hero -->
+            <section class="ats-hero" aria-labelledby="historyHeroTitle">
+                <div class="ats-hero__content" style="width:100%;">
+                    <div class="ats-hero__eyebrow"><i class="fas fa-archive"></i> Applicant Tracking System</div>
+                    <h2 class="ats-hero__title" id="historyHeroTitle">Application History</h2>
+                    <p class="ats-hero__subtitle">Archived applications that can be restored to the active hiring pipeline.</p>
+                    <div class="ats-hero-stats" role="list" aria-label="Archive statistics">
+                        <div class="ats-hero-stat" role="listitem">
+                            <div class="ats-hero-stat__icon" aria-hidden="true"><i class="fas fa-archive"></i></div>
+                            <div>
+                                <div class="ats-hero-stat__value"><?= $totalArchivedAll ?></div>
+                                <div class="ats-hero-stat__label">Total Archived</div>
+                            </div>
+                        </div>
+                        <div class="ats-hero-stat" role="listitem">
+                            <div class="ats-hero-stat__icon" aria-hidden="true"><i class="fas fa-user"></i></div>
+                            <div>
+                                <div class="ats-hero-stat__value"><?= $totalApplications_filtered ?></div>
+                                <div class="ats-hero-stat__label">Showing</div>
+                            </div>
+                        </div>
+                        <div class="ats-hero-stat" role="listitem">
+                            <div class="ats-hero-stat__icon" aria-hidden="true"><i class="fas fa-clock"></i></div>
+                            <div>
+                                <div class="ats-hero-stat__value"><?= $statsPending ?></div>
+                                <div class="ats-hero-stat__label">Pending</div>
+                            </div>
+                        </div>
+                        <div class="ats-hero-stat" role="listitem">
+                            <div class="ats-hero-stat__icon" aria-hidden="true"><i class="fas fa-check"></i></div>
+                            <div>
+                                <div class="ats-hero-stat__value"><?= $statsApproved ?></div>
+                                <div class="ats-hero-stat__label">Approved</div>
+                            </div>
+                        </div>
+                        <div class="ats-hero-stat" role="listitem">
+                            <div class="ats-hero-stat__icon" aria-hidden="true"><i class="fas fa-times"></i></div>
+                            <div>
+                                <div class="ats-hero-stat__value"><?= $statsRejected ?></div>
+                                <div class="ats-hero-stat__label">Rejected</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Filters -->
-            <div class="card" style="margin-bottom: 24px;">
-                <div class="card-body">
-                    <form method="GET" action="">
-                        <div class="filter-section">
-                            <label class="filter-search" for="searchQuery">
-                                <i class="fas fa-search"></i>
-                                <input
-                                    id="searchQuery"
-                                    type="search"
-                                    name="q"
-                                    value="<?= htmlspecialchars($searchQuery) ?>"
-                                    placeholder="Search by name, email, position or keywords..."
-                                >
-                            </label>
-                            <select name="status" class="form-select filter-select" onchange="this.form.submit()">
-                                <option value="all" <?= $filterStatus === 'all' ? 'selected' : '' ?>>All Status</option>
-                                <option value="<?= STATUS_PENDING ?>" <?= $filterStatus === STATUS_PENDING ? 'selected' : '' ?>>Pending</option>
-                                <option value="<?= STATUS_APPROVED ?>" <?= $filterStatus === STATUS_APPROVED ? 'selected' : '' ?>>Approved</option>
-                                <option value="<?= STATUS_REJECTED ?>" <?= $filterStatus === STATUS_REJECTED ? 'selected' : '' ?>>Rejected</option>
-                            </select>
-                            <select name="position" class="form-select filter-select" onchange="this.form.submit()">
-                                <option value="all" <?= $filterPosition === 'all' ? 'selected' : '' ?>>All Positions</option>
-                                <?php foreach ($positions as $position): ?>
-                                    <option value="<?= $position['id'] ?>" <?= $filterPosition == $position['id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($position['title']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-filter"></i> Apply
-                            </button>
-                            <?php if ($filterStatus !== 'all' || $filterPosition !== 'all' || $searchQuery !== ''): ?>
-                                <a href="application_history.php" class="btn btn-outline">
-                                    <i class="fas fa-times"></i> Clear
-                                </a>
-                            <?php endif; ?>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Applications List -->
-            <div class="card">
-                <div class="applications-toolbar">
-                    <h3 class="card-title">
-                        <i class="fas fa-history"></i>
-                        Archived Applications
-                    </h3>
-                    <div class="applications-count">
-                        <span class="badge badge-primary"><?= $totalApplications_filtered ?> result<?= $totalApplications_filtered === 1 ? '' : 's' ?></span>
-                        <span>(<?= count($applications) ?> showing)</span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <?php if (empty($applications)): ?>
-                        <div class="empty-state">
-                            <i class="fas fa-history"></i>
-                            <h3>No Archived Applications</h3>
-                            <p>There are no archived applications in the history.</p>
-                            <a href="applications.php" class="btn btn-primary">
-                                <i class="fas fa-arrow-left"></i> Back to Applications
+            <!-- Search & Filters -->
+            <section class="ats-toolbar ats-toolbar--sticky" aria-label="Search and filters">
+                <form method="GET" action="">
+                    <div class="ats-toolbar__row">
+                        <label class="ats-search-wrap" for="searchQuery">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input
+                                id="searchQuery"
+                                type="search"
+                                name="q"
+                                value="<?= htmlspecialchars($searchQuery) ?>"
+                                placeholder="Search applicants..."
+                                autocomplete="off"
+                                aria-label="Search archived applications"
+                            >
+                        </label>
+                        <select name="status" class="ats-select" aria-label="Filter by status" onchange="this.form.submit()">
+                            <option value="all" <?= $filterStatus === 'all' ? 'selected' : '' ?>>Status ▼ All</option>
+                            <option value="<?= STATUS_PENDING ?>" <?= $filterStatus === STATUS_PENDING ? 'selected' : '' ?>>Pending</option>
+                            <option value="<?= STATUS_APPROVED ?>" <?= $filterStatus === STATUS_APPROVED ? 'selected' : '' ?>>Approved</option>
+                            <option value="<?= STATUS_REJECTED ?>" <?= $filterStatus === STATUS_REJECTED ? 'selected' : '' ?>>Rejected</option>
+                        </select>
+                        <select name="position" class="ats-select" aria-label="Filter by position" onchange="this.form.submit()">
+                            <option value="all" <?= $filterPosition === 'all' ? 'selected' : '' ?>>Position ▼ All</option>
+                            <?php foreach ($positions as $position): ?>
+                                <option value="<?= $position['id'] ?>" <?= $filterPosition == $position['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($position['title']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?php if ($filterStatus !== 'all' || $filterPosition !== 'all' || $searchQuery !== ''): ?>
+                            <a href="application_history.php" class="ats-btn ats-btn-outline" aria-label="Reset filters">
+                                <i class="fas fa-rotate-left"></i> Reset
                             </a>
-                        </div>
-                    <?php else: ?>
+                        <?php endif; ?>
+                        <button type="submit" class="ats-btn ats-btn-primary">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Archived Applications -->
+            <section aria-labelledby="archivedAppsTitle">
+                <div class="ats-section-header">
+                    <h3 class="ats-section-header__title" id="archivedAppsTitle">
+                        <i class="fas fa-box-archive"></i> Archived Applications
+                    </h3>
+                    <span class="ats-results-badge">
+                        <?= $totalApplications_filtered ?> result<?= $totalApplications_filtered === 1 ? '' : 's' ?> · <?= count($applications) ?> showing
+                    </span>
+                </div>
+
+                <?php if (empty($applications)): ?>
+                    <div class="ats-empty">
+                        <div class="ats-empty__icon" aria-hidden="true"><i class="fas fa-archive"></i></div>
+                        <h3 class="ats-empty__title">No archived applications found</h3>
+                        <p class="ats-empty__text">Try adjusting your search or filters, or return to active applications.</p>
+                        <a href="applications.php" class="ats-btn ats-btn-primary">
+                            <i class="fas fa-arrow-left"></i> Return to Applications
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <div class="ats-cards-grid" id="archivedCardsGrid">
                         <?php foreach ($applications as $app): ?>
                             <?php 
                             $documents = $documentModel->getApplicationDocuments($app['id']);
@@ -806,192 +422,223 @@ $documentExtensionIcons = [
 
                             $totalDocuments = count($documentEntries);
                             $hasDocuments = $totalDocuments > 0;
+                            $initials = getApplicantInitials($app['applicant_name']);
+                            $statusClass = $app['status'] === STATUS_PENDING ? 'pending' : ($app['status'] === STATUS_APPROVED ? 'approved' : 'rejected');
+                            $coverPreview = htmlspecialchars(substr($app['cover_letter'], 0, 200));
+                            $coverTruncated = strlen($app['cover_letter']) > 200;
+                            $archiveRelative = !empty($app['archived_at']) ? formatRelativeArchiveTime($app['archived_at']) : '';
                             ?>
-                            <div class="application-item" data-app-id="<?= $app['id'] ?>" data-application-id="<?= $app['id'] ?>" data-status="<?= htmlspecialchars($app['status']) ?>">
-                                <div class="application-header">
-                                    <div class="application-meta">
-                                        <h4 class="application-name">
-                                            <?= htmlspecialchars($app['applicant_name']) ?>
-                                            <span class="archived-badge">ARCHIVED</span>
-                                        </h4>
-                                        <div class="application-tags">
-                                            <span class="application-tag">
-                                                <i class="fas fa-envelope"></i>
-                                                <?= htmlspecialchars($app['applicant_email']) ?>
+                            <article class="ats-applicant-card ats-archive-card application-item"
+                                data-app-id="<?= $app['id'] ?>"
+                                data-application-id="<?= $app['id'] ?>"
+                                data-status="<?= htmlspecialchars($app['status']) ?>">
+                                <div class="ats-archive-card__header">
+                                    <div class="ats-avatar" aria-hidden="true"><?= htmlspecialchars($initials) ?></div>
+                                    <div class="ats-archive-card__identity">
+                                        <h4 class="ats-applicant-card__name application-name"><?= htmlspecialchars($app['applicant_name']) ?></h4>
+                                        <p class="ats-archive-card__email">
+                                            <i class="fas fa-envelope" aria-hidden="true"></i>
+                                            <?= htmlspecialchars($app['applicant_email']) ?>
+                                        </p>
+                                        <p class="ats-applicant-card__position"><?= htmlspecialchars($app['position_title']) ?></p>
+                                        <div class="ats-archive-card__badges">
+                                            <span class="ats-badge ats-badge--<?= $statusClass ?>">
+                                                <i class="fas fa-circle" style="font-size:0.5rem" aria-hidden="true"></i>
+                                                <?= ucfirst($app['status']) ?>
                                             </span>
-                                            <span class="application-tag">
-                                                <i class="fas fa-briefcase"></i>
-                                                <?= htmlspecialchars($app['position_title']) ?>
+                                            <span class="ats-badge ats-badge--archived">
+                                                <i class="fas fa-archive" aria-hidden="true"></i> Archived
                                             </span>
-                                            <span class="application-tag">
-                                                <i class="fas fa-clock"></i>
-                                                <?= $app['total_experience_years'] ?>y exp
-                                            </span>
-                                            <span class="application-tag">
-                                                <i class="fas fa-calendar"></i>
-                                                Applied: <?= date('M j, Y', strtotime($app['applied_at'])) ?>
-                                            </span>
-                                            <?php if (!empty($app['archived_at'])): ?>
-                                            <span class="application-tag">
-                                                <i class="fas fa-archive"></i>
-                                                Archived: <?= date('M j, Y', strtotime($app['archived_at'])) ?>
-                                            </span>
+                                        </div>
+                                        <div class="ats-meta-chips" aria-label="Application metadata">
+                                            <span class="ats-meta-chip"><i class="fas fa-briefcase" aria-hidden="true"></i> <?= $app['total_experience_years'] ?> years</span>
+                                            <span class="ats-meta-chip"><i class="fas fa-paperclip" aria-hidden="true"></i> <?= $totalDocuments ?> Document<?= $totalDocuments === 1 ? '' : 's' ?></span>
+                                            <?php if ($archiveRelative): ?>
+                                            <span class="ats-meta-chip"><i class="fas fa-clock" aria-hidden="true"></i> Archived <?= htmlspecialchars($archiveRelative) ?></span>
                                             <?php endif; ?>
-                                            <span class="application-tag" style="color: <?= $hasDocuments ? 'var(--success-green)' : 'var(--danger-red)' ?>;">
-                                                <i class="fas fa-<?= $hasDocuments ? 'check-circle' : 'times-circle' ?>"></i>
-                                                <?= $totalDocuments ?> File<?= $totalDocuments === 1 ? '' : 's' ?>
-                                            </span>
                                         </div>
-                                        <div class="application-summary">
-                                            <?= htmlspecialchars(substr($app['cover_letter'], 0, 160)) ?><?= strlen($app['cover_letter']) > 160 ? '...' : '' ?>
-                                        </div>
-                                    </div>
-
-                                    <div style="flex: 0 0 auto; display: flex; align-items: center;">
-                                        <span class="badge badge-<?= $app['status'] === STATUS_PENDING ? 'warning' : ($app['status'] === STATUS_APPROVED ? 'success' : 'danger') ?>">
-                                            <?= ucfirst($app['status']) ?>
-                                        </span>
                                     </div>
                                 </div>
-                                <div class="quick-actions">
-                                    <button class="btn btn-sm btn-outline" type="button" onclick='viewCoverLetter(<?= json_encode($app) ?>)'>
-                                        <i class="fas fa-eye"></i> Cover Letter
-                                    </button>
-                                    <?php if (!empty($app['resume_file'])): ?>
-                                        <a href="view_resume.php?id=<?= $app['id'] ?>" target="_blank" class="btn btn-sm btn-outline" style="text-decoration: none;">
-                                            <i class="fas fa-file-pdf"></i> Primary Resume
-                                        </a>
+
+                                <div class="ats-date-timeline" aria-label="Application timeline">
+                                    <div class="ats-date-timeline__item">
+                                        <div class="ats-date-timeline__icon" aria-hidden="true"><i class="fas fa-paper-plane"></i></div>
+                                        <div>
+                                            <span class="ats-date-timeline__label">Applied</span>
+                                            <span class="ats-date-timeline__value"><?= date('M j', strtotime($app['applied_at'])) ?></span>
+                                        </div>
+                                    </div>
+                                    <?php if (!empty($app['archived_at'])): ?>
+                                    <div class="ats-date-timeline__item">
+                                        <div class="ats-date-timeline__icon" aria-hidden="true"><i class="fas fa-box-archive"></i></div>
+                                        <div>
+                                            <span class="ats-date-timeline__label">Archived</span>
+                                            <span class="ats-date-timeline__value"><?= date('M j', strtotime($app['archived_at'])) ?></span>
+                                        </div>
+                                    </div>
                                     <?php endif; ?>
-                                    <button 
-                                        class="btn btn-sm btn-outline" 
-                                        type="button" 
-                                        data-action="toggle-details" 
-                                        data-target="application-details-<?= $app['id'] ?>" 
-                                        aria-expanded="false"
-                                    >
-                                        <i class="fas fa-eye"></i> View Details
+                                    <div class="ats-date-timeline__item">
+                                        <div class="ats-date-timeline__icon" aria-hidden="true"><i class="fas fa-user-clock"></i></div>
+                                        <div>
+                                            <span class="ats-date-timeline__label">Experience</span>
+                                            <span class="ats-date-timeline__value"><?= $app['total_experience_years'] ?> years</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <?php if (!empty(trim($app['cover_letter']))): ?>
+                                <div class="ats-cover-preview">
+                                    <div class="ats-cover-preview__label"><i class="fas fa-file-lines" aria-hidden="true"></i> Quick Overview</div>
+                                    <p class="ats-cover-preview__text application-summary"><?= $coverPreview ?><?= $coverTruncated ? '…' : '' ?></p>
+                                    <?php if ($coverTruncated): ?>
+                                    <div class="ats-cover-preview__fade" aria-hidden="true"></div>
+                                    <button type="button" class="ats-cover-preview__read-more" onclick='viewCoverLetter(<?= json_encode($app) ?>)' aria-label="Read full cover letter for <?= htmlspecialchars($app['applicant_name']) ?>">
+                                        Read More <i class="fas fa-arrow-right" aria-hidden="true"></i>
                                     </button>
-                                    <a href="mailto:<?= htmlspecialchars($app['applicant_email']) ?>" class="btn btn-sm btn-outline" style="text-decoration: none;">
-                                        <i class="fas fa-comments"></i> Email Applicant
-                                    </a>
+                                    <?php endif; ?>
+                                </div>
+                                <?php endif; ?>
+
+                                <div class="ats-doc-chips<?= $hasDocuments ? '' : ' ats-doc-chips--empty' ?>" aria-label="Documents">
+                                    <span class="ats-doc-chips__label"><i class="fas fa-folder-open" aria-hidden="true"></i> Documents</span>
+                                    <?php if ($hasDocuments): ?>
+                                        <?php foreach ($documentEntries as $entry):
+                                            $extension = $entry['extension'] ?? '';
+                                            $extensionLabel = $extension ? strtoupper($extension) : 'FILE';
+                                            $chipIcon = $documentExtensionIcons[$extension] ?? ($documentTypeIcons[$entry['type']] ?? 'fa-file');
+                                        ?>
+                                        <span class="ats-doc-chip">
+                                            <i class="fas <?= $chipIcon ?> ats-doc-chip__icon" aria-hidden="true"></i>
+                                            <span><?= htmlspecialchars($entry['label']) ?></span>
+                                            <span class="ats-doc-chip__type"><?= htmlspecialchars($extensionLabel) ?></span>
+                                            <span class="ats-doc-chip__actions">
+                                                <a href="<?= htmlspecialchars($entry['view_url']) ?>" target="_blank" rel="noopener" aria-label="View <?= htmlspecialchars($entry['label']) ?>">
+                                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                                </a>
+                                                <a href="<?= htmlspecialchars($entry['download_url']) ?>" download="<?= htmlspecialchars($entry['filename']) ?>" aria-label="Download <?= htmlspecialchars($entry['label']) ?>">
+                                                    <i class="fas fa-download" aria-hidden="true"></i>
+                                                </a>
+                                            </span>
+                                        </span>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <span class="ats-doc-chip">No documents uploaded</span>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="ats-archive-card__footer">
+                                    <div class="ats-archive-card__quick-actions quick-actions">
+                                        <button type="button" class="ats-accordion-toggle"
+                                            data-action="toggle-details"
+                                            data-target="application-details-<?= $app['id'] ?>"
+                                            aria-expanded="false"
+                                            aria-controls="application-details-<?= $app['id'] ?>">
+                                            <span>View Details</span>
+                                            <i class="fas fa-chevron-down ats-accordion-chevron" aria-hidden="true"></i>
+                                        </button>
+                                        <button type="button" class="ats-icon-btn" data-tooltip="Cover Letter"
+                                            onclick='viewCoverLetter(<?= json_encode($app) ?>)'
+                                            aria-label="View cover letter">
+                                            <i class="fas fa-eye" aria-hidden="true"></i>
+                                        </button>
+                                        <a href="mailto:<?= htmlspecialchars($app['applicant_email']) ?>" class="ats-icon-btn" data-tooltip="Email"
+                                            aria-label="Email applicant">
+                                            <i class="fas fa-envelope" aria-hidden="true"></i>
+                                        </a>
+                                    </div>
                                     <form method="POST" action="application_history.php" id="restore-form-<?= $app['id'] ?>" style="display: none;">
                                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                                         <?php FormTokenManager::renderFormTokenInput('restore_application_' . (int) $app['id']); ?>
                                         <input type="hidden" name="application_id" value="<?= $app['id'] ?>">
                                         <input type="hidden" name="restore_application" value="1">
                                     </form>
-                                    <button 
-                                        type="button" 
-                                        class="btn btn-sm btn-primary"
-                                        onclick="showRestoreConfirmation(<?= $app['id'] ?>, '<?= htmlspecialchars(addslashes($app['applicant_name'])) ?>', '<?= htmlspecialchars(addslashes($app['position_title'])) ?>')"
-                                    >
-                                        <i class="fas fa-undo"></i> Restore
+                                    <button type="button" class="ats-btn-restore"
+                                        id="restore-btn-<?= $app['id'] ?>"
+                                        onclick="showRestoreConfirmation(<?= $app['id'] ?>, '<?= htmlspecialchars(addslashes($app['applicant_name'])) ?>', '<?= htmlspecialchars(addslashes($app['position_title'])) ?>', '<?= htmlspecialchars(addslashes($initials)) ?>')"
+                                        aria-label="Restore application for <?= htmlspecialchars($app['applicant_name']) ?>">
+                                        <i class="fas fa-undo" aria-hidden="true"></i>
+                                        <span class="ats-btn-restore__label">Restore Application</span>
                                     </button>
                                 </div>
 
-                                <div 
-                                    id="application-details-<?= $app['id'] ?>" 
-                                    class="application-details-panel" 
-                                    style="display: none; margin-top: 16px;"
-                                >
-                                    <div class="documents-section <?= $hasDocuments ? '' : 'empty' ?>">
-                                        <div class="documents-header">
-                                            <div class="documents-title">
-                                                <i class="fas fa-paperclip"></i>
-                                                Applicant Files
-                                            </div>
-                                            <span class="documents-count">
-                                                <?= $hasDocuments ? ($totalDocuments === 1 ? '1 file' : $totalDocuments . ' files') : 'No files uploaded' ?>
-                                            </span>
+                                <div id="application-details-<?= $app['id'] ?>"
+                                    class="ats-details-panel application-details-panel"
+                                    role="region"
+                                    aria-label="Application details"
+                                    hidden>
+                                    <div class="ats-doc-manager">
+                                        <div class="ats-doc-manager__toolbar">
+                                            <strong><i class="fas fa-paperclip" aria-hidden="true"></i> All Documents (<?= $totalDocuments ?>)</strong>
                                         </div>
                                         <?php if ($hasDocuments): ?>
-                                            <div class="document-list">
-                                                <?php foreach ($documentEntries as $entry): 
-                                                    $extension = $entry['extension'] ?? '';
-                                                    $extensionLabel = $extension ? strtoupper($extension) : '';
-                                                    $icon = $documentExtensionIcons[$extension] ?? ($documentTypeIcons[$entry['type']] ?? 'fa-file');
-                                                    $sizeLabel = $entry['size'] ?? null;
-                                                ?>
-                                                <div class="document-item">
-                                                    <div class="document-meta">
-                                                        <i class="fas <?= $icon ?>"></i>
-                                                        <div>
-                                                            <div class="document-name">
-                                                                <?= htmlspecialchars($entry['label']) ?>
-                                                                <?php if ($extensionLabel): ?>
-                                                                    <span class="document-ext">(.<?= htmlspecialchars($extensionLabel) ?>)</span>
-                                                                <?php endif; ?>
-                                                            </div>
-                                                            <div class="document-extra">
-                                                                <?= htmlspecialchars($entry['filename']) ?>
-                                                                <?php if ($sizeLabel): ?>
-                                                                    &bull; <?= htmlspecialchars($sizeLabel) ?>
-                                                                <?php endif; ?>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="document-actions">
-                                                        <a href="<?= htmlspecialchars($entry['view_url']) ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline">
-                                                            <i class="fas fa-eye"></i> View
-                                                        </a>
-                                                        <a href="<?= htmlspecialchars($entry['download_url']) ?>" class="btn btn-sm btn-primary" download="<?= htmlspecialchars($entry['filename']) ?>">
-                                                            <i class="fas fa-download"></i> Download
-                                                        </a>
-                                                    </div>
+                                        <div class="ats-doc-grid">
+                                            <?php foreach ($documentEntries as $entry):
+                                                $extension = $entry['extension'] ?? '';
+                                                $icon = $documentExtensionIcons[$extension] ?? ($documentTypeIcons[$entry['type']] ?? 'fa-file');
+                                            ?>
+                                            <div class="ats-doc-item">
+                                                <div class="ats-doc-item__icon"><i class="fas <?= $icon ?>" aria-hidden="true"></i></div>
+                                                <div class="ats-doc-item__name"><?= htmlspecialchars($entry['label']) ?></div>
+                                                <div class="ats-doc-item__meta">
+                                                    <?= htmlspecialchars($entry['filename']) ?>
+                                                    <?php if (!empty($entry['size'])): ?>
+                                                        · <?= htmlspecialchars($entry['size']) ?>
+                                                    <?php endif; ?>
                                                 </div>
-                                                <?php endforeach; ?>
+                                                <div class="ats-doc-item__actions">
+                                                    <a href="<?= htmlspecialchars($entry['view_url']) ?>" target="_blank" rel="noopener" class="ats-btn ats-btn-sm ats-btn-outline" aria-label="View"><i class="fas fa-eye"></i></a>
+                                                    <a href="<?= htmlspecialchars($entry['download_url']) ?>" class="ats-btn ats-btn-sm ats-btn-primary" download="<?= htmlspecialchars($entry['filename']) ?>" aria-label="Download"><i class="fas fa-download"></i></a>
+                                                </div>
                                             </div>
+                                            <?php endforeach; ?>
+                                        </div>
                                         <?php else: ?>
-                                            <p class="documents-empty-message">
-                                                Applicant did not upload any supporting files.
-                                            </p>
+                                        <p style="color:var(--text-secondary);font-size:0.875rem;margin:0">Applicant did not upload any supporting files.</p>
                                         <?php endif; ?>
                                     </div>
-
-                                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px;">
-                                        <button 
-                                            type="button" 
-                                            class="btn btn-sm btn-outline" 
-                                            data-action="close-details" 
-                                            data-target="application-details-<?= $app['id'] ?>"
-                                        >
+                                    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+                                        <button type="button" class="ats-btn ats-btn-sm ats-btn-outline"
+                                            data-action="close-details"
+                                            data-target="application-details-<?= $app['id'] ?>">
                                             Close
                                         </button>
                                     </div>
                                 </div>
-                            </div>
+                            </article>
                         <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-                
-                <!-- Pagination -->
+                    </div>
+                <?php endif; ?>
+
                 <?php if ($totalPages > 1): ?>
-                <div class="card-footer" style="display: flex; justify-content: center; align-items: center; padding: 16px; border-top: 1px solid var(--gray-200);">
-                    <div class="pagination">
+                <nav class="ats-pagination" aria-label="Pagination">
+                    <div class="ats-pagination-pills">
                         <?php if ($page > 1): ?>
-                            <a href="?page=<?= $page - 1 ?>&status=<?= urlencode($filterStatus) ?>&position=<?= urlencode($filterPosition) ?>&q=<?= urlencode($searchQuery) ?>" class="pagination-btn">
-                                <i class="fas fa-chevron-left"></i> Previous
+                            <a href="?page=<?= $page - 1 ?>&status=<?= urlencode($filterStatus) ?>&position=<?= urlencode($filterPosition) ?>&q=<?= urlencode($searchQuery) ?>" class="ats-pagination-pill" aria-label="Previous page">
+                                <i class="fas fa-chevron-left" aria-hidden="true"></i> Previous
                             </a>
+                        <?php else: ?>
+                            <span class="ats-pagination-pill is-disabled" aria-hidden="true"><i class="fas fa-chevron-left"></i> Previous</span>
                         <?php endif; ?>
-                        
-                        <div class="pagination-info">
-                            Page <?= $page ?> of <?= $totalPages ?> (<?= $totalApplications_filtered ?> total)
-                        </div>
-                        
+
+                        <span class="ats-pagination-pill is-active" aria-current="page"><?= $page ?></span>
+
+                        <span class="ats-pagination__info">of <?= $totalPages ?> (<?= $totalApplications_filtered ?> total)</span>
+
                         <?php if ($page < $totalPages): ?>
-                            <a href="?page=<?= $page + 1 ?>&status=<?= urlencode($filterStatus) ?>&position=<?= urlencode($filterPosition) ?>&q=<?= urlencode($searchQuery) ?>" class="pagination-btn">
-                                Next <i class="fas fa-chevron-right"></i>
+                            <a href="?page=<?= $page + 1 ?>&status=<?= urlencode($filterStatus) ?>&position=<?= urlencode($filterPosition) ?>&q=<?= urlencode($searchQuery) ?>" class="ats-pagination-pill" aria-label="Next page">
+                                Next <i class="fas fa-chevron-right" aria-hidden="true"></i>
                             </a>
+                        <?php else: ?>
+                            <span class="ats-pagination-pill is-disabled" aria-hidden="true">Next <i class="fas fa-chevron-right"></i></span>
                         <?php endif; ?>
                     </div>
-                </div>
+                </nav>
                 <?php endif; ?>
-            </div>
+            </section>
         </div>
     </div>
 
-    <!-- Mobile Bottom Navigation -->
-    <nav class="mobile-nav">
+    <nav class="mobile-nav" aria-label="Mobile navigation">
         <div class="mobile-nav-grid">
             <a href="dashboard.php" class="mobile-nav-item">
                 <i class="fas fa-th-large"></i>
@@ -1013,74 +660,73 @@ $documentExtensionIcons = [
     </nav>
 
     <!-- Cover Letter Modal -->
-    <div class="modal" id="coverLetterModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="coverLetterTitle">Cover Letter</h3>
-                <button class="close" onclick="closeCoverLetterModal()">&times;</button>
+    <div class="ats-modal" id="coverLetterModal" role="dialog" aria-modal="true" aria-labelledby="coverLetterTitle">
+        <div class="ats-modal__content ats-modal__content--lg">
+            <div class="ats-modal__header">
+                <h3 class="ats-modal__title" id="coverLetterTitle">Cover Letter</h3>
+                <button type="button" class="ats-modal__close" onclick="closeCoverLetterModal()" aria-label="Close cover letter">&times;</button>
             </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Applicant</label>
-                    <p style="font-weight: 600; color: var(--gray-800);" id="coverLetterApplicant"></p>
+            <div class="ats-modal__body">
+                <div style="margin-bottom:16px">
+                    <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-secondary);margin-bottom:4px">Applicant</div>
+                    <p style="font-weight:700;font-size:1.05rem;margin:0;color:var(--text-primary)" id="coverLetterApplicant"></p>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Position</label>
-                    <p style="font-weight: 600; color: var(--gray-800);" id="coverLetterPosition"></p>
+                <div style="margin-bottom:20px">
+                    <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-secondary);margin-bottom:4px">Position</div>
+                    <p style="font-weight:600;margin:0;color:var(--primary)" id="coverLetterPosition"></p>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Cover Letter</label>
-                    <div style="padding: 16px; background: var(--gray-50); border-radius: 6px; line-height: 1.6;" id="coverLetterText"></div>
-                </div>
+                <div id="coverLetterText" class="ats-cover-letter-body" role="document"></div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeCoverLetterModal()">Close</button>
+            <div class="ats-modal__footer ats-modal__footer--sticky">
+                <button type="button" class="ats-btn ats-btn-outline" onclick="copyCoverLetter()" aria-label="Copy cover letter">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+                <button type="button" class="ats-btn ats-btn-outline" onclick="printCoverLetter()" aria-label="Print cover letter">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button type="button" class="ats-btn ats-btn-primary" onclick="closeCoverLetterModal()">Close</button>
             </div>
         </div>
     </div>
 
     <!-- Restore Confirmation Modal -->
-    <div class="modal" id="restoreConfirmModal">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header" style="border-bottom: 2px solid var(--primary-blue); background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.05) 100%);">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--primary-blue); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.5rem;">
+    <div class="ats-modal" id="restoreConfirmModal" role="dialog" aria-modal="true" aria-labelledby="restoreModalTitle">
+        <div class="ats-modal__content">
+            <div class="ats-modal__header" style="border-bottom:2px solid var(--primary);background:linear-gradient(135deg,rgba(0,86,210,0.1),rgba(0,86,210,0.04))">
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div class="ats-status-modal-icon" style="background:var(--primary)" aria-hidden="true">
                         <i class="fas fa-undo"></i>
                     </div>
-                    <h3 class="modal-title" style="margin: 0; color: var(--gray-800);">Confirm Restore</h3>
+                    <h3 class="ats-modal__title" id="restoreModalTitle">Restore Application</h3>
                 </div>
-                <button class="close" onclick="closeRestoreConfirmModal()">&times;</button>
+                <button type="button" class="ats-modal__close" onclick="closeRestoreConfirmModal()" aria-label="Close restore confirmation">&times;</button>
             </div>
-            <div class="modal-body" style="padding: 24px;">
-                <div style="margin-bottom: 20px;">
-                    <p style="font-size: 1rem; color: var(--gray-700); margin: 0 0 16px 0; line-height: 1.6;">
-                        Are you sure you want to restore this application? It will be moved back to <strong>Active Applications</strong>.
-                    </p>
-                </div>
-                <div style="background: var(--gray-50); border-left: 4px solid var(--primary-blue); padding: 16px; border-radius: 6px; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                        <i class="fas fa-user" style="color: var(--gray-600);"></i>
-                        <strong style="color: var(--gray-800);">Applicant:</strong>
-                        <span style="color: var(--gray-700);" id="restoreConfirmApplicant"></span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <i class="fas fa-briefcase" style="color: var(--gray-600);"></i>
-                        <strong style="color: var(--gray-800);">Position:</strong>
-                        <span style="color: var(--gray-700);" id="restoreConfirmPosition"></span>
+            <div class="ats-modal__body">
+                <p style="font-size:1rem;color:var(--text-primary);margin:0 0 20px;line-height:1.65">
+                    Are you sure you want to restore this application? It will be moved back to <strong>Active Applications</strong>.
+                </p>
+                <div class="ats-restore-preview">
+                    <div class="ats-restore-preview__avatar" id="restoreConfirmAvatar" aria-hidden="true"></div>
+                    <div>
+                        <p class="ats-restore-preview__name" id="restoreConfirmApplicant"></p>
+                        <p class="ats-restore-preview__position">
+                            <i class="fas fa-briefcase" aria-hidden="true"></i>
+                            <span id="restoreConfirmPosition"></span>
+                        </p>
                     </div>
                 </div>
-                <div style="background: #d1ecf1; border: 1px solid #0dcaf0; border-radius: 6px; padding: 12px; display: flex; align-items: start; gap: 10px;">
-                    <i class="fas fa-info-circle" style="color: #0c5460; margin-top: 2px;"></i>
-                    <p style="margin: 0; font-size: 0.875rem; color: #0c5460; line-height: 1.5;">
+                <div class="ats-info-box ats-info-box--info" style="display:flex;align-items:flex-start;gap:10px">
+                    <i class="fas fa-info-circle" style="color:var(--primary);margin-top:2px" aria-hidden="true"></i>
+                    <p style="margin:0;font-size:0.875rem;line-height:1.55;color:var(--text-secondary)">
                         Once restored, this application will appear in the <strong>Applications</strong> page and can be managed normally.
                     </p>
                 </div>
             </div>
-            <div class="modal-footer" style="border-top: 1px solid var(--gray-200); padding: 16px 24px; display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" class="btn btn-outline" onclick="closeRestoreConfirmModal()" style="min-width: 100px;">
+            <div class="ats-modal__footer">
+                <button type="button" class="ats-btn ats-btn-outline" onclick="closeRestoreConfirmModal()">
                     <i class="fas fa-times"></i> Cancel
                 </button>
-                <button type="button" class="btn btn-primary" onclick="confirmRestore()" style="min-width: 100px;">
+                <button type="button" class="ats-btn ats-btn-primary" id="restoreConfirmBtn" onclick="confirmRestore()">
                     <i class="fas fa-undo"></i> Restore Application
                 </button>
             </div>
@@ -1091,59 +737,118 @@ $documentExtensionIcons = [
     <script src="../../assets/js/office-theme.js"></script>
     <script src="../../assets/js/admin-dashboard.js"></script>
     <script>
-        function viewCoverLetter(app) {
-            document.getElementById('coverLetterApplicant').textContent = app.applicant_name;
-            document.getElementById('coverLetterPosition').textContent = app.position_title;
-            document.getElementById('coverLetterText').innerHTML = app.cover_letter.replace(/\n/g, '<br>');
-            document.getElementById('coverLetterModal').style.display = 'block';
+        let coverLetterPlainText = '';
+
+        function openModal(modal) {
+            if (!modal) return;
+            modal.classList.add('open');
             document.body.classList.add('modal-open');
         }
 
+        function closeModal(modal) {
+            if (!modal) return;
+            modal.classList.remove('open');
+            if (!document.querySelector('.ats-modal.open')) {
+                document.body.classList.remove('modal-open');
+            }
+        }
+
+        function viewCoverLetter(app) {
+            document.getElementById('coverLetterApplicant').textContent = app.applicant_name;
+            document.getElementById('coverLetterPosition').textContent = app.position_title;
+            coverLetterPlainText = app.cover_letter || '';
+            document.getElementById('coverLetterText').innerHTML = coverLetterPlainText.replace(/\n/g, '<br>');
+            openModal(document.getElementById('coverLetterModal'));
+        }
+
         function closeCoverLetterModal() {
-            document.getElementById('coverLetterModal').style.display = 'none';
-            document.body.classList.remove('modal-open');
+            closeModal(document.getElementById('coverLetterModal'));
+        }
+
+        function copyCoverLetter() {
+            if (!coverLetterPlainText) return;
+            navigator.clipboard.writeText(coverLetterPlainText).then(function() {
+                if (typeof showSuccess === 'function') {
+                    showSuccess('Cover letter copied to clipboard.', 3000, 'Copied');
+                }
+            }).catch(function() {
+                if (typeof showError === 'function') {
+                    showError('Unable to copy cover letter.', 3000, 'Error');
+                }
+            });
+        }
+
+        function printCoverLetter() {
+            const applicant = document.getElementById('coverLetterApplicant').textContent;
+            const position = document.getElementById('coverLetterPosition').textContent;
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) return;
+            printWindow.document.write('<html><head><title>Cover Letter - ' + applicant + '</title></head><body>');
+            printWindow.document.write('<h1>' + applicant + '</h1>');
+            printWindow.document.write('<h2>' + position + '</h2>');
+            printWindow.document.write('<div style="line-height:1.75;font-size:14px">' + document.getElementById('coverLetterText').innerHTML + '</div>');
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
         }
 
         let pendingRestoreFormId = null;
 
-        function showRestoreConfirmation(applicationId, applicantName, positionTitle) {
+        function showRestoreConfirmation(applicationId, applicantName, positionTitle, initials) {
             pendingRestoreFormId = applicationId;
             document.getElementById('restoreConfirmApplicant').textContent = applicantName;
             document.getElementById('restoreConfirmPosition').textContent = positionTitle;
-            document.getElementById('restoreConfirmModal').style.display = 'block';
-            document.body.classList.add('modal-open');
+            document.getElementById('restoreConfirmAvatar').textContent = initials || applicantName.substring(0, 2).toUpperCase();
+            openModal(document.getElementById('restoreConfirmModal'));
         }
 
         function closeRestoreConfirmModal() {
-            document.getElementById('restoreConfirmModal').style.display = 'none';
-            document.body.classList.remove('modal-open');
+            closeModal(document.getElementById('restoreConfirmModal'));
             pendingRestoreFormId = null;
+            const confirmBtn = document.getElementById('restoreConfirmBtn');
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.classList.remove('is-loading');
+            }
         }
 
         function confirmRestore() {
-            if (pendingRestoreFormId) {
-                const form = document.getElementById('restore-form-' + pendingRestoreFormId);
-                if (form) {
-                    form.submit();
-                }
+            if (!pendingRestoreFormId) return;
+
+            const form = document.getElementById('restore-form-' + pendingRestoreFormId);
+            const cardBtn = document.getElementById('restore-btn-' + pendingRestoreFormId);
+            const confirmBtn = document.getElementById('restoreConfirmBtn');
+
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.classList.add('is-loading');
+            }
+            if (cardBtn) {
+                cardBtn.disabled = true;
+                cardBtn.classList.add('is-loading');
+            }
+
+            if (form) {
+                form.submit();
             }
         }
 
         function toggleDetails(button, panel, show) {
-            panel.style.display = show ? 'block' : 'none';
+            panel.hidden = !show;
+            panel.classList.toggle('open', show);
             button.setAttribute('aria-expanded', show ? 'true' : 'false');
-            button.innerHTML = show
-                ? '<i class="fas fa-eye-slash"></i> Hide Details'
-                : '<i class="fas fa-eye"></i> View Details';
+            const label = button.querySelector('span');
+            if (label) {
+                label.textContent = show ? 'Hide Details' : 'View Details';
+            }
         }
 
         function initializeApplicationDetails() {
             document.querySelectorAll('[data-action="toggle-details"]').forEach(function(button) {
                 const targetId = button.getAttribute('data-target');
                 const panel = document.getElementById(targetId);
-                if (!panel) {
-                    return;
-                }
+                if (!panel) return;
 
                 panel.querySelectorAll('[data-action="close-details"]').forEach(function(closeButton) {
                     closeButton.addEventListener('click', function() {
@@ -1152,7 +857,7 @@ $documentExtensionIcons = [
                 });
 
                 button.addEventListener('click', function() {
-                    const isOpen = panel.style.display === 'block';
+                    const isOpen = panel.classList.contains('open');
                     toggleDetails(button, panel, !isOpen);
                 });
 

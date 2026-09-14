@@ -16,9 +16,10 @@ $config = [
     'basePath' => $basePath,
     'baseUrl' => BASE_URL,
     'offlineUrl' => $basePath . 'offline.html',
-    'cacheName' => 'wpu-jobs-v1',
+    'cacheName' => 'wpu-jobs-v2',
     'precacheAssets' => [
         $basePath . 'assets/css/office-theme.css',
+        $basePath . 'assets/css/toast.css',
         $basePath . 'assets/js/office-theme.js',
         $basePath . 'assets/js/toast.js',
         $basePath . 'assets/js/notifications.js',

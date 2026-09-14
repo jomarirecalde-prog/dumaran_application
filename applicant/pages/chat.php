@@ -46,7 +46,7 @@ $canChat = !empty($applications);
             border: 1px solid var(--gray-200);
             border-radius: 8px;
             overflow: hidden;
-            background: white;
+            background: var(--white);
         }
 
         .chat-sidebar {
@@ -60,7 +60,7 @@ $canChat = !empty($applications);
         .chat-sidebar-header {
             padding: 16px;
             border-bottom: 1px solid var(--gray-200);
-            background: white;
+            background: var(--white);
         }
 
         .chat-sidebar-header h3 {
@@ -99,7 +99,7 @@ $canChat = !empty($applications);
         .conversation-item {
             padding: 12px;
             margin-bottom: 8px;
-            background: white;
+            background: var(--white);
             border-radius: 8px;
             cursor: pointer;
             transition: background 0.2s;
@@ -165,7 +165,7 @@ $canChat = !empty($applications);
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: white;
+            background: var(--white);
         }
 
         .chat-header {
@@ -341,7 +341,8 @@ $canChat = !empty($applications);
         }
     </style>
 </head>
-<body>
+<body data-theme="system">
+<?php include '../../includes/applicant-theme-init.php'; ?>
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="sidebar-header">
@@ -396,6 +397,7 @@ $canChat = !empty($applications);
             </button>
             <h1 class="topbar-title">Chat</h1>
             <div class="topbar-actions">
+                <?php include '../../includes/applicant-theme-toggle.php'; ?>
                 <a href="../../auth/logout.php" class="topbar-btn confirm-logout" title="Logout">
                     <i class="fas fa-sign-out-alt"></i>
                 </a>
@@ -462,6 +464,8 @@ $canChat = !empty($applications);
         </div>
     </div>
 
+    <script src="../../assets/js/office-theme.js"></script>
+    <script src="../../assets/js/applicant-theme.js"></script>
     <script src="../../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script>
         <?php if ($canChat): ?>

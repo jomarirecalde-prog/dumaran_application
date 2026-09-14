@@ -4,13 +4,14 @@
  */
 
 // Default configuration - will be updated when config is fetched
-let CACHE_NAME = 'wpu-jobs-v1';
+let CACHE_NAME = 'wpu-jobs-v2';
 let OFFLINE_URL = '/Applicant_WPU/offline.html';
 let BASE_PATH = '/Applicant_WPU/';
 
 // Assets to cache on install (default paths)
 let PRECACHE_ASSETS = [
   '/Applicant_WPU/assets/css/office-theme.css',
+  '/Applicant_WPU/assets/css/toast.css',
   '/Applicant_WPU/assets/js/office-theme.js',
   '/Applicant_WPU/assets/js/toast.js',
   '/Applicant_WPU/assets/js/notifications.js',
@@ -30,6 +31,7 @@ if (swPathMatch) {
   OFFLINE_URL = BASE_PATH + 'offline.html';
   PRECACHE_ASSETS = [
     BASE_PATH + 'assets/css/office-theme.css',
+    BASE_PATH + 'assets/css/toast.css',
     BASE_PATH + 'assets/js/office-theme.js',
     BASE_PATH + 'assets/js/toast.js',
     BASE_PATH + 'assets/js/notifications.js',

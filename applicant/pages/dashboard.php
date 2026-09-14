@@ -56,6 +56,182 @@ try {
 // Count applications by status
 $pendingCount = count(array_filter($userApplications, fn($app) => $app['status'] === STATUS_PENDING));
 $approvedCount = count(array_filter($userApplications, fn($app) => $app['status'] === STATUS_APPROVED));
+
+// ── View-layer metrics (derived from existing data, no additional queries) ──
+$rejectedCount = count(array_filter($userApplications, fn($app) => $app['status'] === STATUS_REJECTED));
+$totalApplications = count($userApplications);
+$hour = (int) date('H');
+$greeting = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Evening');
+
+$nameParts = preg_split('/\s+/', trim($user['full_name'] ?? 'User'));
+$profileInitials = strtoupper(substr($nameParts[0] ?? 'U', 0, 1) . substr($nameParts[count($nameParts) - 1] ?? '', 0, 1));
+$hasProfilePhoto = !empty($user['profile_picture']) && file_exists(__DIR__ . '/uploads/' . $user['profile_picture']);
+
+$profileSections = [
+    'personal'    => ['label' => 'Personal Info', 'url' => 'profile.php', 'step' => 0, 'complete' => !empty($user['full_name']) && !empty($user['email']) && !empty($user['address']) && !empty($user['age']) && !empty($user['sex']) && !empty($user['civil_status'])],
+    'education'   => ['label' => 'Education', 'url' => 'profile.php', 'step' => 1, 'complete' => !empty($user['highest_educational_attainment'])],
+    'experience'  => ['label' => 'Experience', 'url' => 'profile.php', 'step' => 2, 'complete' => count($userExperiences) > 0],
+    'eligibility' => ['label' => 'Eligibility', 'url' => 'profile.php', 'step' => 3, 'complete' => !empty($user['career_service_eligibilities'])],
+    'documents'   => ['label' => 'Documents', 'url' => 'profile.php', 'step' => 4, 'complete' => !empty($user['ipcr_file_path']) || !empty($user['pe_file_path'])],
+];
+$profileCompletedCount = count(array_filter($profileSections, fn($s) => $s['complete']));
+$profileCompletionPct = (int) round(($profileCompletedCount / count($profileSections)) * 100);
+$profileMissing = array_filter($profileSections, fn($s) => !$s['complete']);
+
+$appliedPositionIds = [];
+foreach ($userApplications as $app) {
+    $appliedPositionIds[$app['position_id']] = $app['status'];
+}
+
+$calcJobMatch = function ($position) use ($totalExperience) {
+    $minExp = (float) ($position['min_experience_years'] ?? 0);
+    if ($minExp <= 0) {
+        return 92;
+    }
+    $ratio = min(1.2, $totalExperience / max(0.1, $minExp));
+    return (int) min(100, max(45, round($ratio * 85 + 10)));
+};
+
+$scoredPositions = [];
+foreach ($activePositions as $pos) {
+    $pos['_match'] = $calcJobMatch($pos);
+    $pos['_applied'] = isset($appliedPositionIds[$pos['id']]);
+    $scoredPositions[] = $pos;
+}
+usort($scoredPositions, fn($a, $b) => $b['_match'] <=> $a['_match']);
+$recommendedJobs = array_slice(array_filter($scoredPositions, fn($p) => !$p['_applied']), 0, 3);
+$recentJobOpenings = array_slice($activePositions, 0, 4);
+
+$interviewCount = count(array_filter($userApplications, fn($app) => !empty($app['interview_date'])));
+$decidedCount = $approvedCount + $rejectedCount;
+$successRate = $decidedCount > 0 ? (int) round(($approvedCount / $decidedCount) * 100) : 0;
+
+$responseDays = [];
+foreach ($userApplications as $app) {
+    if (in_array($app['status'], [STATUS_APPROVED, STATUS_REJECTED], true) && !empty($app['reviewed_at'])) {
+        $responseDays[] = max(1, (int) round((strtotime($app['reviewed_at']) - strtotime($app['applied_at'])) / 86400));
+    }
+}
+$avgResponseDays = count($responseDays) > 0 ? (int) round(array_sum($responseDays) / count($responseDays)) : null;
+
+$getTrackerSteps = function ($app) {
+    if ($app['status'] === STATUS_APPROVED) {
+        return [
+            ['label' => 'Applied', 'state' => 'done'],
+            ['label' => 'HR Review', 'state' => 'done'],
+            ['label' => 'Interview', 'state' => 'done'],
+            ['label' => 'Decision', 'state' => 'done'],
+        ];
+    }
+    if ($app['status'] === STATUS_REJECTED) {
+        return [
+            ['label' => 'Applied', 'state' => 'done'],
+            ['label' => 'HR Review', 'state' => 'done'],
+            ['label' => 'Interview', 'state' => 'waiting'],
+            ['label' => 'Decision', 'state' => 'active'],
+        ];
+    }
+    return [
+        ['label' => 'Applied', 'state' => 'done'],
+        ['label' => 'HR Review', 'state' => 'active'],
+        ['label' => 'Interview', 'state' => 'waiting'],
+        ['label' => 'Decision', 'state' => 'waiting'],
+    ];
+};
+
+$notifications = [];
+foreach (array_slice($userApplications, 0, 5) as $app) {
+    if ($app['status'] === STATUS_APPROVED) {
+        $notifications[] = [
+            'type' => 'success',
+            'icon' => 'fa-check-circle',
+            'title' => 'Application Reviewed',
+            'text' => 'Your application for ' . $app['position_title'] . ' was approved.',
+            'time' => $app['reviewed_at'] ?? $app['applied_at'],
+            'unread' => false,
+        ];
+    } elseif ($app['status'] === STATUS_REJECTED) {
+        $notifications[] = [
+            'type' => 'warning',
+            'icon' => 'fa-times-circle',
+            'title' => 'Application Update',
+            'text' => 'Update on your application for ' . $app['position_title'] . '.',
+            'time' => $app['reviewed_at'] ?? $app['applied_at'],
+            'unread' => false,
+        ];
+    } elseif (!empty($app['interview_date'])) {
+        $notifications[] = [
+            'type' => 'info',
+            'icon' => 'fa-calendar-check',
+            'title' => 'Interview Scheduled',
+            'text' => 'Interview for ' . $app['position_title'] . '.',
+            'time' => $app['interview_date'],
+            'unread' => true,
+        ];
+    } else {
+        $notifications[] = [
+            'type' => 'info',
+            'icon' => 'fa-file-alt',
+            'title' => 'Application Received',
+            'text' => 'Your application for ' . $app['position_title'] . ' is under review.',
+            'time' => $app['applied_at'],
+            'unread' => $app['status'] === STATUS_PENDING,
+        ];
+    }
+}
+if (!empty($activePositions)) {
+    $notifications[] = [
+        'type' => 'info',
+        'icon' => 'fa-briefcase',
+        'title' => 'New Positions Posted',
+        'text' => count($activePositions) . ' job opening(s) currently available.',
+        'time' => date('Y-m-d H:i:s'),
+        'unread' => true,
+    ];
+}
+usort($notifications, fn($a, $b) => strtotime($b['time']) - strtotime($a['time']));
+$notifications = array_slice($notifications, 0, 6);
+$unreadNotifCount = count(array_filter($notifications, fn($n) => $n['unread']));
+
+$activityFeed = [];
+foreach ($userApplications as $app) {
+    $activityFeed[] = [
+        'icon' => 'fa-paper-plane',
+        'text' => 'Applied for <strong>' . htmlspecialchars($app['position_title']) . '</strong>',
+        'time' => $app['applied_at'],
+    ];
+}
+if (!empty($user['updated_at'])) {
+    $activityFeed[] = [
+        'icon' => 'fa-user-edit',
+        'text' => 'Profile updated',
+        'time' => $user['updated_at'],
+    ];
+}
+usort($activityFeed, fn($a, $b) => strtotime($b['time']) - strtotime($a['time']));
+$activityFeed = array_slice($activityFeed, 0, 8);
+
+$calendarEvents = [];
+foreach ($userApplications as $app) {
+    if (!empty($app['interview_date'])) {
+        $calendarEvents[] = ['date' => $app['interview_date'], 'title' => 'Interview: ' . $app['position_title']];
+    }
+}
+foreach ($activePositions as $pos) {
+    if (!empty($pos['deadline'])) {
+        $calendarEvents[] = ['date' => $pos['deadline'], 'title' => 'Deadline: ' . $pos['title']];
+    }
+}
+
+$achievements = [
+    ['label' => 'Profile 100% Complete', 'icon' => 'fa-star', 'earned' => $profileCompletionPct >= 100],
+    ['label' => 'First Application', 'icon' => 'fa-file-alt', 'earned' => $totalApplications >= 1],
+    ['label' => 'Documents Verified', 'icon' => 'fa-shield-alt', 'earned' => $profileSections['documents']['complete']],
+    ['label' => 'Interview Ready', 'icon' => 'fa-handshake', 'earned' => $interviewCount >= 1],
+];
+
+$applicantStatus = $profileCompletionPct >= 100 ? 'Profile Complete' : ($totalApplications > 0 ? 'Active Applicant' : 'New Applicant');
+$showContinueCard = $profileCompletionPct < 100 || ($totalApplications === 0 && !empty($activePositions));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -66,73 +242,143 @@ $approvedCount = count(array_filter($userApplications, fn($app) => $app['status'
     <link rel="icon" type="image/x-icon" href="../../favicon.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="../../assets/css/office-theme.css" rel="stylesheet">
+    <link href="../../assets/css/applicant-dashboard.css" rel="stylesheet">
     <?php include '../../includes/pwa-header.php'; ?>
 </head>
-<body>
+<body class="dashboard-page" data-theme="system">
+<?php include '../../includes/applicant-theme-init.php'; ?>
     <!-- Sidebar Navigation -->
-    <aside class="sidebar">
+    <aside class="sidebar" aria-label="Main navigation">
         <div class="sidebar-header">
             <a href="dashboard.php" class="sidebar-brand">
                 <img src="../../assets/logo.png" alt="WPU Logo" style="height: 32px; width: auto;">
                 <span>WPU Jobs</span>
             </a>
         </div>
+
+        <button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Toggle sidebar">
+            <i class="fas fa-angles-left"></i>
+            <span>Collapse</span>
+        </button>
         
         <nav class="sidebar-nav">
-         <a href="profile.php" class="sidebar-nav-item">
-                <i class="fas fa-user"></i>
+            <a href="profile.php" class="sidebar-nav-item">
+                <i class="fas fa-user" aria-hidden="true"></i>
                 <span>Profile</span>
             </a>
-            <a href="dashboard.php" class="sidebar-nav-item active">
-                <i class="fas fa-th-large"></i>
+            <a href="dashboard.php" class="sidebar-nav-item active" aria-current="page">
+                <i class="fas fa-th-large" aria-hidden="true"></i>
                 <span>Dashboard</span>
             </a>
             <a href="positions.php" class="sidebar-nav-item">
-                <i class="fas fa-briefcase"></i>
+                <i class="fas fa-briefcase" aria-hidden="true"></i>
                 <span>Browse Jobs</span>
             </a>
             <a href="my-applications.php" class="sidebar-nav-item">
-                <i class="fas fa-file-alt"></i>
+                <i class="fas fa-file-alt" aria-hidden="true"></i>
                 <span>My Applications</span>
+                <?php if ($pendingCount > 0): ?>
+                <span class="sidebar-nav-badge" aria-label="<?= $pendingCount ?> pending"><?= $pendingCount ?></span>
+                <?php endif; ?>
             </a>
-            
         </nav>
         
         <div class="sidebar-footer">
             <div class="sidebar-user">
-                <div class="sidebar-user-avatar">
-                    <?= strtoupper(substr($user['full_name'], 0, 1)) ?>
+                <div class="sidebar-user-avatar" aria-hidden="true">
+                    <?= htmlspecialchars($profileInitials) ?>
                 </div>
                 <div class="sidebar-user-info">
                     <div class="sidebar-user-name"><?= htmlspecialchars($user['full_name']) ?></div>
                     <div class="sidebar-user-role">Applicant</div>
                 </div>
-                
             </div>
+        </div>
+    </aside>
+
+    <!-- Notification Panel -->
+    <aside class="dash-notif-panel" id="notifPanel" aria-label="Notifications" role="dialog" aria-hidden="true">
+        <div class="dash-notif-panel__header">
+            <strong>Notifications</strong>
+            <button type="button" class="topbar-btn" id="notifPanelClose" aria-label="Close notifications"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="dash-notif-panel__body">
+            <?php if (empty($notifications)): ?>
+                <p class="dash-empty__text">No notifications yet.</p>
+            <?php else: ?>
+                <div class="dash-notif-list">
+                    <?php foreach ($notifications as $notif): ?>
+                    <div class="dash-notif-item <?= $notif['unread'] ? 'unread' : '' ?>">
+                        <div class="dash-notif-item__icon <?= $notif['type'] ?>"><i class="fas <?= $notif['icon'] ?>"></i></div>
+                        <div>
+                            <div class="dash-notif-item__title"><?= htmlspecialchars($notif['title']) ?></div>
+                            <div class="dash-notif-item__text"><?= htmlspecialchars($notif['text']) ?></div>
+                            <div class="dash-notif-item__time"><?= date('M j, g:i A', strtotime($notif['time'])) ?></div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </div>
     </aside>
 
     <!-- Main Content Wrapper -->
     <div class="main-wrapper">
         <!-- Top Bar -->
-        <div class="topbar">
-            <button class="mobile-menu-toggle">
+        <header class="topbar">
+            <button type="button" class="mobile-menu-toggle" aria-label="Open menu">
                 <i class="fas fa-bars"></i>
             </button>
             <h1 class="topbar-title">Dashboard</h1>
+
+            <form class="dash-topbar-search" id="dashSearchForm" action="positions.php" role="search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="search" id="dashSearchInput" name="search" placeholder="Search jobs, positions..." aria-label="Search jobs">
+            </form>
+
             <div class="topbar-actions">
-                
-                <a href="../../auth/logout.php" class="topbar-btn confirm-logout" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                <button type="button" class="topbar-btn" id="notifPanelToggle" aria-label="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <?php if ($unreadNotifCount > 0): ?>
+                    <span class="topbar-btn__badge"><?= $unreadNotifCount ?></span>
+                    <?php endif; ?>
+                </button>
+                <a href="chat.php" class="topbar-btn" title="Messages" aria-label="Messages">
+                    <i class="fas fa-comment-dots"></i>
                 </a>
+                <div class="dash-theme-menu">
+                    <button type="button" class="topbar-btn" data-dropdown-toggle="themeDropdown" aria-label="Theme settings">
+                        <i class="fas fa-circle-half-stroke"></i>
+                    </button>
+                    <div class="dash-theme-dropdown" id="themeDropdown" role="menu">
+                        <button type="button" class="dash-theme-option" data-theme-set="light" role="menuitem"><i class="fas fa-sun"></i> Light</button>
+                        <button type="button" class="dash-theme-option" data-theme-set="dark" role="menuitem"><i class="fas fa-moon"></i> Dark</button>
+                        <button type="button" class="dash-theme-option active" data-theme-set="system" role="menuitem"><i class="fas fa-desktop"></i> System</button>
+                    </div>
+                </div>
+                <div class="dash-profile-menu">
+                    <button type="button" class="topbar-btn" data-dropdown-toggle="profileDropdown" aria-label="Profile menu">
+                        <i class="fas fa-user-circle"></i>
+                    </button>
+                    <div class="dash-profile-dropdown" id="profileDropdown" role="menu">
+                        <a href="profile.php" role="menuitem"><i class="fas fa-user"></i> My Profile</a>
+                        <a href="my-applications.php" role="menuitem"><i class="fas fa-file-alt"></i> Applications</a>
+                        <a href="../../auth/logout.php" class="confirm-logout danger" role="menuitem"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
             </div>
-        </div>
+        </header>
 
         <!-- Main Content -->
         <div class="content">
+            <div class="dash-skeleton-wrap" aria-hidden="true">
+                <div class="dash-skeleton" style="height:180px;margin-bottom:24px"></div>
+                <div class="dash-skeleton" style="height:120px;margin-bottom:24px"></div>
+            </div>
+
+            <div class="dash-content-wrap">
             <?php if (isset($databaseError) && $databaseError): ?>
-            <!-- Database Error Alert -->
-            <div class="alert alert-warning">
+            <div class="alert alert-warning" role="alert">
                 <i class="fas fa-exclamation-triangle"></i>
                 <div>
                     <strong>Database Setup Required</strong><br>
@@ -141,193 +387,454 @@ $approvedCount = count(array_filter($userApplications, fn($app) => $app['status'
             </div>
             <?php endif; ?>
 
-            <!-- Welcome Message -->
-            <div class="card" style="background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%); border: none; color: white; margin-bottom: 24px;">
-                <div class="card-body" style="padding: 32px;">
-                    <h2 style="margin-bottom: 12px; font-size: 1.75rem; font-weight: 700;">Welcome back, <?= htmlspecialchars($user['full_name']) ?>! 👋</h2>
-                    <p style="opacity: 0.9; margin-bottom: 20px; font-size: 1rem;">Discover new opportunities and take the next step in your career journey.</p>
-                    <a href="positions.php" class="btn" style="background: white; color: var(--primary-blue); font-weight: 600;">
-                        <i class="fas fa-search"></i> Browse Available Positions
-                    </a>
-                </div>
-            </div>
-
-            <!-- Statistics Cards -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <div>
-                            <div class="stat-card-value"><?= count($userApplications) ?></div>
-                            <div class="stat-card-label">Total Applications</div>
-                        </div>
-                        <div class="stat-card-icon blue">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
+            <!-- Hero Section -->
+            <section class="dash-hero" aria-label="Welcome">
+                <div class="dash-hero__main">
+                    <div class="dash-hero__avatar" aria-hidden="true">
+                        <?php if ($hasProfilePhoto): ?>
+                            <img src="uploads/<?= htmlspecialchars($user['profile_picture']) ?>" alt="">
+                        <?php else: ?>
+                            <?= htmlspecialchars($profileInitials) ?>
+                        <?php endif; ?>
                     </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <div>
-                            <div class="stat-card-value"><?= $pendingCount ?></div>
-                            <div class="stat-card-label">Pending</div>
+                    <div>
+                        <p class="dash-hero__greeting"><?= $greeting ?>,</p>
+                        <h2 class="dash-hero__name"><?= htmlspecialchars($user['full_name']) ?></h2>
+                        <div class="dash-hero__meta">
+                            <span class="dash-hero__badge"><i class="fas fa-id-badge"></i> ID #<?= (int) ($user['id'] ?? 0) ?></span>
+                            <span class="dash-hero__badge"><i class="fas fa-user-check"></i> <?= htmlspecialchars($applicantStatus) ?></span>
                         </div>
-                        <div class="stat-card-icon yellow">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <div>
-                            <div class="stat-card-value"><?= number_format($totalExperience, 1) ?></div>
-                            <div class="stat-card-label">Years Experience</div>
-                        </div>
-                        <div class="stat-card-icon green">
-                            <i class="fas fa-briefcase"></i>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <div>
-                            <div class="stat-card-value"><?= count($activePositions) ?></div>
-                            <div class="stat-card-label">Available Jobs</div>
-                        </div>
-                        <div class="stat-card-icon blue">
-                            <i class="fas fa-building"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Responsive Dashboard Sections -->
-            <div class="dashboard-sections">
-                <!-- Recent Applications -->
-                <div class="card">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3 class="card-title">
-                            <i class="fas fa-file-alt"></i> Recent Applications
-                        </h3>
-                        <a href="my-applications.php" class="btn btn-sm btn-outline">View All</a>
-                    </div>
-                    <div class="card-body">
-                        <?php if (empty($userApplications)): ?>
-                            <div class="empty-state" style="padding: 30px 20px;">
-                                <i class="fas fa-file-alt" style="font-size: 2.5rem;"></i>
-                                <p style="margin: 12px 0 0 0; font-size: 0.875rem;">No applications yet</p>
+                        <div class="dash-hero__stats">
+                            <div class="dash-hero__stat">
+                                <div class="dash-hero__stat-value"><?= $profileCompletionPct ?>%</div>
+                                <div class="dash-hero__stat-label">Profile</div>
                             </div>
+                            <div class="dash-hero__stat">
+                                <div class="dash-hero__stat-value" data-count="<?= $totalApplications ?>">0</div>
+                                <div class="dash-hero__stat-label">Applications</div>
+                            </div>
+                            <div class="dash-hero__stat">
+                                <div class="dash-hero__stat-value" data-count="<?= $pendingCount ?>">0</div>
+                                <div class="dash-hero__stat-label">Pending</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="dash-hero__actions">
+                    <span class="dash-hero__actions-title">Quick Actions</span>
+                    <a href="positions.php" class="dash-quick-link"><i class="fas fa-search"></i> Browse Jobs</a>
+                    <a href="profile.php" class="dash-quick-link"><i class="fas fa-user-edit"></i> Complete Profile</a>
+                    <a href="my-applications.php" class="dash-quick-link"><i class="fas fa-file-alt"></i> View Applications</a>
+                </div>
+            </section>
+
+            <!-- Quick Action Cards -->
+            <nav class="dash-actions-grid" aria-label="Dashboard quick actions">
+                <a href="positions.php" class="dash-action-card"><div class="dash-action-card__icon"><i class="fas fa-briefcase"></i></div><span class="dash-action-card__label">Browse Jobs</span></a>
+                <a href="my-applications.php" class="dash-action-card"><div class="dash-action-card__icon"><i class="fas fa-file-signature"></i></div><span class="dash-action-card__label">Continue Application</span></a>
+                <a href="profile.php" class="dash-action-card"><div class="dash-action-card__icon"><i class="fas fa-user-edit"></i></div><span class="dash-action-card__label">Update Profile</span></a>
+                <a href="profile.php" class="dash-action-card"><div class="dash-action-card__icon"><i class="fas fa-cloud-upload-alt"></i></div><span class="dash-action-card__label">Upload Documents</span></a>
+                <a href="my-applications.php" class="dash-action-card"><div class="dash-action-card__icon"><i class="fas fa-folder-open"></i></div><span class="dash-action-card__label">My Applications</span></a>
+                <a href="my-applications.php" class="dash-action-card"><div class="dash-action-card__icon"><i class="fas fa-calendar-check"></i></div><span class="dash-action-card__label">Interview Schedule</span></a>
+            </nav>
+
+            <?php if ($showContinueCard): ?>
+            <div class="dash-continue-card" role="region" aria-label="Continue where you left off">
+                <div class="dash-continue-card__icon"><i class="fas fa-route"></i></div>
+                <div class="dash-continue-card__content">
+                    <div class="dash-continue-card__title">Continue Where You Left Off</div>
+                    <div class="dash-continue-card__text">
+                        <?php if ($profileCompletionPct < 100): ?>
+                            Your profile is <?= $profileCompletionPct ?>% complete. Finish your profile to unlock better job matches.
+                        <?php else: ?>
+                            Start exploring opportunities and submit your first application today.
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <a href="<?= $profileCompletionPct < 100 ? 'profile.php' : 'positions.php' ?>" class="dash-btn dash-btn--primary">
+                    <?= $profileCompletionPct < 100 ? 'Complete Profile' : 'Browse Jobs' ?>
+                </a>
+            </div>
+            <?php endif; ?>
+
+            <!-- Profile Completion -->
+            <section class="dash-profile-card" aria-label="Profile completion">
+                <div class="dash-profile-card__header">
+                    <h3 class="dash-profile-card__title">Profile Completion</h3>
+                    <span class="dash-profile-card__pct"><?= $profileCompletionPct ?>%</span>
+                </div>
+                <div class="dash-progress-bar" role="progressbar" aria-valuenow="<?= $profileCompletionPct ?>" aria-valuemin="0" aria-valuemax="100">
+                    <div class="dash-progress-bar__fill" style="width: <?= $profileCompletionPct ?>%"></div>
+                </div>
+                <?php if (!empty($profileMissing)): ?>
+                <div class="dash-missing-items">
+                    <span style="font-size:0.8rem;color:var(--dash-text-muted);font-weight:600;margin-right:4px">Missing:</span>
+                    <?php foreach ($profileMissing as $key => $section): ?>
+                    <a href="<?= $section['url'] ?>" class="dash-missing-chip"><?= htmlspecialchars($section['label']) ?></a>
+                    <?php endforeach; ?>
+                </div>
+                <?php else: ?>
+                <div class="dash-missing-items">
+                    <span class="dash-missing-chip complete"><i class="fas fa-check"></i> All sections complete</span>
+                </div>
+                <?php endif; ?>
+                <?php if ($profileCompletionPct < 100): ?>
+                <a href="profile.php" class="dash-btn dash-btn--primary"><i class="fas fa-arrow-right"></i> Complete Profile</a>
+                <?php endif; ?>
+            </section>
+
+            <!-- Statistics -->
+            <div class="dash-stats-grid" aria-label="Application statistics">
+                <?php
+                $statCards = [
+                    ['value' => $totalApplications, 'label' => 'Applications', 'icon' => 'fa-file-alt', 'color' => '#1e40af', 'trend' => $totalApplications > 0 ? 'Active pipeline' : 'Get started', 'trendClass' => 'neutral'],
+                    ['value' => $pendingCount, 'label' => 'Pending', 'icon' => 'fa-clock', 'color' => '#f59e0b', 'trend' => $pendingCount > 0 ? 'In review' : 'All clear', 'trendClass' => 'neutral'],
+                    ['value' => $approvedCount, 'label' => 'Approved', 'icon' => 'fa-check-circle', 'color' => '#10b981', 'trend' => $approvedCount > 0 ? '+' . $approvedCount . ' success' : 'None yet', 'trendClass' => $approvedCount > 0 ? 'up' : 'neutral'],
+                    ['value' => $rejectedCount, 'label' => 'Rejected', 'icon' => 'fa-times-circle', 'color' => '#ef4444', 'trend' => $rejectedCount > 0 ? $rejectedCount . ' closed' : 'None', 'trendClass' => 'neutral'],
+                    ['value' => $interviewCount, 'label' => 'Interviews', 'icon' => 'fa-handshake', 'color' => '#6366f1', 'trend' => $interviewCount > 0 ? 'Scheduled' : 'Pending', 'trendClass' => 'neutral'],
+                    ['value' => 0, 'label' => 'Saved Jobs', 'icon' => 'fa-bookmark', 'color' => '#8b5cf6', 'trend' => 'Bookmark jobs', 'trendClass' => 'neutral', 'id' => 'savedJobsCount'],
+                    ['value' => $totalExperience, 'label' => 'Years Experience', 'icon' => 'fa-briefcase', 'color' => '#0ea5e9', 'trend' => count($userExperiences) . ' record(s)', 'trendClass' => 'neutral', 'decimal' => true],
+                    ['value' => count($activePositions), 'label' => 'Available Jobs', 'icon' => 'fa-building', 'color' => '#1e40af', 'trend' => 'Open now', 'trendClass' => 'up'],
+                ];
+                foreach ($statCards as $stat):
+                ?>
+                <div class="dash-stat-card" style="--stat-color: <?= $stat['color'] ?>; --stat-bg: <?= $stat['color'] ?>18; --stat-accent: linear-gradient(90deg, <?= $stat['color'] ?>, transparent)">
+                    <div class="dash-stat-card__top">
+                        <div>
+                            <div class="dash-stat-card__value" <?= !empty($stat['id']) ? 'id="' . $stat['id'] . '"' : '' ?> data-count="<?= $stat['value'] ?>" <?= !empty($stat['decimal']) ? 'data-decimal="1"' : '' ?>>0</div>
+                            <div class="dash-stat-card__label"><?= $stat['label'] ?></div>
+                        </div>
+                        <div class="dash-stat-card__icon"><i class="fas <?= $stat['icon'] ?>"></i></div>
+                    </div>
+                    <div class="dash-stat-card__trend <?= $stat['trendClass'] ?>">
+                        <?php if ($stat['trendClass'] === 'up'): ?><i class="fas fa-arrow-up"></i><?php endif; ?>
+                        <?= htmlspecialchars($stat['trend']) ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="dash-main-grid">
+                <!-- Application Trackers -->
+                <section class="dash-widget" data-widget="applications">
+                    <div class="dash-widget__header">
+                        <h3 class="dash-widget__title"><i class="fas fa-route"></i> Application Status Tracker</h3>
+                        <div class="dash-widget__actions">
+                            <a href="my-applications.php" class="dash-link-btn">View All</a>
+                            <button type="button" class="dash-widget__toggle" data-widget-toggle aria-label="Collapse section"><i class="fas fa-chevron-up"></i></button>
+                        </div>
+                    </div>
+                    <div class="dash-widget__body">
+                        <?php if (empty($userApplications)): ?>
+                        <div class="dash-empty">
+                            <div class="dash-empty__illus"><i class="fas fa-file-alt"></i></div>
+                            <h4 class="dash-empty__title">No Applications Yet</h4>
+                            <p class="dash-empty__text">Start exploring opportunities and take the next step in your career.</p>
+                            <a href="positions.php" class="dash-btn dash-btn--primary"><i class="fas fa-search"></i> Browse Jobs</a>
+                        </div>
                         <?php else: ?>
                             <?php foreach (array_slice($userApplications, 0, 3) as $app): ?>
-                                <div style="padding: 12px 0; border-bottom: 1px solid var(--gray-200);">
-                                    <div style="font-weight: 600; font-size: 0.9rem; color: var(--gray-800); margin-bottom: 4px;">
-                                        <?= htmlspecialchars($app['position_title']) ?>
+                            <article class="dash-app-tracker">
+                                <div class="dash-app-tracker__title">
+                                    <a href="application-details.php?id=<?= (int) $app['id'] ?>"><?= htmlspecialchars($app['position_title']) ?></a>
+                                </div>
+                                <div class="dash-tracker-steps" role="list" aria-label="Application progress">
+                                    <?php foreach ($getTrackerSteps($app) as $step): ?>
+                                    <div class="dash-tracker-step <?= $step['state'] ?>" role="listitem">
+                                        <div class="dash-tracker-step__dot">
+                                            <?php if ($step['state'] === 'done'): ?><i class="fas fa-check"></i><?php endif; ?>
+                                        </div>
+                                        <div class="dash-tracker-step__label"><?= htmlspecialchars($step['label']) ?></div>
                                     </div>
-                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                                        <span style="font-size: 0.75rem; color: var(--gray-500);">
-                                            <?= date('M j, Y', strtotime($app['applied_at'])) ?>
-                                        </span>
-                                        <span class="badge badge-<?= $app['status'] === STATUS_PENDING ? 'warning' : ($app['status'] === STATUS_APPROVED ? 'success' : 'danger') ?>">
-                                            <?= ucfirst($app['status']) ?>
-                                        </span>
+                                    <?php endforeach; ?>
+                                </div>
+                                <div class="dash-timeline" style="margin-top:16px">
+                                    <div class="dash-timeline-item">
+                                        <div class="dash-timeline-item__dot success"></div>
+                                        <div class="dash-timeline-item__title">Applied</div>
+                                        <div class="dash-timeline-item__meta"><?= date('M j, Y', strtotime($app['applied_at'])) ?></div>
+                                    </div>
+                                    <div class="dash-timeline-item">
+                                        <div class="dash-timeline-item__dot <?= $app['status'] !== STATUS_PENDING ? 'success' : 'pending' ?>"></div>
+                                        <div class="dash-timeline-item__title">Screening</div>
+                                        <div class="dash-timeline-item__meta"><?= $app['status'] !== STATUS_PENDING ? 'Completed' : 'In progress' ?></div>
+                                    </div>
+                                    <div class="dash-timeline-item">
+                                        <div class="dash-timeline-item__dot <?= !empty($app['interview_date']) ? 'success' : 'pending' ?>"></div>
+                                        <div class="dash-timeline-item__title">Interview</div>
+                                        <div class="dash-timeline-item__meta"><?= !empty($app['interview_date']) ? date('M j, Y', strtotime($app['interview_date'])) : 'Pending' ?></div>
+                                    </div>
+                                    <div class="dash-timeline-item">
+                                        <div class="dash-timeline-item__dot <?= in_array($app['status'], [STATUS_APPROVED, STATUS_REJECTED], true) ? ($app['status'] === STATUS_APPROVED ? 'success' : 'pending') : 'pending' ?>"></div>
+                                        <div class="dash-timeline-item__title">Decision</div>
+                                        <div class="dash-timeline-item__meta"><?= $app['status'] === STATUS_APPROVED ? 'Approved' : ($app['status'] === STATUS_REJECTED ? 'Rejected' : 'Waiting') ?></div>
                                     </div>
                                 </div>
+                            </article>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
-                </div>
+                </section>
 
-                <!-- Work Experience Summary -->
-                <div class="card">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3 class="card-title">
-                            <i class="fas fa-briefcase"></i> Experience
-                        </h3>
-                        <a href="profile.php" class="btn btn-sm btn-outline">Edit</a>
-                    </div>
-                    <div class="card-body">
-                        <div style="text-align: center; padding: 20px;">
-                            <div style="font-size: 2.5rem; font-weight: 700; color: var(--primary-blue);">
-                                <?= number_format($totalExperience, 1) ?>
+                <div class="dash-secondary-grid">
+                    <!-- Applicant Insights -->
+                    <section class="dash-widget" data-widget="insights">
+                        <div class="dash-widget__header">
+                            <h3 class="dash-widget__title"><i class="fas fa-chart-pie"></i> Applicant Insights</h3>
+                            <button type="button" class="dash-widget__toggle" data-widget-toggle aria-label="Collapse section"><i class="fas fa-chevron-up"></i></button>
+                        </div>
+                        <div class="dash-widget__body">
+                            <div class="dash-insights-grid">
+                                <div class="dash-insight-item">
+                                    <div class="dash-insight-item__value" data-count="<?= $totalApplications ?>">0</div>
+                                    <div class="dash-insight-item__label">Applications</div>
+                                </div>
+                                <div class="dash-insight-item">
+                                    <div class="dash-insight-item__value" data-count="<?= $interviewCount ?>">0</div>
+                                    <div class="dash-insight-item__label">Interviews</div>
+                                </div>
+                                <div class="dash-insight-item">
+                                    <div class="dash-insight-item__value"><?= $successRate ?>%</div>
+                                    <div class="dash-insight-item__label">Success Rate</div>
+                                </div>
+                                <div class="dash-insight-item">
+                                    <div class="dash-insight-item__value"><?= $avgResponseDays !== null ? $avgResponseDays . 'd' : '—' ?></div>
+                                    <div class="dash-insight-item__label">Avg Response</div>
+                                </div>
                             </div>
-                            <div style="font-size: 0.875rem; color: var(--gray-500); font-weight: 600;">
-                                TOTAL YEARS
-                            </div>
-                            <div style="margin-top: 16px; font-size: 0.85rem; color: var(--gray-600);">
-                                <?= count($userExperiences) ?> work experience<?= count($userExperiences) != 1 ? 's' : '' ?> listed
+                            <div style="margin-top:20px">
+                                <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--dash-text-muted);margin-bottom:10px">Achievements</div>
+                                <div class="dash-badges">
+                                    <?php foreach ($achievements as $badge): ?>
+                                    <span class="dash-achievement <?= $badge['earned'] ? 'earned' : '' ?>"><i class="fas <?= $badge['icon'] ?>"></i> <?= htmlspecialchars($badge['label']) ?></span>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </section>
 
-                <!-- Recent Job Openings -->
-                <div class="card">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3 class="card-title">
-                            <i class="fas fa-briefcase"></i> Recent Job Openings
-                        </h3>
-                        <a href="positions.php" class="btn btn-sm btn-primary">View All</a>
-                    </div>
-                    <div class="card-body">
-                        <?php if (empty($activePositions)): ?>
-                            <div class="empty-state">
-                                <i class="fas fa-briefcase"></i>
-                                <h3>No Available Positions</h3>
-                                <p>Check back later for new job openings.</p>
-                            </div>
-                        <?php else: ?>
-                            <?php foreach (array_slice($activePositions, 0, 5) as $position): ?>
-                                <?php
-                                $hasApplied = false;
-                                foreach ($userApplications as $app) {
-                                    if ($app['position_id'] == $position['id']) {
-                                        $hasApplied = true;
-                                        break;
-                                    }
-                                }
-                                $meetsRequirements = $totalExperience >= $position['min_experience_years'];
-                                ?>
-                                <div style="padding: 14px; border-bottom: 1px solid var(--gray-200);">
-                                    <h4 style="margin: 0 0 8px 0; font-size: 0.95rem; font-weight: 600; color: var(--gray-800);">
-                                        <a href="position-details.php?id=<?= $position['id'] ?>" style="color: var(--gray-800); text-decoration: none;">
-                                            <?= htmlspecialchars($position['title']) ?>
-                                        </a>
-                                    </h4>
-                                    <div style="font-size: 0.8rem; color: var(--gray-600); display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px;">
-                                        <?php if ($position['location']): ?>
-                                            <span><i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($position['location']) ?></span>
-                                        <?php endif; ?>
-                                        <span><i class="fas fa-clock"></i> Min. <?= $position['min_experience_years'] ?>y</span>
-                                        <span class="badge badge-primary"><?= ucfirst($position['employment_type']) ?></span>
-                                    </div>
+                    <!-- Notifications -->
+                    <section class="dash-widget" data-widget="notifications">
+                        <div class="dash-widget__header">
+                            <h3 class="dash-widget__title"><i class="fas fa-bell"></i> Notification Center</h3>
+                            <button type="button" class="dash-widget__toggle" data-widget-toggle aria-label="Collapse section"><i class="fas fa-chevron-up"></i></button>
+                        </div>
+                        <div class="dash-widget__body">
+                            <?php if (empty($notifications)): ?>
+                                <p class="dash-empty__text">You're all caught up!</p>
+                            <?php else: ?>
+                            <div class="dash-notif-list">
+                                <?php foreach (array_slice($notifications, 0, 4) as $notif): ?>
+                                <div class="dash-notif-item <?= $notif['unread'] ? 'unread' : '' ?>">
+                                    <div class="dash-notif-item__icon <?= $notif['type'] ?>"><i class="fas <?= $notif['icon'] ?>"></i></div>
                                     <div>
-                                        <?php if ($hasApplied): ?>
-                                            <span class="badge badge-success">Applied</span>
-                                        <?php elseif (!$meetsRequirements): ?>
-                                            <span class="badge badge-warning" title="Below required experience">
-                                                <i class="fas fa-exclamation-triangle"></i> Below required experience
-                                            </span>
-                                        <?php else: ?>
-                                            <a href="apply.php?position=<?= $position['id'] ?>" class="btn btn-sm btn-primary">
-                                                Apply Now
-                                            </a>
-                                        <?php endif; ?>
+                                        <div class="dash-notif-item__title"><?= htmlspecialchars($notif['title']) ?></div>
+                                        <div class="dash-notif-item__text"><?= htmlspecialchars($notif['text']) ?></div>
+                                        <div class="dash-notif-item__time"><?= date('M j, g:i A', strtotime($notif['time'])) ?></div>
                                     </div>
                                 </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </section>
                 </div>
             </div>
+
+            <!-- Recommended Jobs -->
+            <?php if (!empty($recommendedJobs)): ?>
+            <section class="dash-widget" data-widget="recommended" style="margin-bottom:24px">
+                <div class="dash-widget__header">
+                    <h3 class="dash-widget__title"><i class="fas fa-wand-magic-sparkles"></i> Recommended for You</h3>
+                    <a href="positions.php" class="dash-link-btn">View All Jobs</a>
+                </div>
+                <div class="dash-widget__body">
+                    <div class="dash-jobs-grid">
+                        <?php foreach ($recommendedJobs as $position):
+                            $meetsRequirements = $totalExperience >= $position['min_experience_years'];
+                        ?>
+                        <article class="dash-job-card" data-position-id="<?= (int) $position['id'] ?>">
+                            <span class="dash-job-card__match"><?= $position['_match'] ?>% Match</span>
+                            <h4 class="dash-job-card__title">
+                                <a href="position-details.php?id=<?= (int) $position['id'] ?>"><?= htmlspecialchars($position['title']) ?></a>
+                            </h4>
+                            <div class="dash-job-card__meta">
+                                <?php if (!empty($position['location'])): ?>
+                                <span><i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($position['location']) ?></span>
+                                <?php endif; ?>
+                                <?php if (!empty($position['salary_range'])): ?>
+                                <span><i class="fas fa-peso-sign"></i> <?= htmlspecialchars($position['salary_range']) ?></span>
+                                <?php endif; ?>
+                                <span><i class="fas fa-clock"></i> Min. <?= $position['min_experience_years'] ?>y</span>
+                                <span><i class="fas fa-briefcase"></i> <?= ucfirst($position['employment_type']) ?></span>
+                                <?php if (!empty($position['deadline'])): ?>
+                                <span><i class="fas fa-calendar"></i> Closes <?= date('M j', strtotime($position['deadline'])) ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="dash-job-card__actions">
+                                <a href="position-details.php?id=<?= (int) $position['id'] ?>" class="dash-btn dash-btn--outline">View Details</a>
+                                <?php if ($meetsRequirements): ?>
+                                <a href="apply.php?position=<?= (int) $position['id'] ?>" class="dash-btn dash-btn--primary">Apply</a>
+                                <?php endif; ?>
+                                <button type="button" class="dash-btn dash-btn--icon" data-bookmark-id="<?= (int) $position['id'] ?>" aria-label="Bookmark job" title="Save job"><i class="fas fa-bookmark"></i></button>
+                            </div>
+                        </article>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </section>
+            <?php endif; ?>
+
+            <div class="dash-secondary-grid">
+                <!-- Recent Job Openings -->
+                <section class="dash-widget" data-widget="jobs">
+                    <div class="dash-widget__header">
+                        <h3 class="dash-widget__title"><i class="fas fa-briefcase"></i> Recent Job Openings</h3>
+                        <a href="positions.php" class="dash-link-btn">View All</a>
+                    </div>
+                    <div class="dash-widget__body">
+                        <?php if (empty($recentJobOpenings)): ?>
+                        <div class="dash-empty">
+                            <div class="dash-empty__illus"><i class="fas fa-briefcase"></i></div>
+                            <h4 class="dash-empty__title">No Available Positions</h4>
+                            <p class="dash-empty__text">Check back later for new job openings.</p>
+                        </div>
+                        <?php else: ?>
+                        <div class="dash-jobs-grid">
+                            <?php foreach ($recentJobOpenings as $position):
+                                $hasApplied = isset($appliedPositionIds[$position['id']]);
+                                $meetsRequirements = $totalExperience >= $position['min_experience_years'];
+                                $matchPct = $calcJobMatch($position);
+                            ?>
+                            <article class="dash-job-card" data-position-id="<?= (int) $position['id'] ?>">
+                                <span class="dash-job-card__match"><?= $matchPct ?>% Match</span>
+                                <h4 class="dash-job-card__title">
+                                    <a href="position-details.php?id=<?= (int) $position['id'] ?>"><?= htmlspecialchars($position['title']) ?></a>
+                                </h4>
+                                <div class="dash-job-card__meta">
+                                    <?php if (!empty($position['location'])): ?>
+                                    <span><i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($position['location']) ?></span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($position['salary_range'])): ?>
+                                    <span><i class="fas fa-peso-sign"></i> <?= htmlspecialchars($position['salary_range']) ?></span>
+                                    <?php endif; ?>
+                                    <span><i class="fas fa-clock"></i> Min. <?= $position['min_experience_years'] ?>y</span>
+                                    <span><i class="fas fa-briefcase"></i> <?= ucfirst($position['employment_type']) ?></span>
+                                </div>
+                                <div class="dash-job-card__actions">
+                                    <?php if ($hasApplied): ?>
+                                        <span class="dash-job-card__badge"><i class="fas fa-check"></i> Already Applied</span>
+                                    <?php elseif (!$meetsRequirements): ?>
+                                        <span class="dash-job-card__badge" style="background:rgba(245,158,11,0.12);color:var(--dash-warning)"><i class="fas fa-exclamation-triangle"></i> Below required experience</span>
+                                    <?php else: ?>
+                                        <a href="apply.php?position=<?= (int) $position['id'] ?>" class="dash-btn dash-btn--primary">Apply Now</a>
+                                    <?php endif; ?>
+                                    <a href="position-details.php?id=<?= (int) $position['id'] ?>" class="dash-btn dash-btn--outline">Details</a>
+                                    <button type="button" class="dash-btn dash-btn--icon" data-bookmark-id="<?= (int) $position['id'] ?>" aria-label="Bookmark job"><i class="fas fa-bookmark"></i></button>
+                                </div>
+                            </article>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </section>
+
+                <!-- Activity & Calendar -->
+                <div style="display:flex;flex-direction:column;gap:24px">
+                    <section class="dash-widget" data-widget="activity">
+                        <div class="dash-widget__header">
+                            <h3 class="dash-widget__title"><i class="fas fa-stream"></i> Recent Activity</h3>
+                            <button type="button" class="dash-widget__toggle" data-widget-toggle aria-label="Collapse section"><i class="fas fa-chevron-up"></i></button>
+                        </div>
+                        <div class="dash-widget__body">
+                            <?php if (empty($activityFeed)): ?>
+                                <p class="dash-empty__text">No recent activity.</p>
+                            <?php else: ?>
+                                <?php
+                                $groupedActivity = [];
+                                foreach ($activityFeed as $item) {
+                                    $dayKey = date('Y-m-d', strtotime($item['time']));
+                                    $label = $dayKey === date('Y-m-d') ? 'Today' : ($dayKey === date('Y-m-d', strtotime('-1 day')) ? 'Yesterday' : date('l, M j', strtotime($item['time'])));
+                                    $groupedActivity[$label][] = $item;
+                                }
+                                foreach ($groupedActivity as $label => $items):
+                                ?>
+                                <div class="dash-activity-group">
+                                    <div class="dash-activity-group__label"><?= htmlspecialchars($label) ?></div>
+                                    <?php foreach ($items as $item): ?>
+                                    <div class="dash-activity-item">
+                                        <div class="dash-activity-item__icon"><i class="fas <?= $item['icon'] ?>"></i></div>
+                                        <div><?= $item['text'] ?> · <span style="color:var(--dash-text-muted);font-size:0.8rem"><?= date('g:i A', strtotime($item['time'])) ?></span></div>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </section>
+
+                    <section class="dash-widget" data-widget="calendar">
+                        <div class="dash-widget__header">
+                            <h3 class="dash-widget__title"><i class="fas fa-calendar-alt"></i> Calendar</h3>
+                            <button type="button" class="dash-widget__toggle" data-widget-toggle aria-label="Collapse section"><i class="fas fa-chevron-up"></i></button>
+                        </div>
+                        <div class="dash-widget__body">
+                            <?php
+                            $calMonth = date('n');
+                            $calYear = date('Y');
+                            $firstDay = mktime(0, 0, 0, $calMonth, 1, $calYear);
+                            $daysInMonth = (int) date('t', $firstDay);
+                            $startWeekday = (int) date('w', $firstDay);
+                            $eventDates = array_column($calendarEvents, 'date');
+                            $today = date('Y-m-d');
+                            ?>
+                            <div style="text-align:center;font-weight:700;margin-bottom:12px"><?= date('F Y') ?></div>
+                            <div class="dash-calendar" role="grid" aria-label="Calendar">
+                                <?php foreach (['Su','Mo','Tu','We','Th','Fr','Sa'] as $d): ?>
+                                <div class="dash-calendar__head"><?= $d ?></div>
+                                <?php endforeach; ?>
+                                <?php for ($i = 0; $i < $startWeekday; $i++): ?><div></div><?php endfor; ?>
+                                <?php for ($day = 1; $day <= $daysInMonth; $day++):
+                                    $dateStr = sprintf('%04d-%02d-%02d', $calYear, $calMonth, $day);
+                                    $classes = 'dash-calendar__day';
+                                    if ($dateStr === $today) $classes .= ' today';
+                                    if (in_array($dateStr, $eventDates, true)) $classes .= ' has-event';
+                                ?>
+                                <div class="<?= $classes ?>"><?= $day ?></div>
+                                <?php endfor; ?>
+                            </div>
+                            <?php if (!empty($calendarEvents)): ?>
+                            <div class="dash-calendar-events">
+                                <?php foreach (array_slice($calendarEvents, 0, 4) as $ev): ?>
+                                <div class="dash-calendar-event">
+                                    <span class="dash-calendar-event__date"><?= date('M j', strtotime($ev['date'])) ?></span>
+                                    <span><?= htmlspecialchars($ev['title']) ?></span>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php else: ?>
+                            <p class="dash-empty__text" style="margin-top:16px;margin-bottom:0">No upcoming deadlines or interviews.</p>
+                            <?php endif; ?>
+                        </div>
+                    </section>
+
+                    <section class="dash-widget" data-widget="recent">
+                        <div class="dash-widget__header">
+                            <h3 class="dash-widget__title"><i class="fas fa-history"></i> Recently Viewed</h3>
+                        </div>
+                        <div class="dash-widget__body" id="recentlyViewedJobs"></div>
+                    </section>
+                </div>
+            </div>
+
+            </div><!-- /.dash-content-wrap -->
         </div>
     </div>
 
     <!-- Mobile Bottom Navigation -->
-    <nav class="mobile-nav">
+    <nav class="mobile-nav" aria-label="Mobile navigation">
         <div class="mobile-nav-grid">
-            <a href="dashboard.php" class="mobile-nav-item active">
+            <a href="dashboard.php" class="mobile-nav-item active" aria-current="page">
                 <i class="fas fa-th-large"></i>
                 <span>Home</span>
             </a>
@@ -346,10 +853,11 @@ $approvedCount = count(array_filter($userApplications, fn($app) => $app['status'
         </div>
     </nav>
 
+    <a href="positions.php" class="dash-mobile-fab" aria-label="Browse jobs"><i class="fas fa-search"></i></a>
+
     <!-- Data Privacy Waiver Modal -->
     <?php if (!$privacyWaiverAccepted): ?>
     <style>
-        /* Block all interactions when modal is shown */
         body.modal-open {
             overflow: hidden;
             pointer-events: none;
@@ -361,11 +869,28 @@ $approvedCount = count(array_filter($userApplications, fn($app) => $app['status'
             pointer-events: auto;
         }
     </style>
-    <div id="privacyWaiverModal" class="modal" style="display: block; z-index: 10000; position: fixed; top: 0; left: 0; right: 0; bottom: 0;">
-        <div class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.85); display: flex; align-items: center; justify-content: center; padding: 20px; cursor: default;">
-            <div class="modal-content" style="background: white; border-radius: 8px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); position: relative; z-index: 10001;">
-                
-                <div class="modal-body" style="padding: 24px;">
+    <div id="privacyWaiverModal" class="modal dash-privacy-modal" style="display: block;">
+        <div class="modal-overlay">
+            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="privacyWizardTitle">
+                <div class="dash-privacy-wizard__progress">
+                    <h2 id="privacyWizardTitle" style="font-size:1.1rem;font-weight:800;text-align:center;margin-bottom:16px">Privacy Wizard</h2>
+                    <div class="dash-privacy-wizard__steps" aria-label="Wizard progress">
+                        <div class="dash-privacy-wizard__step active" data-wizard-step="1">
+                            <div class="dash-privacy-wizard__step-icon"><i class="fas fa-book-open"></i></div>
+                            <div class="dash-privacy-wizard__step-label">Application Guidelines</div>
+                        </div>
+                        <div class="dash-privacy-wizard__step" data-wizard-step="2">
+                            <div class="dash-privacy-wizard__step-icon"><i class="fas fa-shield-alt"></i></div>
+                            <div class="dash-privacy-wizard__step-label">Privacy Policy</div>
+                        </div>
+                        <div class="dash-privacy-wizard__step" data-wizard-step="3">
+                            <div class="dash-privacy-wizard__step-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="dash-privacy-wizard__step-label">Confirm Information</div>
+                        </div>
+                    </div>
+                    <p class="dash-privacy-wizard__read-time"><i class="fas fa-clock"></i> Estimated reading time: ~5 minutes</p>
+                </div>
+                <div class="modal-body">
                     <!-- Step 1: Application Guidelines Section -->
                     <div id="step1Guidelines" class="modal-step">
                         <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--gray-800); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
@@ -520,15 +1045,15 @@ $approvedCount = count(array_filter($userApplications, fn($app) => $app['status'
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer" style="padding: 20px 24px; border-top: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                <div class="modal-footer">
                     <button type="button" id="backBtn" class="btn btn-outline" style="display: none; min-width: 120px;">
                         <i class="fas fa-arrow-left"></i> Back
                     </button>
                     <div style="display: flex; gap: 12px; margin-left: auto;">
-                        <button type="button" id="nextBtn" class="btn btn-primary" style="min-width: 120px;">
+                        <button type="button" id="nextBtn" class="btn btn-primary dash-btn dash-btn--primary" style="min-width: 120px;">
                             Next <i class="fas fa-arrow-right"></i>
                         </button>
-                        <button type="button" id="acceptPrivacyWaiverBtn" class="btn btn-primary" disabled style="display: none; min-width: 120px;">
+                        <button type="button" id="acceptPrivacyWaiverBtn" class="btn btn-primary dash-btn dash-btn--primary" disabled style="display: none; min-width: 120px;">
                             <i class="fas fa-check"></i> I Agree
                         </button>
                     </div>
@@ -540,6 +1065,8 @@ $approvedCount = count(array_filter($userApplications, fn($app) => $app['status'
 
     <script src="../../assets/js/toast.js"></script>
     <script src="../../assets/js/office-theme.js"></script>
+    <script src="../../assets/js/applicant-theme.js"></script>
+    <script src="../../assets/js/applicant-dashboard.js"></script>
     <?php include '../../includes/pwa-scripts.php'; ?>
     <?php if (!$privacyWaiverAccepted): ?>
     <script>
@@ -586,6 +1113,9 @@ $approvedCount = count(array_filter($userApplications, fn($app) => $app['status'
             
             // Function to update step display
             function updateStepDisplay() {
+                if (typeof updatePrivacyWizardUI === 'function') {
+                    updatePrivacyWizardUI(currentStep);
+                }
                 if (currentStep === 1) {
                     step1Guidelines.style.display = 'block';
                     step2Privacy.style.display = 'none';
@@ -737,6 +1267,7 @@ $approvedCount = count(array_filter($userApplications, fn($app) => $app['status'
                     alert('An error occurred. Please try again.');
                 });
             });
+            updateStepDisplay();
         });
     </script>
     <?php endif; ?>

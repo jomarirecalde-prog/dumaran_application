@@ -315,7 +315,8 @@ $statusInfo = $statusConfig[$application['status']] ?? $statusConfig[STATUS_PEND
         }
     </style>
 </head>
-<body data-application-id="<?= $appId ?>" data-status="<?= htmlspecialchars($application['status']) ?>">
+<body data-theme="system" data-application-id="<?= $appId ?>" data-status="<?= htmlspecialchars($application['status']) ?>">
+<?php include '../../includes/applicant-theme-init.php'; ?>
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="sidebar-header">
@@ -363,6 +364,7 @@ $statusInfo = $statusConfig[$application['status']] ?? $statusConfig[STATUS_PEND
             </button>
             <h1 class="topbar-title">Application Details</h1>
             <div class="topbar-actions">
+                <?php include '../../includes/applicant-theme-toggle.php'; ?>
                 <a href="my-applications.php" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i>
                 </a>
@@ -601,6 +603,7 @@ $statusInfo = $statusConfig[$application['status']] ?? $statusConfig[STATUS_PEND
 
     <script src="../../assets/js/toast.js"></script>
     <script src="../../assets/js/office-theme.js"></script>
+    <script src="../../assets/js/applicant-theme.js"></script>
     <?php include '../../includes/pwa-scripts.php'; ?>
 </body>
 </html>

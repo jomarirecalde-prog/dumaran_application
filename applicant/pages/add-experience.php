@@ -75,7 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="../../assets/css/office-theme.css" rel="stylesheet">
     <?php include '../../includes/pwa-header.php'; ?>
 </head>
-<body>
+<body data-theme="system">
+<?php include '../../includes/applicant-theme-init.php'; ?>
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="sidebar-header">
@@ -132,6 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </button>
             <h1 class="topbar-title">Add Experience</h1>
             <div class="topbar-actions">
+                <?php include '../../includes/applicant-theme-toggle.php'; ?>
                 <a href="profile.php" class="topbar-btn">
                     <i class="fas fa-arrow-left"></i>
                 </a>
@@ -230,6 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="../../assets/js/toast.js"></script>
     <script src="../../assets/js/form-submission-manager.js"></script>
     <script src="../../assets/js/office-theme.js"></script>
+    <script src="../../assets/js/applicant-theme.js"></script>
     <script>
         const isCurrentCheckbox = document.getElementById('isCurrent');
         const endDateInput = document.getElementById('endDate');

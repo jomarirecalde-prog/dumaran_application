@@ -1,5 +1,7 @@
 /* WPU Employment and Selection System — Login Portal */
 
+@import url('toast.css');
+
 :root {
     --primary: #0056D2;
     --primary-dark: #0F4C81;
@@ -958,77 +960,6 @@ body.login-body {
     border: 0;
 }
 
-/* Toast overrides for login */
-.toast-container-custom {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-width: min(400px, calc(100vw - 32px));
-    pointer-events: none;
-}
-
-.toast-notification {
-    background: var(--card);
-    backdrop-filter: var(--glass-blur);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    padding: 16px 18px;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    min-width: 280px;
-    border-left: 4px solid;
-    animation: toastSlideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-    pointer-events: auto;
-    cursor: pointer;
-    border: 1px solid var(--card-border);
-}
-
-.toast-notification.toast-closing {
-    animation: toastSlideOut 0.3s ease forwards;
-}
-
-@keyframes toastSlideIn {
-    from {
-        opacity: 0;
-        transform: translateX(24px) translateY(-8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0) translateY(0);
-    }
-}
-
-@keyframes toastSlideOut {
-    to {
-        opacity: 0;
-        transform: translateX(24px);
-    }
-}
-
-.toast-notification-icon { font-size: 1.25rem; flex-shrink: 0; }
-.toast-notification-content { flex: 1; min-width: 0; }
-.toast-notification-title { font-weight: 700; font-size: 0.875rem; margin-bottom: 3px; }
-.toast-notification-message { font-size: 0.8125rem; line-height: 1.45; color: var(--text-muted); }
-.toast-notification-close {
-    background: none; border: none; opacity: 0.5; cursor: pointer; padding: 4px;
-    color: var(--text-muted); transition: opacity var(--transition);
-}
-.toast-notification-close:hover { opacity: 1; }
-
-.toast-notification.toast-success { border-left-color: var(--success); }
-.toast-notification.toast-success .toast-notification-icon { color: var(--success); }
-.toast-notification.toast-error { border-left-color: var(--error); }
-.toast-notification.toast-error .toast-notification-icon { color: var(--error); }
-.toast-notification.toast-warning { border-left-color: var(--warning); }
-.toast-notification.toast-warning .toast-notification-icon { color: var(--warning); }
-.toast-notification.toast-info { border-left-color: var(--primary); }
-.toast-notification.toast-info .toast-notification-icon { color: var(--primary); }
-
 /* Responsive */
 @media (max-width: 1024px) {
     .login-split {
@@ -1067,16 +998,6 @@ body.login-body {
         align-self: flex-end;
     }
 
-    .toast-container-custom {
-        top: 12px;
-        right: 12px;
-        left: 12px;
-    }
-
-    .toast-notification {
-        min-width: unset;
-        width: 100%;
-    }
 }
 
 @media (min-width: 1400px) {

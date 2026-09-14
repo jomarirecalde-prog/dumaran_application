@@ -41,7 +41,8 @@ $applicationCount = $positionModel->getApplicationCount($positionId);
     <link href="../../assets/css/office-theme.css" rel="stylesheet">
     <?php include '../../includes/pwa-header.php'; ?>
 </head>
-<body>
+<body data-theme="system">
+<?php include '../../includes/applicant-theme-init.php'; ?>
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="sidebar-header">
@@ -98,6 +99,7 @@ $applicationCount = $positionModel->getApplicationCount($positionId);
             </button>
             <h1 class="topbar-title">Job Details</h1>
             <div class="topbar-actions">
+                <?php include '../../includes/applicant-theme-toggle.php'; ?>
                 <a href="positions.php" class="topbar-btn">
                     <i class="fas fa-arrow-left"></i>
                 </a>
@@ -273,6 +275,7 @@ $applicationCount = $positionModel->getApplicationCount($positionId);
 
     <script src="../../assets/js/toast.js"></script>
     <script src="../../assets/js/office-theme.js"></script>
+    <script src="../../assets/js/applicant-theme.js"></script>
     <?php include '../../includes/pwa-scripts.php'; ?>
 </body>
 </html>

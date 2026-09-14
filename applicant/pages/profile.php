@@ -745,6 +745,103 @@ try {
 
 // Refresh user data to get latest file paths
 $user = $userModel->findById($userId);
+
+// Display-only stats for dashboard cards (no backend logic change)
+$applicationModel = new Application();
+$userApplications = $applicationModel->getUserApplications($userId);
+$applicationsSubmitted = count($userApplications);
+$pendingApplications = count(array_filter($userApplications, fn($a) => ($a['status'] ?? '') === STATUS_PENDING));
+$interviewInvitations = count(array_filter($userApplications, fn($a) => !empty($a['interview_date'])));
+$documentsUploaded = count($trainingCertificates) + count($applicationDocuments);
+if (!empty($user['ipcr_file_path'])) $documentsUploaded++;
+if (!empty($user['pe_file_path'])) $documentsUploaded++;
+
+// Avatar initials helper
+function profileInitials($fullName) {
+    $parts = array_filter(explode(' ', preg_replace('/[,]+/', ' ', strtoupper(trim($fullName)))));
+    if (count($parts) >= 2) {
+        return substr($parts[0], 0, 1) . substr($parts[1], 0, 1);
+    }
+    return strtoupper(substr(trim($fullName), 0, 1));
+}
+
+$profileInitials = profileInitials($user['full_name'] ?? 'A');
+$memberSince = !empty($user['created_at']) ? date('M j, Y', strtotime($user['created_at'])) : '—';
+$lastUpdated = !empty($user['updated_at']) ? date('M j, Y g:i A', strtotime($user['updated_at'])) : '—';
+$infoMessage = $_GET['info'] ?? '';
+
+function renderDocumentSection($number, $title, $description, $formatCode, $examples, $fileInputName, $documentType, $allowedFormats, $documentsByType, $isMultiple = false) {
+    $docs = isset($documentsByType[$documentType]) ? $documentsByType[$documentType] : [];
+    $isMultipleAllowed = $isMultiple;
+    if (!$isMultipleAllowed && !empty($docs)) {
+        $docs = [end($docs)];
+    }
+    $acceptAttr = implode(',', array_map(function($f) {
+        return '.' . $f . ($f === 'pdf' ? ',application/pdf' : ($f === 'jpg' || $f === 'jpeg' ? ',image/jpeg,image/jpg' : ''));
+    }, $allowedFormats));
+    ?>
+    <div class="profile-doc-section" data-doc-type="<?= htmlspecialchars($documentType) ?>">
+        <h4 class="profile-doc-section__title"><?= $number ?>. <?= htmlspecialchars($title) ?></h4>
+        <?php if (!empty($description)): ?>
+            <div class="profile-doc-section__desc"><?= $description ?></div>
+        <?php endif; ?>
+        <div class="profile-format-card">
+            <div class="profile-format-card__label">Required Format</div>
+            <div class="profile-format-card__code">
+                <span><?= htmlspecialchars(strip_tags($formatCode)) ?></span>
+                <button type="button" class="profile-format-card__copy" data-copy-format="<?= htmlspecialchars(strip_tags($formatCode)) ?>">Copy</button>
+            </div>
+            <?php if (!empty($examples)): ?>
+                <p class="profile-field-hint" style="margin-top:8px;">Example: <?= is_array($examples) ? htmlspecialchars($examples[0]) : htmlspecialchars($examples) ?></p>
+            <?php endif; ?>
+        </div>
+        <label class="profile-section-label">Uploaded Files</label>
+        <div class="profile-files-grid">
+        <?php if (!empty($docs)): ?>
+            <?php foreach ($docs as $doc):
+                $docDisplayPath = 'uploads/documents/' . $doc['file_path'];
+                $docFullPath = __DIR__ . '/' . $docDisplayPath;
+                $docFileExists = file_exists($docFullPath);
+                $isPdf = strtolower(pathinfo($doc['file_path'], PATHINFO_EXTENSION)) === 'pdf';
+                $fileSize = !empty($doc['file_size']) ? round($doc['file_size'] / 1024, 1) . ' KB' : '';
+            ?>
+            <div class="profile-file-card" data-has-file="1">
+                <div class="profile-file-card__icon profile-file-card__icon--<?= $isPdf ? 'pdf' : 'image' ?>"><i class="fas fa-<?= $isPdf ? 'file-pdf' : 'file-image' ?>"></i></div>
+                <div class="profile-file-card__info">
+                    <div class="profile-file-card__name"><?= htmlspecialchars($doc['file_name']) ?></div>
+                    <div class="profile-file-card__meta"><?= $fileSize ?></div>
+                    <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check"></i> Completed</span>
+                </div>
+                <div class="profile-file-card__actions">
+                    <?php if ($docFileExists): ?>
+                    <a href="#" class="profile-btn profile-btn--sm profile-btn--secondary" data-preview="<?= htmlspecialchars($docDisplayPath) ?>"><i class="fas fa-eye"></i> View</a>
+                    <a href="<?= htmlspecialchars($docDisplayPath) ?>" download class="profile-btn profile-btn--sm profile-btn--secondary"><i class="fas fa-download"></i></a>
+                    <?php endif; ?>
+                    <a href="../actions/delete-application-document.php?id=<?= $doc['id'] ?>" class="profile-btn profile-btn--sm profile-btn--danger-outline" data-confirm="Delete this document?"><i class="fas fa-trash"></i></a>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="profile-empty" style="padding:20px;">
+                <div class="profile-empty__icon" style="width:56px;height:56px;font-size:1.25rem;"><i class="fas fa-file-upload"></i></div>
+                <p class="profile-empty__text">No file uploaded yet.</p>
+            </div>
+        <?php endif; ?>
+        </div>
+        <div class="profile-dropzone">
+            <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt"></i></div>
+            <div class="profile-dropzone__title">Drop <?= strtoupper(implode(' or ', $allowedFormats)) ?> here or Browse</div>
+            <div class="profile-dropzone__subtitle profile-dropzone__selected"></div>
+            <div class="profile-dropzone__formats">
+                <?php foreach ($allowedFormats as $f): ?><span class="profile-dropzone__tag"><?= strtoupper($f) ?></span><?php endforeach; ?>
+                <span class="profile-dropzone__tag">Max 10MB</span>
+            </div>
+            <input type="file" name="<?= $fileInputName ?><?= $isMultipleAllowed ? '[]' : '' ?>" accept="<?= $acceptAttr ?>" <?= $isMultipleAllowed ? 'multiple' : '' ?> aria-label="Upload <?= htmlspecialchars($title) ?>">
+            <div class="profile-dropzone__progress"><div class="profile-dropzone__progress-bar"><div class="profile-dropzone__progress-fill"></div></div></div>
+        </div>
+    </div>
+    <?php
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -755,17 +852,11 @@ $user = $userModel->findById($userId);
     <link rel="icon" type="image/x-icon" href="../../favicon.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="../../assets/css/office-theme.css" rel="stylesheet">
+    <link href="../../assets/css/profile.css" rel="stylesheet">
     <?php include '../../includes/pwa-header.php'; ?>
-    <style>
-        @media (max-width: 768px) {
-            .content > div[style*="grid-template-columns"] {
-                grid-template-columns: 1fr !important;
-            }
-        }
-    </style>
-       
 </head>
-<body>
+<body class="profile-page" data-theme="system">
+<?php include '../../includes/applicant-theme-init.php'; ?>
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="sidebar-header">
@@ -776,11 +867,11 @@ $user = $userModel->findById($userId);
         </div>
         
         <nav class="sidebar-nav">
-         <a href="profile.php" class="sidebar-nav-item">
+         <a href="profile.php" class="sidebar-nav-item active">
                 <i class="fas fa-user"></i>
                 <span>Profile</span>
             </a>
-            <a href="dashboard.php" class="sidebar-nav-item active">
+            <a href="dashboard.php" class="sidebar-nav-item">
                 <i class="fas fa-th-large"></i>
                 <span>Dashboard</span>
             </a>
@@ -818,6 +909,7 @@ $user = $userModel->findById($userId);
             </button>
             <h1 class="topbar-title">Profile</h1>
             <div class="topbar-actions">
+                <?php include '../../includes/applicant-theme-toggle.php'; ?>
                 <a href="../../auth/logout.php" class="topbar-btn confirm-logout" title="Logout">
                     <i class="fas fa-sign-out-alt"></i>
                 </a>
@@ -826,602 +918,756 @@ $user = $userModel->findById($userId);
 
         <!-- Main Content -->
         <div class="content">
-            <!-- Profile Header -->
-            <div class="card" style="background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%); border: none; color: white; margin-bottom: 20px;">
-                <div class="card-body" style="padding: 32px; text-align: center;">
-                    <div style="width: 100px; height: 100px; border-radius: 50%; background: white; color: var(--primary-blue); display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);">
-                        <i class="fas fa-user"></i>
+            <!-- Profile Hero -->
+            <section class="profile-hero" aria-label="Profile overview">
+                <div class="profile-hero__banner"></div>
+                <div class="profile-hero__body">
+                    <div class="profile-hero__top">
+                        <div class="profile-avatar-wrap">
+                            <div class="profile-avatar" aria-hidden="true">
+                                <?php if (!empty($user['profile_picture']) && file_exists(__DIR__ . '/uploads/' . $user['profile_picture'])): ?>
+                                    <img src="uploads/<?= htmlspecialchars($user['profile_picture']) ?>" alt="">
+                                <?php else: ?>
+                                    <?= htmlspecialchars($profileInitials) ?>
+                                <?php endif; ?>
+                            </div>
+                            <button type="button" class="profile-avatar-edit" title="Edit photo (coming soon)" aria-label="Edit profile photo" disabled>
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        </div>
+                        <div class="profile-hero__info">
+                            <h2 class="profile-hero__name"><?= htmlspecialchars($user['full_name']) ?></h2>
+                            <div class="profile-hero__role">Applicant · ID #<?= (int)$userId ?></div>
+                            <div class="profile-hero__meta">
+                                <span><i class="fas fa-envelope"></i> <?= htmlspecialchars($user['email']) ?></span>
+                                <?php if (!empty($user['phone'])): ?>
+                                <span><i class="fas fa-phone"></i> <?= htmlspecialchars($user['phone']) ?></span>
+                                <?php endif; ?>
+                                <span><i class="fas fa-chart-pie"></i> <span id="profileHeroPct">0</span> complete</span>
+                            </div>
+                        </div>
+                        <div class="profile-hero__actions">
+                            <span class="profile-badge profile-badge--incomplete" id="profileStatusBadge">
+                                <i class="fas fa-clock"></i> In Progress
+                            </span>
+                            <div class="profile-theme-toggle" role="group" aria-label="Theme">
+                                <button type="button" data-theme-set="light" aria-pressed="false">Light</button>
+                                <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
+                                <button type="button" data-theme-set="system" aria-pressed="true" class="active">System</button>
+                            </div>
+                        </div>
                     </div>
-                    <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 8px;"><?= htmlspecialchars($user['full_name']) ?></h2>
-                    <p style="opacity: 0.9; margin-bottom: 0;"><i class="fas fa-envelope"></i> <?= htmlspecialchars($user['email']) ?></p>
+                    <div class="profile-hero__dates">
+                        <span><i class="fas fa-calendar-plus"></i> Member since <?= $memberSince ?></span>
+                        <span><i class="fas fa-clock"></i> Last updated <?= $lastUpdated ?></span>
+                        <span id="draftSavedIndicator" style="opacity:0; transition: opacity 0.3s;"><i class="fas fa-cloud"></i> Draft saved</span>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Experience Stats -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <div>
-                            <div class="stat-card-value"><?= number_format($totalExperience, 1) ?></div>
-                            <div class="stat-card-label">Years Experience</div>
-                        </div>
-                        <div class="stat-card-icon green">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                    </div>
+            <!-- Profile Completion -->
+            <section class="profile-completion-card" aria-label="Profile completion">
+                <div class="profile-completion-card__header">
+                    <h3 class="profile-completion-card__title">Profile Completion</h3>
+                    <span class="profile-completion-card__pct" id="profileProgressPct">0%</span>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <div>
-                            <div class="stat-card-value"><?= count($experiences) ?></div>
-                            <div class="stat-card-label">Work Experiences</div>
-                        </div>
-                        <div class="stat-card-icon blue">
-                            <i class="fas fa-briefcase"></i>
-                        </div>
-                    </div>
+                <div class="profile-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="profile-progress-bar__fill" id="profileProgressFill"></div>
                 </div>
-            </div>
+                <div class="profile-completion-checklist">
+                    <button type="button" class="profile-checklist-item incomplete" data-section="personal" data-goto-step="0">
+                        <i class="fas fa-circle"></i> Personal Information
+                    </button>
+                    <button type="button" class="profile-checklist-item incomplete" data-section="education" data-goto-step="1">
+                        <i class="fas fa-circle"></i> Education
+                    </button>
+                    <button type="button" class="profile-checklist-item incomplete" data-section="experience" data-goto-step="2">
+                        <i class="fas fa-circle"></i> Experience
+                    </button>
+                    <button type="button" class="profile-checklist-item incomplete" data-section="eligibility" data-goto-step="3">
+                        <i class="fas fa-circle"></i> Eligibility
+                    </button>
+                    <button type="button" class="profile-checklist-item incomplete" data-section="documents" data-goto-step="4">
+                        <i class="fas fa-circle"></i> Documents
+                    </button>
+                </div>
+                <div style="margin-top: 16px; font-size: 0.8125rem; color: var(--profile-text-muted);">
+                    <strong>Missing:</strong> <span id="profileMissingList"></span>
+                </div>
+            </section>
 
-            <!-- Alerts -->
-            <?php if (isset($tablesExist) && !$tablesExist): ?>
-                <div class="alert alert-warning" style="background-color: #fef3c7; border-color: #f59e0b; color: #92400e;">
-                    <i class="fas fa-exclamation-triangle"></i>
+            <!-- Dashboard Stats -->
+            <div class="profile-stats-grid">
+                <div class="profile-stat-card">
+                    <div class="profile-stat-card__icon profile-stat-card__icon--green"><i class="fas fa-chart-line"></i></div>
                     <div>
-                        <strong>Database Tables Missing!</strong> 
-                        The training certificates and application documents tables are not set up yet. 
-                        Please <a href="../../migrations/run_migrations.php" style="color: #92400e; text-decoration: underline; font-weight: 600;">run the migration script</a> to create these tables before uploading files.
-                        Your profile information will still save, but file uploads won't work until the tables are created.
+                        <div class="profile-stat-card__value"><?= number_format($totalExperience, 1) ?></div>
+                        <div class="profile-stat-card__label">Years Experience</div>
                     </div>
+                </div>
+                <div class="profile-stat-card">
+                    <div class="profile-stat-card__icon profile-stat-card__icon--purple"><i class="fas fa-award"></i></div>
+                    <div>
+                        <div class="profile-stat-card__value"><?= count($trainingCertificates) ?></div>
+                        <div class="profile-stat-card__label">Certificates</div>
+                    </div>
+                </div>
+                <div class="profile-stat-card">
+                    <div class="profile-stat-card__icon profile-stat-card__icon--blue"><i class="fas fa-file-alt"></i></div>
+                    <div>
+                        <div class="profile-stat-card__value"><?= $documentsUploaded ?></div>
+                        <div class="profile-stat-card__label">Documents Uploaded</div>
+                    </div>
+                </div>
+                <div class="profile-stat-card">
+                    <div class="profile-stat-card__icon profile-stat-card__icon--teal"><i class="fas fa-paper-plane"></i></div>
+                    <div>
+                        <div class="profile-stat-card__value"><?= $applicationsSubmitted ?></div>
+                        <div class="profile-stat-card__label">Applications Submitted</div>
+                    </div>
+                </div>
+                <div class="profile-stat-card">
+                    <div class="profile-stat-card__icon profile-stat-card__icon--orange"><i class="fas fa-hourglass-half"></i></div>
+                    <div>
+                        <div class="profile-stat-card__value"><?= $pendingApplications ?></div>
+                        <div class="profile-stat-card__label">Pending Applications</div>
+                    </div>
+                </div>
+                <div class="profile-stat-card">
+                    <div class="profile-stat-card__icon profile-stat-card__icon--pink"><i class="fas fa-calendar-check"></i></div>
+                    <div>
+                        <div class="profile-stat-card__value"><?= $interviewInvitations ?></div>
+                        <div class="profile-stat-card__label">Interview Invitations</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="profile-notifications">
+            <?php if (isset($tablesExist) && !$tablesExist): ?>
+                <div class="profile-notification profile-notification--warning" data-auto-hide="1" role="alert">
+                    <div class="profile-notification__icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="profile-notification__body">
+                        <strong>Database Tables Missing!</strong>
+                        The training certificates and application documents tables are not set up yet.
+                        Please <a href="../../migrations/run_migrations.php">run the migration script</a> to create these tables before uploading files.
+                    </div>
+                    <button type="button" class="profile-notification__close" aria-label="Dismiss"><i class="fas fa-times"></i></button>
                 </div>
             <?php endif; ?>
             
             <?php if ($success === 'profile_updated'): ?>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <div><strong>Success!</strong> Profile updated successfully!</div>
+                <div class="profile-notification profile-notification--success" data-auto-hide="1" role="alert">
+                    <div class="profile-notification__icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="profile-notification__body"><strong>Success!</strong> Profile updated successfully!</div>
+                    <button type="button" class="profile-notification__close" aria-label="Dismiss"><i class="fas fa-times"></i></button>
                 </div>
             <?php elseif ($success === 'certificate_deleted'): ?>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <div><strong>Success!</strong> Training certificate deleted successfully!</div>
+                <div class="profile-notification profile-notification--success" data-auto-hide="1" role="alert">
+                    <div class="profile-notification__icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="profile-notification__body"><strong>Success!</strong> Training certificate deleted successfully!</div>
+                    <button type="button" class="profile-notification__close" aria-label="Dismiss"><i class="fas fa-times"></i></button>
                 </div>
             <?php elseif ($success === 'document_deleted'): ?>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <div><strong>Success!</strong> Document deleted successfully!</div>
+                <div class="profile-notification profile-notification--success" data-auto-hide="1" role="alert">
+                    <div class="profile-notification__icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="profile-notification__body"><strong>Success!</strong> Document deleted successfully!</div>
+                    <button type="button" class="profile-notification__close" aria-label="Dismiss"><i class="fas fa-times"></i></button>
+                </div>
+            <?php elseif ($success === 'experience_added' || $success === 'experience_updated' || $success === 'experience_deleted'): ?>
+                <div class="profile-notification profile-notification--success" data-auto-hide="1" role="alert">
+                    <div class="profile-notification__icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="profile-notification__body"><strong>Success!</strong> Work experience updated.</div>
+                    <button type="button" class="profile-notification__close" aria-label="Dismiss"><i class="fas fa-times"></i></button>
                 </div>
             <?php endif; ?>
             
             <?php if (!empty($error)): ?>
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <div><strong>Error!</strong> <?= htmlspecialchars($error) ?></div>
+                <div class="profile-notification profile-notification--error" role="alert">
+                    <div class="profile-notification__icon"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="profile-notification__body"><strong>Error!</strong> <?= htmlspecialchars($error) ?></div>
+                    <button type="button" class="profile-notification__close" aria-label="Dismiss"><i class="fas fa-times"></i></button>
                 </div>
             <?php endif; ?>
 
-            <!-- Profile Information Form -->
-            <div class="card" style="margin-bottom: 24px;">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-user-edit"></i> Profile Information
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <form method="POST" action="" class="prevent-double-submit" enctype="multipart/form-data">
-                            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
-                            <?php FormTokenManager::renderFormTokenInput('update_profile'); ?>
-                            
-                            <!-- 3. NAME -->
-                            <div class="form-group">
-                                <label class="form-label"><strong> NAME *</strong></label>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Format: SURNAME, FIRST NAME, MIDDLE NAME (Capital Letters)</p>
-                                <input type="text" name="full_name" class="form-control" style="text-transform: uppercase;"
-                                       value="<?= htmlspecialchars(strtoupper($user['full_name'] ?? '')) ?>" 
-                                       placeholder="SANTOS, MARIA FE, REYES" required>
-                                <small class="form-text text-muted">Ensure your name matches official documents exactly.</small>
-                            </div>
-                            
-                            <!-- 4. AGE -->
-                            <div class="form-group">
-                                <label class="form-label"><strong> AGE *</strong></label>
-                                <input type="number" name="age" class="form-control" 
-                                       value="<?= htmlspecialchars($user['age'] ?? '') ?>" 
-                                       min="1" max="120" placeholder="Enter your age" required>
-                            </div>
-                            
-                            <!-- 5. SEX -->
-                            <div class="form-group">
-                                <label class="form-label"><strong>SEX *</strong></label>
-                                <div style="display: flex; gap: 24px; margin-top: 8px;">
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="radio" name="sex" value="Male" <?= (isset($user['sex']) && $user['sex'] === 'Male') ? 'checked' : '' ?> required>
-                                        <span>Male</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="radio" name="sex" value="Female" <?= (isset($user['sex']) && $user['sex'] === 'Female') ? 'checked' : '' ?> required>
-                                        <span>Female</span>
-                                    </label>
-                                </div>
-                                <small class="form-text text-muted">Mark only one oval.</small>
-                            </div>
-                            
-                            <!-- 6. CIVIL STATUS -->
-                            <div class="form-group">
-                                <label class="form-label"><strong>CIVIL STATUS *</strong></label>
-                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px;">
-                                    <?php 
-                                    $civilStatuses = ['Married', 'Single', 'Separated', 'Widowed', 'Annuled', 'Solo Parent'];
-                                    foreach ($civilStatuses as $status): 
-                                    ?>
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="radio" name="civil_status" value="<?= htmlspecialchars($status) ?>" 
-                                               <?= (isset($user['civil_status']) && $user['civil_status'] === $status) ? 'checked' : '' ?> required>
-                                        <span><?= htmlspecialchars($status) ?></span>
-                                    </label>
-                                    <?php endforeach; ?>
-                                </div>
-                                <small class="form-text text-muted">Mark only one oval.</small>
-                            </div>
-                            
-                            <!-- 7. ADDRESS -->
-                            <div class="form-group">
-                                <label class="form-label"><strong>ADDRESS *</strong></label>
-                                <textarea name="address" class="form-control" rows="3" required><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
-                            </div>
-                            
-                            <hr style="margin: 32px 0; border-color: var(--gray-200);">
-                            
-                            <!-- EDUCATIONAL BACKGROUND -->
-                            <h4 style="margin-bottom: 20px; font-size: 1.25rem; font-weight: 700;">EDUCATIONAL BACKGROUND</h4>
-                            <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 20px;">Please provide the details of your educational attainment. If a field does not apply to you, kindly indicate <strong>Not Applicable (NA)</strong>.</p>
+            <?php if (!empty($infoMessage)): ?>
+                <div class="profile-notification profile-notification--info" data-auto-hide="1" role="alert">
+                    <div class="profile-notification__icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="profile-notification__body"><?= htmlspecialchars($infoMessage) ?></div>
+                    <button type="button" class="profile-notification__close" aria-label="Dismiss"><i class="fas fa-times"></i></button>
+                </div>
+            <?php endif; ?>
+            </div>
 
-                            
-                            <!-- 8. HIGHEST EDUCATIONAL ATTAINMENT -->
-                            <div class="form-group">
-                                <label class="form-label"><strong>HIGHEST EDUCATIONAL ATTAINMENT</strong></label>
-                                <select name="highest_educational_attainment" class="form-control">
-                                    <option value="">Select highest educational attainment</option>
-                                    <option value="Elementary Level" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'Elementary Level') ? 'selected' : '' ?>>Elementary Level</option>
-                                    <option value="Elementary Graduate" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'Elementary Graduate') ? 'selected' : '' ?>>Elementary Graduate</option>
-                                    <option value="Secondary/ High School Level" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'Secondary/ High School Level') ? 'selected' : '' ?>>Secondary/ High School Level</option>
-                                    <option value="Secondary/ High School Graduate" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'Secondary/ High School Graduate') ? 'selected' : '' ?>>Secondary/ High School Graduate</option>
-                                    <option value="College Level" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'College Level') ? 'selected' : '' ?>>College Level</option>
-                                    <option value="College Graduate" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'College Graduate') ? 'selected' : '' ?>>College Graduate</option>
-                                    <option value="Master's Degree Holder" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'Master\'s Degree Holder') ? 'selected' : '' ?>>Master's Degree Holder</option>
-                                    <option value="Doctoral Degree Holder" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'Doctoral Degree Holder') ? 'selected' : '' ?>>Doctoral Degree Holder</option>
-                                </select>
-                                <small class="form-text text-muted">Mark only one oval.</small>
-                            </div>
-                            
-                            <!-- 9. BACHELOR'S DEGREE -->
-                            <div class="form-group">
-                                <label class="form-label"><strong>BACHELOR'S DEGREE/COURSE</strong></label>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Format: Degree Program, School/University, Year of Completion</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Example: Bachelor of Science in Business Administration, Western Philippines University, 2018</p>
-                                <textarea name="bachelors_degree" class="form-control" rows="2" placeholder="If not applicable, type: NA"><?= htmlspecialchars($user['bachelors_degree'] ?? '') ?></textarea>
-                            </div>
-                            
-                            <!-- 10. MASTER'S DEGREE -->
-                            <div class="form-group">
-                                <label class="form-label"><strong>MASTER'S DEGREE/PROGRAM</strong></label>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Format: Degree Program, School/University, Year of Completion</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Example: Master of Public Administration, Rizal State University, 2022</p>
-                                <textarea name="masters_degree" class="form-control" rows="2" placeholder="If not applicable, type: NA"><?= htmlspecialchars($user['masters_degree'] ?? '') ?></textarea>
-                            </div>
-                            
-                            <!-- 11. DOCTORATE DEGREE -->
-                            <div class="form-group">
-                                <label class="form-label"><strong>DOCTORATE DEGREE/PROGRAM</strong></label>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Format: Degree Program, School/University, Year of Completion</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Example: Doctor of Philosophy in Educational Management, Palawan State University, 2025</p>
-                                <textarea name="doctorate_degree" class="form-control" rows="2" placeholder="If not applicable, type: NA"><?= htmlspecialchars($user['doctorate_degree'] ?? '') ?></textarea>
-                            </div>
-                            
-                            <!-- 12. CONTACT INFORMATION -->
-                            <div class="form-group">
-                                <label class="form-label"><strong>CONTACT INFORMATION (Mobile Number and E-mail Address)</strong></label>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Format: 09156161822, santosmf@gmail.com</p>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                    <input type="tel" name="phone" class="form-control" 
-                                           value="<?= htmlspecialchars($user['phone'] ?? '') ?>" 
-                                           placeholder="Mobile Number">
-                                    <input type="email" name="email" class="form-control" 
-                                           value="<?= htmlspecialchars($user['email'] ?? '') ?>" 
-                                           placeholder="Email Address" required>
+            <!-- Profile Wizard -->
+            <div class="profile-wizard">
+                <!-- Desktop Navigation -->
+                <nav class="profile-wizard-nav" aria-label="Profile sections">
+                    <div class="profile-wizard-nav__title">Sections</div>
+                    <?php
+                    $wizardSteps = [
+                        ['Personal Information', 'fa-user'],
+                        ['Education', 'fa-graduation-cap'],
+                        ['Experience', 'fa-briefcase'],
+                        ['Eligibility', 'fa-certificate'],
+                        ['Documents', 'fa-folder-open'],
+                        ['Review & Submit', 'fa-check-circle'],
+                    ];
+                    foreach ($wizardSteps as $i => $step): ?>
+                    <button type="button" class="profile-wizard-step<?= $i === 0 ? ' active' : '' ?>" data-wizard-step="<?= $i ?>" aria-current="<?= $i === 0 ? 'step' : 'false' ?>">
+                        <span class="profile-wizard-step__num"><?= $i + 1 ?></span>
+                        <span><?= htmlspecialchars($step[0]) ?></span>
+                    </button>
+                    <?php endforeach; ?>
+                </nav>
+
+                <!-- Mobile Stepper -->
+                <div class="profile-wizard-stepper" aria-label="Profile steps">
+                    <?php foreach ($wizardSteps as $i => $step): ?>
+                    <button type="button" class="profile-stepper-pill<?= $i === 0 ? ' active' : '' ?>" data-wizard-step="<?= $i ?>">
+                        <?= $i + 1 ?>. <?= htmlspecialchars(explode(' ', $step[0])[0]) ?>
+                    </button>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="profile-wizard-main">
+                    <form method="POST" action="" id="profileForm" class="prevent-double-submit" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                        <?php FormTokenManager::renderFormTokenInput('update_profile'); ?>
+
+                        <!-- Step 1: Personal Information -->
+                        <div class="profile-wizard-panel active" id="wizard-panel-personal" role="tabpanel">
+                            <div class="profile-section-card">
+                                <div class="profile-section-card__header">
+                                    <h3 class="profile-section-card__title"><i class="fas fa-user"></i> Personal Information</h3>
+                                </div>
+                                <div class="profile-section-card__body">
+                                    <div class="profile-form-grid profile-form-grid--1">
+                                        <div class="profile-field profile-field--full">
+                                            <label class="profile-section-label">Full Name <span class="profile-badge-req">Required</span></label>
+                                            <p class="profile-field-hint">Format: SURNAME, FIRST NAME, MIDDLE NAME (Capital Letters)</p>
+                                            <div class="profile-floating-label">
+                                                <i class="fas fa-id-card profile-field-icon"></i>
+                                                <input type="text" name="full_name" style="text-transform: uppercase;" placeholder=" "
+                                                       value="<?= htmlspecialchars(strtoupper($user['full_name'] ?? '')) ?>" required aria-required="true">
+                                                <label>Full Name</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="profile-form-grid">
+                                            <div class="profile-field">
+                                                <label class="profile-section-label">Age <span class="profile-badge-req">Required</span></label>
+                                                <div class="profile-floating-label">
+                                                    <i class="fas fa-birthday-cake profile-field-icon"></i>
+                                                    <input type="number" name="age" placeholder=" " min="1" max="120"
+                                                           value="<?= htmlspecialchars($user['age'] ?? '') ?>" required aria-required="true">
+                                                    <label>Age</label>
+                                                </div>
+                                            </div>
+                                            <div class="profile-field">
+                                                <label class="profile-section-label">Sex <span class="profile-badge-req">Required</span></label>
+                                                <div class="profile-radio-grid">
+                                                    <label class="profile-radio-card">
+                                                        <input type="radio" name="sex" value="Male" <?= (isset($user['sex']) && $user['sex'] === 'Male') ? 'checked' : '' ?> required>
+                                                        <span class="profile-radio-card__inner"><i class="fas fa-mars"></i> Male</span>
+                                                    </label>
+                                                    <label class="profile-radio-card">
+                                                        <input type="radio" name="sex" value="Female" <?= (isset($user['sex']) && $user['sex'] === 'Female') ? 'checked' : '' ?> required>
+                                                        <span class="profile-radio-card__inner"><i class="fas fa-venus"></i> Female</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="profile-field profile-field--full">
+                                            <label class="profile-section-label">Civil Status <span class="profile-badge-req">Required</span></label>
+                                            <div class="profile-radio-grid">
+                                                <?php 
+                                                $civilStatuses = ['Married', 'Single', 'Separated', 'Widowed', 'Annuled', 'Solo Parent'];
+                                                foreach ($civilStatuses as $status): ?>
+                                                <label class="profile-radio-card">
+                                                    <input type="radio" name="civil_status" value="<?= htmlspecialchars($status) ?>"
+                                                           <?= (isset($user['civil_status']) && $user['civil_status'] === $status) ? 'checked' : '' ?> required>
+                                                    <span class="profile-radio-card__inner"><?= htmlspecialchars($status) ?></span>
+                                                </label>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+
+                                        <div class="profile-field profile-field--full">
+                                            <label class="profile-section-label">Address <span class="profile-badge-req">Required</span></label>
+                                            <div class="profile-floating-label">
+                                                <i class="fas fa-map-marker-alt profile-field-icon"></i>
+                                                <textarea name="address" placeholder=" " required aria-required="true" data-max-length="500"><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
+                                                <label>Complete Address</label>
+                                            </div>
+                                            <div class="profile-char-count">0 / 500</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <!-- 13. TYPE OF APPLICATION -->
-                            <div class="form-group">
-                                <label class="form-label"><strong>TYPE OF APPLICATION</strong></label>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">(Please select the option that applies to you.)</p>
-                                <div style="margin-top: 8px;">
+
+                            <div class="profile-section-card">
+                                <div class="profile-section-card__header">
+                                    <h3 class="profile-section-card__title"><i class="fas fa-address-book"></i> Contact Information</h3>
+                                </div>
+                                <div class="profile-section-card__body">
+                                    <div class="profile-form-grid">
+                                        <div class="profile-field">
+                                            <label class="profile-section-label">Mobile Number <span class="profile-badge-opt">Optional</span></label>
+                                            <div class="profile-floating-label">
+                                                <i class="fas fa-phone profile-field-icon"></i>
+                                                <input type="tel" name="phone" placeholder=" " value="<?= htmlspecialchars($user['phone'] ?? '') ?>">
+                                                <label>Mobile Number</label>
+                                            </div>
+                                        </div>
+                                        <div class="profile-field">
+                                            <label class="profile-section-label">Email <span class="profile-badge-req">Required</span></label>
+                                            <div class="profile-floating-label">
+                                                <i class="fas fa-envelope profile-field-icon"></i>
+                                                <input type="email" name="email" placeholder=" " value="<?= htmlspecialchars($user['email'] ?? '') ?>" required aria-required="true">
+                                                <label>Email Address</label>
+                                            </div>
+                                            <div class="profile-field-error">Please enter a valid email address.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; justify-content:flex-end; gap:12px;">
+                                <button type="button" class="profile-btn profile-btn--primary" data-wizard-next>Continue to Education <i class="fas fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Education -->
+                        <div class="profile-wizard-panel" id="wizard-panel-education" role="tabpanel">
+                            <div class="profile-section-card">
+                                <div class="profile-section-card__header">
+                                    <h3 class="profile-section-card__title"><i class="fas fa-graduation-cap"></i> Educational Background</h3>
+                                </div>
+                                <div class="profile-section-card__body">
+                                    <p class="profile-field-hint" style="margin-bottom:20px;">If a field does not apply, indicate <strong>Not Applicable (NA)</strong>.</p>
+
+                                    <div class="profile-field profile-field--full" style="margin-bottom:24px;">
+                                        <label class="profile-section-label">Highest Educational Attainment</label>
+                                        <div class="profile-floating-label">
+                                            <select name="highest_educational_attainment">
+                                                <option value="" <?= empty($user['highest_educational_attainment']) ? 'selected' : '' ?>>Select highest educational attainment</option>
+                                                <option value="Elementary Level" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'Elementary Level') ? 'selected' : '' ?>>Elementary Level</option>
+                                                <option value="Elementary Graduate" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'Elementary Graduate') ? 'selected' : '' ?>>Elementary Graduate</option>
+                                                <option value="Secondary/ High School Level" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'Secondary/ High School Level') ? 'selected' : '' ?>>Secondary/ High School Level</option>
+                                                <option value="Secondary/ High School Graduate" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'Secondary/ High School Graduate') ? 'selected' : '' ?>>Secondary/ High School Graduate</option>
+                                                <option value="College Level" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'College Level') ? 'selected' : '' ?>>College Level</option>
+                                                <option value="College Graduate" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'College Graduate') ? 'selected' : '' ?>>College Graduate</option>
+                                                <option value="Master's Degree Holder" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'Master\'s Degree Holder') ? 'selected' : '' ?>>Master's Degree Holder</option>
+                                                <option value="Doctoral Degree Holder" <?= (isset($user['highest_educational_attainment']) && $user['highest_educational_attainment'] === 'Doctoral Degree Holder') ? 'selected' : '' ?>>Doctoral Degree Holder</option>
+                                            </select>
+                                            <label>Highest Attainment</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="profile-edu-cards">
+                                        <div class="profile-edu-card">
+                                            <div class="profile-edu-card__header"><i class="fas fa-university"></i> Bachelor's Degree</div>
+                                            <div class="profile-edu-card__body">
+                                                <p class="profile-field-hint">Degree, School/University, Year — or NA</p>
+                                                <textarea name="bachelors_degree" placeholder="If not applicable, type: NA" data-max-length="500"><?= htmlspecialchars($user['bachelors_degree'] ?? '') ?></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="profile-edu-card">
+                                            <div class="profile-edu-card__header"><i class="fas fa-user-graduate"></i> Master's Degree</div>
+                                            <div class="profile-edu-card__body">
+                                                <p class="profile-field-hint">Degree, School/University, Year — or NA</p>
+                                                <textarea name="masters_degree" placeholder="If not applicable, type: NA" data-max-length="500"><?= htmlspecialchars($user['masters_degree'] ?? '') ?></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="profile-edu-card">
+                                            <div class="profile-edu-card__header"><i class="fas fa-award"></i> Doctorate Degree</div>
+                                            <div class="profile-edu-card__body">
+                                                <p class="profile-field-hint">Degree, School/University, Year — or NA</p>
+                                                <textarea name="doctorate_degree" placeholder="If not applicable, type: NA" data-max-length="500"><?= htmlspecialchars($user['doctorate_degree'] ?? '') ?></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                                <button type="button" class="profile-btn profile-btn--secondary" data-wizard-prev><i class="fas fa-arrow-left"></i> Back</button>
+                                <button type="button" class="profile-btn profile-btn--primary" data-wizard-next>Continue to Experience <i class="fas fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Experience (summary field in form) -->
+                        <div class="profile-wizard-panel" id="wizard-panel-experience" role="tabpanel">
+                            <div class="profile-section-card">
+                                <div class="profile-section-card__header">
+                                    <h3 class="profile-section-card__title"><i class="fas fa-briefcase"></i> Work Experience Summary</h3>
+                                </div>
+                                <div class="profile-section-card__body">
+                                    <p class="profile-field-hint">Managed in the timeline below. Format: Position, Company, Inclusive Dates.</p>
+                                    <?php
+                                    $workExpText = '';
+                                    if (!empty($allExperiences)) {
+                                        $workExpLines = [];
+                                        foreach ($allExperiences as $exp) {
+                                            $startDate = date('M. d, Y', strtotime($exp['start_date']));
+                                            $endDate = $exp['is_current'] ? 'Present' : date('M. d, Y', strtotime($exp['end_date']));
+                                            $workExpLines[] = htmlspecialchars($exp['position_title'] . ', ' . $exp['company_name'] . ', ' . $startDate . ' to ' . $endDate);
+                                        }
+                                        $workExpText = implode("\n", $workExpLines);
+                                    } else {
+                                        $workExpText = 'NA';
+                                    }
+                                    ?>
+                                    <textarea name="work_experience_display" class="form-control" rows="4" readonly style="width:100%; border-radius:12px; padding:12px; border:1.5px solid var(--profile-border); background:var(--profile-surface-2);"><?= $workExpText ?></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Work Experience Timeline (outside submit flow, same data) -->
+                            <div class="profile-section-card" id="experienceCount" data-count="<?= $totalExperiences ?>">
+                                <div class="profile-section-card__header">
+                                    <h3 class="profile-section-card__title"><i class="fas fa-history"></i> Experience Timeline</h3>
+                                    <a href="add-experience.php" class="profile-btn profile-btn--sm profile-btn--primary"><i class="fas fa-plus"></i> Add Experience</a>
+                                </div>
+                                <div class="profile-section-card__body">
+                                    <div class="profile-exp-toolbar">
+                                        <div class="profile-exp-search">
+                                            <i class="fas fa-search"></i>
+                                            <input type="search" id="expSearch" placeholder="Search experiences..." aria-label="Search work experiences">
+                                        </div>
+                                    </div>
+                                    <?php if (empty($experiences)): ?>
+                                        <div class="profile-empty">
+                                            <div class="profile-empty__icon"><i class="fas fa-briefcase"></i></div>
+                                            <h4 class="profile-empty__title">No Work Experience Yet</h4>
+                                            <p class="profile-empty__text">Add your work experience to strengthen your applications.</p>
+                                            <a href="add-experience.php" class="profile-btn profile-btn--primary"><i class="fas fa-plus"></i> Add Experience</a>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="profile-timeline">
+                                            <?php foreach ($experiences as $exp): ?>
+                                            <div class="profile-timeline-item">
+                                                <div class="profile-timeline-item__card">
+                                                    <div class="profile-timeline-item__year"><?= date('Y', strtotime($exp['start_date'])) ?></div>
+                                                    <div class="profile-timeline-item__title"><?= htmlspecialchars($exp['position_title']) ?></div>
+                                                    <div class="profile-timeline-item__company"><i class="fas fa-building"></i> <?= htmlspecialchars($exp['company_name']) ?></div>
+                                                    <div class="profile-timeline-item__dates">
+                                                        <i class="fas fa-calendar"></i>
+                                                        <?= date('M Y', strtotime($exp['start_date'])) ?> – <?= $exp['is_current'] ? 'Present' : date('M Y', strtotime($exp['end_date'])) ?>
+                                                        <span class="profile-badge profile-badge--verified"><?= number_format($exp['years_duration'], 1) ?> yrs</span>
+                                                    </div>
+                                                    <?php if ($exp['description']): ?>
+                                                    <p style="font-size:0.8125rem;color:var(--profile-text-muted);margin-top:10px;line-height:1.5;"><?= nl2br(htmlspecialchars($exp['description'])) ?></p>
+                                                    <?php endif; ?>
+                                                    <div class="profile-timeline-item__actions">
+                                                        <a href="edit-experience.php?id=<?= $exp['id'] ?>" class="profile-btn profile-btn--sm profile-btn--secondary" title="Edit"><i class="fas fa-edit"></i> Edit</a>
+                                                        <a href="../actions/delete-experience.php?id=<?= $exp['id'] ?>" class="profile-btn profile-btn--sm profile-btn--danger-outline confirm-delete-experience" data-confirm="Delete this work experience?" title="Delete"><i class="fas fa-trash"></i> Delete</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <?php if ($totalPages > 1): ?>
+                                    <div class="profile-pagination">
+                                        <?php if ($page > 1): ?>
+                                            <a href="?page=<?= $page - 1 ?>" class="profile-btn profile-btn--sm profile-btn--secondary"><i class="fas fa-chevron-left"></i> Previous</a>
+                                        <?php endif; ?>
+                                        <span style="font-size:0.875rem;color:var(--profile-text-muted);">Page <?= $page ?> of <?= $totalPages ?> (<?= $totalExperiences ?> total)</span>
+                                        <?php if ($page < $totalPages): ?>
+                                            <a href="?page=<?= $page + 1 ?>" class="profile-btn profile-btn--sm profile-btn--secondary">Next <i class="fas fa-chevron-right"></i></a>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                                <button type="button" class="profile-btn profile-btn--secondary" data-wizard-prev><i class="fas fa-arrow-left"></i> Back</button>
+                                <button type="button" class="profile-btn profile-btn--primary" data-wizard-next>Continue to Eligibility <i class="fas fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Eligibility -->
+                        <div class="profile-wizard-panel" id="wizard-panel-eligibility" role="tabpanel">
+                            <div class="profile-section-card">
+                                <div class="profile-section-card__header">
+                                    <h3 class="profile-section-card__title"><i class="fas fa-file-signature"></i> Application Type</h3>
+                                </div>
+                                <div class="profile-section-card__body">
                                     <?php 
                                     $appTypes = [];
                                     if (isset($user['application_type']) && !empty($user['application_type'])) {
                                         $appTypes = explode(',', $user['application_type']);
                                     }
                                     ?>
-                                    <label style="display: flex; align-items: start; gap: 8px; cursor: pointer; margin-bottom: 12px;">
-                                        <input type="checkbox" name="application_type[]" value="PROMOTION" 
-                                               <?= in_array('PROMOTION', $appTypes) ? 'checked' : '' ?>>
-                                        <div>
-                                            <strong>PROMOTION:</strong>
-                                            <small style="display: block; color: var(--gray-600); margin-top: 4px;">
-                                                Applicants who are currently employed in the government sector, including: Existing Western Philippines University (WPU) employees applying for a higher or next-in-rank position; Government employees within WPU or from other government agencies applying for a higher position; and Government employees from other agencies seeking appointment to a position at Western Philippines University.
-                                            </small>
-                                        </div>
-                                    </label>
-                                    <label style="display: flex; align-items: start; gap: 8px; cursor: pointer;">
-                                        <input type="checkbox" name="application_type[]" value="ENTRY LEVEL" 
-                                               <?= in_array('ENTRY LEVEL', $appTypes) ? 'checked' : '' ?>>
-                                        <div>
-                                            <strong>ENTRY LEVEL:</strong>
-                                            <small style="display: block; color: var(--gray-600); margin-top: 4px;">
-                                                Applicants who are: From the private sector; or Individuals with no prior employment background, including fresh graduates and first-time job seekers.
-                                            </small>
-                                        </div>
-                                    </label>
-                                </div>
-                                <small class="form-text text-muted">Check all that apply.</small>
-                            </div>
-                            
-                            <!-- 14. FOR PROMOTION -->
-                            <?php 
-                            $showPromotion = false;
-                            if (isset($user['application_type']) && !empty($user['application_type'])) {
-                                $appTypesCheck = explode(',', $user['application_type']);
-                                $showPromotion = in_array('PROMOTION', $appTypesCheck);
-                            }
-                            // Always show section if file exists, even if checkbox isn't checked
-                            if (!empty($user['ipcr_file_path'])) {
-                                $showPromotion = true;
-                            }
-                            ?>
-                            <div class="form-group" id="promotion-section" style="display: <?= $showPromotion ? 'block' : 'none' ?>;">
-                                <label class="form-label"><strong>FOR PROMOTION</strong></label>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Provide the performance rating in the last rating period.</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">E.g. Individual Performance Commitment and Review(IPCR)</p>
-                                
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Applicants are required to save their completed documents in PDF format. The file name must follow this exact format:</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px; font-family: monospace; background: var(--gray-50); padding: 8px; border-radius: 4px;">SURNAME_FIRSTNAME_IPCR_WPUHRMDO</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 16px;">Example: SANTOS_MARIAFE_IPCR_WPUHRMDO.pdf</p>
-                                <p style="font-size: 0.875rem; color: var(--danger); margin-bottom: 16px; font-weight: 600;">Failure to follow this file naming convention may result in difficulty in processing your application.</p>
-                                
-                                <div style="margin-bottom: 16px;">
-                                    <label class="form-label"><strong>Files submitted:</strong></label>
-                                    <?php if (!empty($user['ipcr_file_path'])): 
-                                        $ipcrDisplayPath = 'uploads/documents/' . $user['ipcr_file_path'];
-                                        $ipcrFullPath = __DIR__ . '/' . $ipcrDisplayPath;
-                                        $ipcrFileExists = file_exists($ipcrFullPath);
-                                    ?>
-                                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--gray-50); border-radius: 4px; margin-top: 8px;">
-                                            <i class="fas fa-file-pdf" style="color: var(--danger); font-size: 1.5rem;"></i>
-                                            <div style="flex: 1;">
-                                                <div style="font-weight: 600; color: var(--gray-900);"><?= htmlspecialchars($user['ipcr_file_path']) ?></div>
-                                                <?php if ($ipcrFileExists): ?>
-                                                    <a href="<?= htmlspecialchars($ipcrDisplayPath) ?>" target="_blank" style="font-size: 0.875rem; color: var(--primary-blue); text-decoration: none;">
-                                                        <i class="fas fa-external-link-alt"></i> View File
-                                                    </a>
-                                                <?php else: ?>
-                                                    <span style="font-size: 0.875rem; color: var(--gray-500);">File not found on server</span>
-                                                <?php endif; ?>
+                                    <div class="profile-type-cards">
+                                        <label class="profile-type-card">
+                                            <input type="checkbox" name="application_type[]" value="PROMOTION" <?= in_array('PROMOTION', $appTypes) ? 'checked' : '' ?>>
+                                            <div class="profile-type-card__inner">
+                                                <div class="profile-type-card__icon"><i class="fas fa-level-up-alt"></i></div>
+                                                <strong>Promotion</strong>
+                                                <p>For government employees applying for higher or next-in-rank positions at WPU or other agencies.</p>
                                             </div>
-                                            <button type="button" class="btn btn-sm btn-outline" style="color: var(--danger); border-color: var(--danger);" onclick="if(confirm('Are you sure you want to delete this file?')) { document.getElementById('delete_ipcr_file').value = '1'; this.form.submit(); }">
-                                                <i class="fas fa-trash"></i> Delete
-                                            </button>
+                                        </label>
+                                        <label class="profile-type-card">
+                                            <input type="checkbox" name="application_type[]" value="ENTRY LEVEL" <?= in_array('ENTRY LEVEL', $appTypes) ? 'checked' : '' ?>>
+                                            <div class="profile-type-card__inner">
+                                                <div class="profile-type-card__icon"><i class="fas fa-seedling"></i></div>
+                                                <strong>Entry Level</strong>
+                                                <p>For private sector applicants, fresh graduates, and first-time job seekers.</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <?php 
+                            $showPromotion = in_array('PROMOTION', $appTypes) || !empty($user['ipcr_file_path']);
+                            $showEntryLevel = in_array('ENTRY LEVEL', $appTypes) || !empty($user['pe_file_path']);
+                            ?>
+
+                            <div class="profile-dynamic-section<?= $showPromotion ? ' expanded' : '' ?>" id="promotion-section">
+                                <div class="profile-section-card">
+                                    <div class="profile-section-card__header">
+                                        <h3 class="profile-section-card__title"><i class="fas fa-chart-bar"></i> For Promotion (IPCR)</h3>
+                                    </div>
+                                    <div class="profile-section-card__body">
+                                        <p class="profile-field-hint">Individual Performance Commitment and Review (IPCR) — PDF only, max 10MB.</p>
+                                        <div class="profile-format-card">
+                                            <div class="profile-format-card__label">Required Format</div>
+                                            <div class="profile-format-card__code">
+                                                <span>SURNAME_FIRSTNAME_IPCR_WPUHRMDO.pdf</span>
+                                                <button type="button" class="profile-format-card__copy" data-copy-format="SURNAME_FIRSTNAME_IPCR_WPUHRMDO.pdf">Copy</button>
+                                            </div>
+                                            <p class="profile-field-hint" style="margin-top:8px;">Example: SANTOS_MARIAFE_IPCR_WPUHRMDO.pdf</p>
+                                        </div>
+                                        <label class="profile-section-label">Uploaded Files</label>
+                                        <div class="profile-files-grid">
+                                        <?php if (!empty($user['ipcr_file_path'])): 
+                                            $ipcrDisplayPath = 'uploads/documents/' . $user['ipcr_file_path'];
+                                            $ipcrFullPath = __DIR__ . '/' . $ipcrDisplayPath;
+                                            $ipcrFileExists = file_exists($ipcrFullPath);
+                                        ?>
+                                            <div class="profile-file-card" data-has-file="1">
+                                                <div class="profile-file-card__icon profile-file-card__icon--pdf"><i class="fas fa-file-pdf"></i></div>
+                                                <div class="profile-file-card__info">
+                                                    <div class="profile-file-card__name"><?= htmlspecialchars($user['ipcr_file_path']) ?></div>
+                                                    <div class="profile-file-card__meta">PDF Document</div>
+                                                    <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check"></i> Completed</span>
+                                                </div>
+                                                <div class="profile-file-card__actions">
+                                                    <?php if ($ipcrFileExists): ?>
+                                                    <a href="#" class="profile-btn profile-btn--sm profile-btn--secondary" data-preview="<?= htmlspecialchars($ipcrDisplayPath) ?>"><i class="fas fa-eye"></i> View</a>
+                                                    <a href="<?= htmlspecialchars($ipcrDisplayPath) ?>" download class="profile-btn profile-btn--sm profile-btn--secondary"><i class="fas fa-download"></i></a>
+                                                    <?php endif; ?>
+                                                    <button type="button" class="profile-btn profile-btn--sm profile-btn--danger-outline" data-confirm="Delete this IPCR file?" data-delete-field="delete_ipcr_file"><i class="fas fa-trash"></i></button>
+                                                </div>
+                                            </div>
                                             <input type="hidden" id="delete_ipcr_file" name="delete_ipcr_file" value="0">
-                                        </div>
-                                    <?php else: ?>
-                                        <p style="font-size: 0.875rem; color: var(--gray-500); margin-top: 8px; font-style: italic;">No file uploaded</p>
-                                    <?php endif; ?>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Upload IPCR Document (PDF only)</label>
-                                    <input type="file" name="ipcr_file" class="form-control" accept=".pdf,application/pdf">
-                                    <small class="form-text text-muted">Maximum file size: 10MB. The file will be automatically renamed according to the required format.</small>
-                                </div>
-                            </div>
-                            
-                            <!-- 15. ENTRY LEVEL -->
-                            <?php 
-                            $showEntryLevel = false;
-                            if (isset($user['application_type']) && !empty($user['application_type'])) {
-                                $appTypes = explode(',', $user['application_type']);
-                                $showEntryLevel = in_array('ENTRY LEVEL', $appTypes);
-                            }
-                            // Always show section if file exists, even if checkbox isn't checked
-                            if (!empty($user['pe_file_path'])) {
-                                $showEntryLevel = true;
-                            }
-                            ?>
-                            <div class="form-group" id="entry-level-section" style="display: <?= $showEntryLevel ? 'block' : 'none' ?>;">
-                                <label class="form-label"><strong>ENTRY LEVEL</strong></label>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Provide the performance rating in the last rating period.</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">E.g. Performance Evaluation/ Rating/ Key Performance Indicator Evaluation (PE)</p>
-                                
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Applicants are required to save their completed documents in PDF format. The file name must follow this exact format:</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px; font-family: monospace; background: var(--gray-50); padding: 8px; border-radius: 4px;">SURNAME_FIRSTNAME_PE_WPUHRMDO</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 16px;">Example: SANTOS_MARIAFE_PE_WPUHRMDO.pdf</p>
-                                <p style="font-size: 0.875rem; color: var(--danger); margin-bottom: 16px; font-weight: 600;">Failure to follow this file naming convention may result in difficulty in processing your application.</p>
-                                
-                                <div style="margin-bottom: 16px;">
-                                    <label class="form-label"><strong>Files submitted:</strong></label>
-                                    <?php if (!empty($user['pe_file_path'])): 
-                                        $peDisplayPath = 'uploads/documents/' . $user['pe_file_path'];
-                                        $peFullPath = __DIR__ . '/' . $peDisplayPath;
-                                        $peFileExists = file_exists($peFullPath);
-                                    ?>
-                                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--gray-50); border-radius: 4px; margin-top: 8px;">
-                                            <i class="fas fa-file-pdf" style="color: var(--danger); font-size: 1.5rem;"></i>
-                                            <div style="flex: 1;">
-                                                <div style="font-weight: 600; color: var(--gray-900);"><?= htmlspecialchars($user['pe_file_path']) ?></div>
-                                                <?php if ($peFileExists): ?>
-                                                    <a href="<?= htmlspecialchars($peDisplayPath) ?>" target="_blank" style="font-size: 0.875rem; color: var(--primary-blue); text-decoration: none;">
-                                                        <i class="fas fa-external-link-alt"></i> View File
-                                                    </a>
-                                                <?php else: ?>
-                                                    <span style="font-size: 0.875rem; color: var(--gray-500);">File not found on server</span>
-                                                <?php endif; ?>
+                                        <?php else: ?>
+                                            <div class="profile-empty" style="padding:24px;">
+                                                <p class="profile-empty__text">No IPCR document uploaded yet.</p>
                                             </div>
-                                            <button type="button" class="btn btn-sm btn-outline" style="color: var(--danger); border-color: var(--danger);" onclick="if(confirm('Are you sure you want to delete this file?')) { document.getElementById('delete_pe_file').value = '1'; this.form.submit(); }">
-                                                <i class="fas fa-trash"></i> Delete
-                                            </button>
-                                            <input type="hidden" id="delete_pe_file" name="delete_pe_file" value="0">
+                                        <?php endif; ?>
                                         </div>
-                                    <?php else: ?>
-                                        <p style="font-size: 0.875rem; color: var(--gray-500); margin-top: 8px; font-style: italic;">No file uploaded</p>
-                                    <?php endif; ?>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Upload PE Document (PDF only)</label>
-                                    <input type="file" name="pe_file" class="form-control" accept=".pdf,application/pdf">
-                                    <small class="form-text text-muted">Maximum file size: 10MB. The file will be automatically renamed according to the required format.</small>
+                                        <div class="profile-dropzone">
+                                            <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                                            <div class="profile-dropzone__title">Drop PDF here or Browse Files</div>
+                                            <div class="profile-dropzone__subtitle profile-dropzone__selected"></div>
+                                            <div class="profile-dropzone__formats">
+                                                <span class="profile-dropzone__tag">PDF</span>
+                                                <span class="profile-dropzone__tag">Max 10MB</span>
+                                            </div>
+                                            <input type="file" name="ipcr_file" accept=".pdf,application/pdf" aria-label="Upload IPCR document">
+                                            <div class="profile-dropzone__progress"><div class="profile-dropzone__progress-bar"><div class="profile-dropzone__progress-fill"></div></div></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <!-- 16. POSITION BEING APPLIED FOR -->
-                            
-                            
-                            <hr style="margin: 32px 0; border-color: var(--gray-200);">
-                            
-                            <h4 style="margin-bottom: 12px; font-size: 1.25rem; font-weight: 700;">TRAINING PROGRAMS ATTENDED</h4>
-                            <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 20px;">Applicants are required to provide a list of training programs, seminars, workshops, or webinars they have attended that are relevant to the position they are applying for. Each entry must follow the format below: <strong>Title of Training/Seminar/Workshop, Organizing Office/Agency, Date of Attendance</strong></p>
-                            
-                            <!-- 17. TRAINING PROGRAMS ATTENDED -->
-                            <div class="form-group">
-                                <label class="form-label"><strong>TRAINING PROGRAMS ATTENDED</strong></label>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Format: Title of Training/Seminar/Workshop, Organizing Office/Agency, Date of Attendance</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Example: Values Restoration Officers Training Seminar, Provincial HR Management, Sept. 23–25, 2024</p>
-                                <textarea name="training_programs" class="form-control" rows="4" placeholder="Enter each training on a new line. If not applicable, type: NA"><?= htmlspecialchars($user['training_programs'] ?? '') ?></textarea>
+
+                            <div class="profile-dynamic-section<?= $showEntryLevel ? ' expanded' : '' ?>" id="entry-level-section">
+                                <div class="profile-section-card">
+                                    <div class="profile-section-card__header">
+                                        <h3 class="profile-section-card__title"><i class="fas fa-star"></i> Entry Level (PE)</h3>
+                                    </div>
+                                    <div class="profile-section-card__body">
+                                        <p class="profile-field-hint">Performance Evaluation (PE) — PDF only, max 10MB.</p>
+                                        <div class="profile-format-card">
+                                            <div class="profile-format-card__label">Required Format</div>
+                                            <div class="profile-format-card__code">
+                                                <span>SURNAME_FIRSTNAME_PE_WPUHRMDO.pdf</span>
+                                                <button type="button" class="profile-format-card__copy" data-copy-format="SURNAME_FIRSTNAME_PE_WPUHRMDO.pdf">Copy</button>
+                                            </div>
+                                        </div>
+                                        <label class="profile-section-label">Uploaded Files</label>
+                                        <div class="profile-files-grid">
+                                        <?php if (!empty($user['pe_file_path'])): 
+                                            $peDisplayPath = 'uploads/documents/' . $user['pe_file_path'];
+                                            $peFullPath = __DIR__ . '/' . $peDisplayPath;
+                                            $peFileExists = file_exists($peFullPath);
+                                        ?>
+                                            <div class="profile-file-card" data-has-file="1">
+                                                <div class="profile-file-card__icon profile-file-card__icon--pdf"><i class="fas fa-file-pdf"></i></div>
+                                                <div class="profile-file-card__info">
+                                                    <div class="profile-file-card__name"><?= htmlspecialchars($user['pe_file_path']) ?></div>
+                                                    <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check"></i> Completed</span>
+                                                </div>
+                                                <div class="profile-file-card__actions">
+                                                    <?php if ($peFileExists): ?>
+                                                    <a href="#" class="profile-btn profile-btn--sm profile-btn--secondary" data-preview="<?= htmlspecialchars($peDisplayPath) ?>"><i class="fas fa-eye"></i> View</a>
+                                                    <a href="<?= htmlspecialchars($peDisplayPath) ?>" download class="profile-btn profile-btn--sm profile-btn--secondary"><i class="fas fa-download"></i></a>
+                                                    <?php endif; ?>
+                                                    <button type="button" class="profile-btn profile-btn--sm profile-btn--danger-outline" data-confirm="Delete this PE file?" data-delete-field="delete_pe_file"><i class="fas fa-trash"></i></button>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" id="delete_pe_file" name="delete_pe_file" value="0">
+                                        <?php else: ?>
+                                            <div class="profile-empty" style="padding:24px;"><p class="profile-empty__text">No PE document uploaded yet.</p></div>
+                                        <?php endif; ?>
+                                        </div>
+                                        <div class="profile-dropzone">
+                                            <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                                            <div class="profile-dropzone__title">Drop PDF here or Browse Files</div>
+                                            <div class="profile-dropzone__subtitle profile-dropzone__selected"></div>
+                                            <div class="profile-dropzone__formats"><span class="profile-dropzone__tag">PDF</span><span class="profile-dropzone__tag">Max 10MB</span></div>
+                                            <input type="file" name="pe_file" accept=".pdf,application/pdf" aria-label="Upload PE document">
+                                            <div class="profile-dropzone__progress"><div class="profile-dropzone__progress-bar"><div class="profile-dropzone__progress-fill"></div></div></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            
-                            <!-- 18. PHOTOCOPY OF SEMINARS AND TRAININGS ATTENDED -->
-                            <div class="form-group">
-                                <label class="form-label"><strong> PHOTOCOPY OF SEMINARS AND TRAININGS ATTENDED RELEVANT TO THE POSITION (IF APPLICABLE)</strong></label>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Applicants are required to upload scanned copies or photocopies of certificates of seminars, trainings, workshops, or webinars attended that are relevant to the position being applied for, if applicable. All documents must be clear, complete, and readable.</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Each certificate must be saved in PDF or JPEG file format and renamed using the following file naming convention:</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px; font-family: monospace; background: var(--gray-50); padding: 8px; border-radius: 4px;">Format: SURNAME_FIRSTNAME_TS##_WPUHRMDO</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Examples:</p>
-                                <ul style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 16px; padding-left: 24px;">
-                                    <li>SANTOS_MARIAFE_TS01_WPUHRMDO.pdf</li>
-                                    <li>SANTOS_MARIAFE_TS02_WPUHRMDO.jpg</li>
-                                    <li>SANTOS_MARIAFE_TS03_WPUHRMDO.pdf</li>
-                                </ul>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 16px;">Applicants are advised to ensure that all uploaded files follow the prescribed format and naming convention. Failure to comply with these requirements may result in delays or affect the evaluation of the application.</p>
-                                
-                                <div style="margin-bottom: 16px;">
-                                    <label class="form-label"><strong>Files submitted:</strong></label>
+
+                            <div class="profile-section-card">
+                                <div class="profile-section-card__header">
+                                    <h3 class="profile-section-card__title"><i class="fas fa-chalkboard-teacher"></i> Training Programs</h3>
+                                </div>
+                                <div class="profile-section-card__body">
+                                    <div class="profile-field">
+                                        <label class="profile-section-label">Training Programs Attended <span class="profile-badge-opt">Optional</span></label>
+                                        <p class="profile-field-hint">Title, Organizing Office/Agency, Date — one per line.</p>
+                                        <textarea name="training_programs" rows="4" placeholder="Enter each training on a new line. If not applicable, type: NA" data-max-length="2000" style="width:100%;border-radius:12px;padding:12px;border:1.5px solid var(--profile-border);font-family:inherit;"><?= htmlspecialchars($user['training_programs'] ?? '') ?></textarea>
+                                    </div>
+
+                                    <h4 class="profile-subsection-title">Training Certificates</h4>
+                                    <div class="profile-format-card">
+                                        <div class="profile-format-card__label">Required Format</div>
+                                        <div class="profile-format-card__code">
+                                            <span>SURNAME_FIRSTNAME_TS##_WPUHRMDO</span>
+                                            <button type="button" class="profile-format-card__copy" data-copy-format="SURNAME_FIRSTNAME_TS01_WPUHRMDO.pdf">Copy</button>
+                                        </div>
+                                    </div>
+                                    <div class="profile-files-grid">
                                     <?php if (!empty($trainingCertificates)): ?>
-                                        <?php foreach ($trainingCertificates as $index => $cert): 
-                                            // Ensure file_path is not null
+                                        <?php foreach ($trainingCertificates as $cert): 
                                             $certFilePath = $cert['file_path'] ?? '';
-                                            if (empty($certFilePath)) continue; // Skip if no valid file path
-                                            
+                                            if (empty($certFilePath)) continue;
                                             $certDisplayPath = 'uploads/documents/' . $certFilePath;
                                             $certFullPath = __DIR__ . '/' . $certDisplayPath;
                                             $certFileExists = file_exists($certFullPath);
                                             $isPdf = strtolower(pathinfo($certFilePath, PATHINFO_EXTENSION)) === 'pdf';
+                                            $fileSize = !empty($cert['file_size']) ? round($cert['file_size'] / 1024, 1) . ' KB' : '';
                                         ?>
-                                            <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--gray-50); border-radius: 4px; margin-top: 8px;">
-                                                <i class="fas fa-<?= $isPdf ? 'file-pdf' : 'file-image' ?>" style="color: var(--<?= $isPdf ? 'danger' : 'success' ?>); font-size: 1.5rem;"></i>
-                                                <div style="flex: 1;">
-                                                    <div style="font-weight: 600; color: var(--gray-900);"><?= htmlspecialchars($cert['file_name'] ?? $certFilePath) ?></div>
-                                                    <?php if ($certFileExists): ?>
-                                                        <a href="<?= htmlspecialchars($certDisplayPath) ?>" target="_blank" style="font-size: 0.875rem; color: var(--primary-blue); text-decoration: none;">
-                                                            <i class="fas fa-external-link-alt"></i> View File
-                                                        </a>
-                                                    <?php else: ?>
-                                                        <span style="font-size: 0.875rem; color: var(--gray-500);">File not found on server</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <a href="../actions/delete-training-certificate.php?id=<?= $cert['id'] ?>" 
-                                                   class="btn btn-sm btn-outline confirm-delete-certificate" 
-                                                   style="color: var(--danger); border-color: var(--danger);" 
-                                                   title="Delete"
-                                                   onclick="return confirm('Are you sure you want to delete this training certificate?');">
-                                                    <i class="fas fa-trash"></i> Delete
-                                                </a>
+                                        <div class="profile-file-card" data-has-file="1">
+                                            <div class="profile-file-card__icon profile-file-card__icon--<?= $isPdf ? 'pdf' : 'image' ?>"><i class="fas fa-<?= $isPdf ? 'file-pdf' : 'file-image' ?>"></i></div>
+                                            <div class="profile-file-card__info">
+                                                <div class="profile-file-card__name"><?= htmlspecialchars($cert['file_name'] ?? $certFilePath) ?></div>
+                                                <div class="profile-file-card__meta"><?= $fileSize ?></div>
+                                                <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check"></i> Completed</span>
                                             </div>
+                                            <div class="profile-file-card__actions">
+                                                <?php if ($certFileExists): ?>
+                                                <a href="#" class="profile-btn profile-btn--sm profile-btn--secondary" data-preview="<?= htmlspecialchars($certDisplayPath) ?>"><i class="fas fa-eye"></i></a>
+                                                <a href="<?= htmlspecialchars($certDisplayPath) ?>" download class="profile-btn profile-btn--sm profile-btn--secondary"><i class="fas fa-download"></i></a>
+                                                <?php endif; ?>
+                                                <a href="../actions/delete-training-certificate.php?id=<?= $cert['id'] ?>" class="profile-btn profile-btn--sm profile-btn--danger-outline confirm-delete-certificate" data-confirm="Delete this training certificate?"><i class="fas fa-trash"></i></a>
+                                            </div>
+                                        </div>
                                         <?php endforeach; ?>
                                     <?php else: ?>
-                                        <p style="font-size: 0.875rem; color: var(--gray-500); margin-top: 8px; font-style: italic;">No files uploaded</p>
+                                        <div class="profile-empty">
+                                            <div class="profile-empty__icon"><i class="fas fa-certificate"></i></div>
+                                            <h4 class="profile-empty__title">No Certificates Yet</h4>
+                                            <p class="profile-empty__text">Upload your first training certificate below.</p>
+                                        </div>
                                     <?php endif; ?>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Upload Training/Seminar Certificates (PDF or JPEG only)</label>
-                                    <input type="file" name="training_certificates[]" class="form-control" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple>
-                                    <small class="form-text text-muted">Maximum file size: 10MB per file. Multiple files can be uploaded. Files will be automatically renamed according to the required format (TS01, TS02, etc.).</small>
+                                    </div>
+                                    <div class="profile-dropzone">
+                                        <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                                        <div class="profile-dropzone__title">Drop files here or Browse</div>
+                                        <div class="profile-dropzone__subtitle profile-dropzone__selected"></div>
+                                        <div class="profile-dropzone__formats"><span class="profile-dropzone__tag">PDF</span><span class="profile-dropzone__tag">JPEG</span><span class="profile-dropzone__tag">Max 10MB</span></div>
+                                        <input type="file" name="training_certificates[]" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple aria-label="Upload training certificates">
+                                        <div class="profile-dropzone__progress"><div class="profile-dropzone__progress-bar"><div class="profile-dropzone__progress-fill"></div></div></div>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <!-- 19. WORK EXPERIENCE -->
-                            <div class="form-group">
-                                <label class="form-label"><strong>WORK EXPERIENCE *</strong></label>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Format: Position/Title, Company/Organization, Inclusive Dates of Employment</p>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Example: HR Manager, MSPP Store–PPC, Sept. 11, 2017 to March 10, 2019</p>
-                                <?php
-                                // Generate work experience text from stored experiences
-                                $workExpText = '';
-                                if (!empty($allExperiences)) {
-                                    $workExpLines = [];
-                                    foreach ($allExperiences as $exp) {
-                                        $startDate = date('M. d, Y', strtotime($exp['start_date']));
-                                        $endDate = $exp['is_current'] ? 'Present' : date('M. d, Y', strtotime($exp['end_date']));
-                                        $workExpLines[] = htmlspecialchars($exp['position_title'] . ', ' . $exp['company_name'] . ', ' . $startDate . ' to ' . $endDate);
+
+                            <div class="profile-section-card">
+                                <div class="profile-section-card__header">
+                                    <h3 class="profile-section-card__title"><i class="fas fa-id-badge"></i> Career Service Eligibilities</h3>
+                                </div>
+                                <div class="profile-section-card__body">
+                                    <label class="profile-section-label">CSE <span class="profile-badge-req">Required</span></label>
+                                    <?php 
+                                    $cseValues = [];
+                                    if (isset($user['career_service_eligibilities']) && !empty($user['career_service_eligibilities'])) {
+                                        $cseValues = explode(',', $user['career_service_eligibilities']);
                                     }
-                                    $workExpText = implode("\n", $workExpLines);
-                                } else {
-                                    $workExpText = 'NA';
-                                }
-                                ?>
-                                <textarea name="work_experience_display" class="form-control" rows="4" readonly><?= $workExpText ?></textarea>
-                                <small class="form-text text-muted">Work experiences are managed in the "Work Experience" section below.</small>
-                            </div>
-                            
-                            <!-- 20. CAREER SERVICE ELIGIBILITIES -->
-                            <div class="form-group">
-                                <label class="form-label"><strong>CAREER SERVICE ELIGIBILITIES (CSE) *</strong></label>
-                                <?php 
-                                $cseValues = [];
-                                if (isset($user['career_service_eligibilities']) && !empty($user['career_service_eligibilities'])) {
-                                    $cseValues = explode(',', $user['career_service_eligibilities']);
-                                }
-                                ?>
-                                <div style="margin-top: 8px;">
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px;">
-                                        <input type="checkbox" name="career_service_eligibilities[]" value="Professional Eligibility" 
-                                               <?= in_array('Professional Eligibility', $cseValues) ? 'checked' : '' ?>>
-                                        <span>Professional Eligibility: For first-level (clerical, trades) and second-level (technical, supervisory, managerial) positions.</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px;">
-                                        <input type="checkbox" name="career_service_eligibilities[]" value="Sub-Professional Eligibility" 
-                                               <?= in_array('Sub-Professional Eligibility', $cseValues) ? 'checked' : '' ?>>
-                                        <span>Sub-Professional Eligibility: Qualifies for first-level positions (clerical, custodial).</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px;">
-                                        <input type="checkbox" name="career_service_eligibilities[]" value="Career Service Executive Eligibility (CSE-E)" 
-                                               <?= in_array('Career Service Executive Eligibility (CSE-E)', $cseValues) ? 'checked' : '' ?>>
-                                        <span>Career Service Executive Eligibility (CSE-E): For high-level executive positions.</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px;">
-                                        <input type="checkbox" name="career_service_eligibilities[]" value="Bar/Board Eligibility (RA 1080)" 
-                                               <?= in_array('Bar/Board Eligibility (RA 1080)', $cseValues) ? 'checked' : '' ?>>
-                                        <span>Bar/Board Eligibility (RA 1080): For licensed professionals (e.g., lawyers, doctors, engineers).</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="checkbox" name="career_service_eligibilities[]" value="Other" 
-                                               <?= in_array('Other', $cseValues) ? 'checked' : '' ?> id="cse-other-checkbox">
-                                        <span>Other:</span>
-                                    </label>
-                                    <input type="text" name="career_service_eligibilities_other" class="form-control" 
+                                    $cseOptions = [
+                                        'Professional Eligibility' => 'Professional Eligibility: For first-level and second-level positions.',
+                                        'Sub-Professional Eligibility' => 'Sub-Professional Eligibility: Qualifies for first-level positions.',
+                                        'Career Service Executive Eligibility (CSE-E)' => 'CSE-E: For high-level executive positions.',
+                                        'Bar/Board Eligibility (RA 1080)' => 'Bar/Board Eligibility (RA 1080): For licensed professionals.',
+                                    ];
+                                    ?>
+                                    <div class="profile-cse-list">
+                                        <?php foreach ($cseOptions as $val => $desc): ?>
+                                        <label class="profile-cse-item">
+                                            <input type="checkbox" name="career_service_eligibilities[]" value="<?= htmlspecialchars($val) ?>" <?= in_array($val, $cseValues) ? 'checked' : '' ?>>
+                                            <span><?= htmlspecialchars($desc) ?></span>
+                                        </label>
+                                        <?php endforeach; ?>
+                                        <label class="profile-cse-item">
+                                            <input type="checkbox" name="career_service_eligibilities[]" value="Other" <?= in_array('Other', $cseValues) ? 'checked' : '' ?> id="cse-other-checkbox">
+                                            <span>Other</span>
+                                        </label>
+                                    </div>
+                                    <input type="text" name="career_service_eligibilities_other" class="form-control" id="cse-other-input"
                                            value="<?= htmlspecialchars($user['career_service_eligibilities_other'] ?? '') ?>" 
-                                           placeholder="Specify other eligibility" 
-                                           style="margin-top: 8px; <?= !in_array('Other', $cseValues) ? 'display: none;' : '' ?>" 
-                                           id="cse-other-input">
+                                           placeholder="Specify other eligibility"
+                                           style="margin-top:12px;width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--profile-border);<?= !in_array('Other', $cseValues) ? 'display:none;' : '' ?>">
                                 </div>
-                                <small class="form-text text-muted">Check all that apply.</small>
                             </div>
-                            
-                            <!-- 28. SPECIAL NEEDS -->
-                            <div class="form-group">
-                                <label class="form-label"><strong>SPECIAL NEEDS</strong></label>
-                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Applicants may indicate any medical condition, disability, or special circumstance that may require reasonable accommodation. If not applicable, kindly indicate Not Applicable (NA).</p>
-                                <textarea name="special_needs" class="form-control" rows="3" placeholder="If not applicable, type: NA"><?= htmlspecialchars($user['special_needs'] ?? '') ?></textarea>
-                            </div>
-                            
-                            <hr style="margin: 32px 0; border-color: var(--gray-200);">
-                            
-                            <h4 style="margin-bottom: 20px; font-size: 1.25rem; font-weight: 700;">REQUIRED DOCUMENTS</h4>
-                            
-                            <?php
-                            // Helper function to render document section
-                            function renderDocumentSection($number, $title, $description, $format, $examples, $fileInputName, $documentType, $allowedFormats, $documentsByType, $isMultiple = false) {
-                                $docs = isset($documentsByType[$documentType]) ? $documentsByType[$documentType] : [];
-                                $isMultipleAllowed = $isMultiple;
-                                if (!$isMultipleAllowed && !empty($docs)) {
-                                    $docs = [end($docs)]; // Only show the latest for single-file documents
-                                }
-                                ?>
-                                <!-- <?= $number ?>. <?= $title ?> -->
-                                <div class="form-group" style="margin-bottom: 32px;">
-                                    <label class="form-label"><strong><?= $number ?>. <?= $title ?></strong></label>
-                                    <?php if (!empty($description)): ?>
-                                        <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 12px;"><?= $description ?></p>
-                                    <?php endif; ?>
-                                    
-                                    <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;"><?= $format ?></p>
-                                    
-                                    <?php if (!empty($examples)): ?>
-                                        <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Examples:</p>
-                                        <?php if (is_array($examples)): ?>
-                                            <ul style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 16px; padding-left: 24px;">
-                                                <?php foreach ($examples as $example): ?>
-                                                    <li><?= htmlspecialchars($example) ?></li>
-                                                <?php endforeach; ?>
-                                            </ul>
-                                        <?php else: ?>
-                                            <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 16px; font-family: monospace; background: var(--gray-50); padding: 8px; border-radius: 4px;"><?= htmlspecialchars($examples) ?></p>
-                                        <?php endif; ?>
-                                    <?php endif; ?>
-                                    
-                                    <div style="margin-bottom: 16px;">
-                                        <label class="form-label"><strong>Files submitted:</strong></label>
-                                        <?php if (!empty($docs)): ?>
-                                            <?php foreach ($docs as $doc): 
-                                                $docDisplayPath = 'uploads/documents/' . $doc['file_path'];
-                                                $docFullPath = __DIR__ . '/' . $docDisplayPath;
-                                                $docFileExists = file_exists($docFullPath);
-                                                $isPdf = strtolower(pathinfo($doc['file_path'], PATHINFO_EXTENSION)) === 'pdf';
-                                            ?>
-                                                <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--gray-50); border-radius: 4px; margin-top: 8px;">
-                                                    <i class="fas fa-<?= $isPdf ? 'file-pdf' : 'file-image' ?>" style="color: var(--<?= $isPdf ? 'danger' : 'success' ?>); font-size: 1.5rem;"></i>
-                                                    <div style="flex: 1;">
-                                                        <div style="font-weight: 600; color: var(--gray-900);"><?= htmlspecialchars($doc['file_name']) ?></div>
-                                                        <?php if ($docFileExists): ?>
-                                                            <a href="<?= htmlspecialchars($docDisplayPath) ?>" target="_blank" style="font-size: 0.875rem; color: var(--primary-blue); text-decoration: none;">
-                                                                <i class="fas fa-external-link-alt"></i> View File
-                                                            </a>
-                                                        <?php else: ?>
-                                                            <span style="font-size: 0.875rem; color: var(--gray-500);">File not found on server</span>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                    <a href="../actions/delete-application-document.php?id=<?= $doc['id'] ?>" 
-                                                       class="btn btn-sm btn-outline" 
-                                                       style="color: var(--danger); border-color: var(--danger);" 
-                                                       title="Delete"
-                                                       onclick="return confirm('Are you sure you want to delete this document?');">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </a>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
-                                            <p style="font-size: 0.875rem; color: var(--gray-500); margin-top: 8px; font-style: italic;">No file uploaded</p>
-                                        <?php endif; ?>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="form-label">Upload <?= $title ?> (<?= strtoupper(implode(' or ', $allowedFormats)) ?> only)</label>
-                                        <input type="file" name="<?= $fileInputName ?><?= $isMultipleAllowed ? '[]' : '' ?>" class="form-control" 
-                                               accept="<?= implode(',', array_map(function($f) { return '.' . $f . ($f === 'pdf' ? ',application/pdf' : ($f === 'jpg' || $f === 'jpeg' ? ',image/jpeg,image/jpg' : '')); }, $allowedFormats)) ?>"
-                                               <?= $isMultipleAllowed ? 'multiple' : '' ?>>
-                                        <small class="form-text text-muted">Maximum file size: 10MB<?= $isMultipleAllowed ? ' per file. Multiple files can be uploaded.' : '' ?>. Files will be automatically renamed according to the required format<?= $isMultipleAllowed ? ' (##01, ##02, etc.)' : '' ?>.</small>
-                                    </div>
+
+                            <div class="profile-section-card">
+                                <div class="profile-section-card__header">
+                                    <h3 class="profile-section-card__title"><i class="fas fa-wheelchair"></i> Special Needs</h3>
                                 </div>
+                                <div class="profile-section-card__body">
+                                    <textarea name="special_needs" rows="3" placeholder="If not applicable, type: NA" data-max-length="500" style="width:100%;border-radius:12px;padding:12px;border:1.5px solid var(--profile-border);font-family:inherit;"><?= htmlspecialchars($user['special_needs'] ?? '') ?></textarea>
+                                    <p class="profile-field-hint">Indicate any condition requiring reasonable accommodation, or NA.</p>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                                <button type="button" class="profile-btn profile-btn--secondary" data-wizard-prev><i class="fas fa-arrow-left"></i> Back</button>
+                                <button type="button" class="profile-btn profile-btn--primary" data-wizard-next>Continue to Documents <i class="fas fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Step 5: Documents -->
+                        <div class="profile-wizard-panel" id="wizard-panel-documents" role="tabpanel">
+                            <div class="profile-section-card">
+                                <div class="profile-section-card__header">
+                                    <h3 class="profile-section-card__title"><i class="fas fa-folder-open"></i> Required Documents</h3>
+                                </div>
+                                <div class="profile-section-card__body">
                             <?php
-                            }
-                            
-                            // Render all document sections
                             renderDocumentSection(
                                 '21',
                                 'APPLICATION LETTER',
                                 'Applicants are required to upload an Application Letter addressed to:<br><strong>DR. AMABEL S. LIAO<br>University President<br>Western Philippines University<br>Aborlan, Palawan</strong><br><br>The Application Letter must be properly addressed, signed, and clearly readable.',
-                                'Format: <code style="background: var(--gray-50); padding: 4px 8px; border-radius: 4px; font-family: monospace;">SURNAME_FIRSTNAME_APLET_WPUHRMDO</code>',
+                                'SURNAME_FIRSTNAME_APLET_WPUHRMDO.pdf',
                                 'SANTOS_MARIAFE_APLET_WPUHRMDO.pdf',
                                 'application_letter',
                                 'APLET',
@@ -1434,7 +1680,7 @@ $user = $userModel->findById($userId);
                                 '22',
                                 'PERSONAL DATA SHEET',
                                 'CS FORM NO. 212, REVISED 2025<br><br>Applicants are required to upload a fully accomplished CS Form No. 212, <strong>Revised 2025</strong> – Personal Data Sheet (PDS). The form must be properly filled out, signed, and notarized or duly administered by an authorized administering officer. A recent passport-sized photograph must be affixed to the form.',
-                                'Format: <code style="background: var(--gray-50); padding: 4px 8px; border-radius: 4px; font-family: monospace;">SURNAME_FIRSTNAME_PDS_WPUHRMDO</code>',
+                                'SURNAME_FIRSTNAME_PDS_WPUHRMDO.pdf',
                                 'SANTOS_MARIAFE_PDS_WPUHRMDO.pdf',
                                 'personal_data_sheet',
                                 'PDS',
@@ -1447,7 +1693,7 @@ $user = $userModel->findById($userId);
                                 '23',
                                 'WORK EXPERIENCE SHEET',
                                 'Applicants are required to upload a fully accomplished Work Experience <strong>Sheet</strong>, which is an attachment to CS Form No. 212 – Personal Data Sheet (PDS). All relevant work experiences must be completely and accurately indicated in the prescribed form.',
-                                'Format: <code style="background: var(--gray-50); padding: 4px 8px; border-radius: 4px; font-family: monospace;">SURNAME_FIRSTNAME_WES_WPUHRMDO</code>',
+                                'SURNAME_FIRSTNAME_WES_WPUHRMDO.pdf',
                                 'SANTOS_MARIAFE_WES_WPUHRMDO.pdf',
                                 'work_experience_sheet',
                                 'WES',
@@ -1460,7 +1706,7 @@ $user = $userModel->findById($userId);
                                 '24',
                                 'TRANSCRIPT OF RECORDS',
                                 'Applicants are required to upload a Transcript of Records (TOR) relevant to the position being applied for. The document must be clear, complete, and readable, showing all academic records.',
-                                'Format: <code style="background: var(--gray-50); padding: 4px 8px; border-radius: 4px; font-family: monospace;">SURNAME_FIRSTNAME_TOR_WPUHRMDO</code>',
+                                'SURNAME_FIRSTNAME_TOR_WPUHRMDO.pdf',
                                 ['SANTOS_MARIAFE_TOR_WPUHRMDO.pdf', 'SANTOS_MARIAFE_TOR_WPUHRMDO.jpg'],
                                 'transcript_of_records',
                                 'TOR',
@@ -1473,7 +1719,7 @@ $user = $userModel->findById($userId);
                                 '25',
                                 'DIPLOMA',
                                 'Applicants are required to upload a Diploma relevant to the position being applied for. The document must be clear, complete, and readable.',
-                                'Format: <code style="background: var(--gray-50); padding: 4px 8px; border-radius: 4px; font-family: monospace;">SURNAME_FIRSTNAME_DIP_WPUHRMDO</code>',
+                                'SURNAME_FIRSTNAME_DIP_WPUHRMDO.pdf',
                                 ['SANTOS_MARIAFE_DIP_WPUHRMDO.pdf', 'SANTOS_MARIAFE_DIP_WPUHRMDO.jpg'],
                                 'diploma',
                                 'DIP',
@@ -1484,10 +1730,10 @@ $user = $userModel->findById($userId);
                             
                             renderDocumentSection(
                                 '26',
-                                'CERTIFICATE OF EMPLOYMENT AND/OR SERVICE RECORD (IF APPLICABLE)',
-                                'Applicants are required to upload scanned copies or photocopies of their Certificate(s) of Employment (COE) and/or Service Record(s) relevant to the position being applied for, if applicable. All documents must be clear, complete, and readable.<br><br><strong>For Certificate of Employment (COE):</strong> Format: SURNAME_FIRSTNAME_COE##_WPUHRMDO<br><strong>For Service Record (SR):</strong> Format: SURNAME_FIRSTNAME_SRE##_WPUHRMDO',
-                                'Format: <code style="background: var(--gray-50); padding: 4px 8px; border-radius: 4px; font-family: monospace;">SURNAME_FIRSTNAME_COE##_WPUHRMDO</code> or <code style="background: var(--gray-50); padding: 4px 8px; border-radius: 4px; font-family: monospace;">SURNAME_FIRSTNAME_SRE##_WPUHRMDO</code>',
-                                ['SANTOS_MARIAFE_COE01_WPUHRMDO.pdf', 'SANTOS_MARIAFE_COE02_WPUHRMDO.jpg', 'SANTOS_MARIAFE_SRE01_WPUHRMDO.pdf', 'SANTOS_MARIAFE_SRE02_WPUHRMDO.jpg'],
+                                'CERTIFICATE OF EMPLOYMENT (IF APPLICABLE)',
+                                'Applicants are required to upload scanned copies or photocopies of their Certificate(s) of Employment (COE) relevant to the position being applied for, if applicable.',
+                                'SURNAME_FIRSTNAME_COE##_WPUHRMDO.pdf',
+                                ['SANTOS_MARIAFE_COE01_WPUHRMDO.pdf', 'SANTOS_MARIAFE_COE02_WPUHRMDO.jpg'],
                                 'certificate_of_employment',
                                 'COE',
                                 ['pdf', 'jpg', 'jpeg'],
@@ -1495,60 +1741,60 @@ $user = $userModel->findById($userId);
                                 true
                             );
                             
-                            // Service Records section
                             $sreDocs = isset($documentsByType['SRE']) ? $documentsByType['SRE'] : [];
                             ?>
-                            <div class="form-group" style="margin-bottom: 32px;">
-                                <label class="form-label"><strong>Service Records:</strong></label>
-                                <div style="margin-bottom: 16px;">
-                                    <label class="form-label"><strong>Files submitted:</strong></label>
-                                    <?php if (!empty($sreDocs)): ?>
-                                        <?php foreach ($sreDocs as $doc): 
-                                            $docDisplayPath = 'uploads/documents/' . $doc['file_path'];
-                                            $docFullPath = __DIR__ . '/' . $docDisplayPath;
-                                            $docFileExists = file_exists($docFullPath);
-                                            $isPdf = strtolower(pathinfo($doc['file_path'], PATHINFO_EXTENSION)) === 'pdf';
-                                        ?>
-                                            <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--gray-50); border-radius: 4px; margin-top: 8px;">
-                                                <i class="fas fa-<?= $isPdf ? 'file-pdf' : 'file-image' ?>" style="color: var(--<?= $isPdf ? 'danger' : 'success' ?>); font-size: 1.5rem;"></i>
-                                                <div style="flex: 1;">
-                                                    <div style="font-weight: 600; color: var(--gray-900);"><?= htmlspecialchars($doc['file_name']) ?></div>
-                                                    <?php if ($docFileExists): ?>
-                                                        <a href="<?= htmlspecialchars($docDisplayPath) ?>" target="_blank" style="font-size: 0.875rem; color: var(--primary-blue); text-decoration: none;">
-                                                            <i class="fas fa-external-link-alt"></i> View File
-                                                        </a>
-                                                    <?php else: ?>
-                                                        <span style="font-size: 0.875rem; color: var(--gray-500);">File not found on server</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <a href="../actions/delete-application-document.php?id=<?= $doc['id'] ?>" 
-                                                   class="btn btn-sm btn-outline" 
-                                                   style="color: var(--danger); border-color: var(--danger);" 
-                                                   title="Delete"
-                                                   onclick="return confirm('Are you sure you want to delete this document?');">
-                                                    <i class="fas fa-trash"></i> Delete
-                                                </a>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <p style="font-size: 0.875rem; color: var(--gray-500); margin-top: 8px; font-style: italic;">No files uploaded</p>
-                                    <?php endif; ?>
+                            <div class="profile-doc-section">
+                                <h4 class="profile-doc-section__title">Service Records (IF APPLICABLE)</h4>
+                                <div class="profile-format-card">
+                                    <div class="profile-format-card__label">Required Format</div>
+                                    <div class="profile-format-card__code">
+                                        <span>SURNAME_FIRSTNAME_SRE##_WPUHRMDO.pdf</span>
+                                        <button type="button" class="profile-format-card__copy" data-copy-format="SURNAME_FIRSTNAME_SRE01_WPUHRMDO.pdf">Copy</button>
+                                    </div>
                                 </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Upload Service Record(s) (PDF or JPEG only)</label>
-                                    <input type="file" name="service_record[]" class="form-control" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple>
-                                    <small class="form-text text-muted">Maximum file size: 10MB per file. Multiple files can be uploaded. Files will be automatically renamed according to the required format (SRE01, SRE02, etc.).</small>
+                                <div class="profile-files-grid">
+                                <?php if (!empty($sreDocs)): ?>
+                                    <?php foreach ($sreDocs as $doc):
+                                        $docDisplayPath = 'uploads/documents/' . $doc['file_path'];
+                                        $docFullPath = __DIR__ . '/' . $docDisplayPath;
+                                        $docFileExists = file_exists($docFullPath);
+                                        $isPdf = strtolower(pathinfo($doc['file_path'], PATHINFO_EXTENSION)) === 'pdf';
+                                    ?>
+                                    <div class="profile-file-card" data-has-file="1">
+                                        <div class="profile-file-card__icon profile-file-card__icon--<?= $isPdf ? 'pdf' : 'image' ?>"><i class="fas fa-<?= $isPdf ? 'file-pdf' : 'file-image' ?>"></i></div>
+                                        <div class="profile-file-card__info">
+                                            <div class="profile-file-card__name"><?= htmlspecialchars($doc['file_name']) ?></div>
+                                            <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check"></i> Completed</span>
+                                        </div>
+                                        <div class="profile-file-card__actions">
+                                            <?php if ($docFileExists): ?>
+                                            <a href="#" class="profile-btn profile-btn--sm profile-btn--secondary" data-preview="<?= htmlspecialchars($docDisplayPath) ?>"><i class="fas fa-eye"></i></a>
+                                            <a href="<?= htmlspecialchars($docDisplayPath) ?>" download class="profile-btn profile-btn--sm profile-btn--secondary"><i class="fas fa-download"></i></a>
+                                            <?php endif; ?>
+                                            <a href="../actions/delete-application-document.php?id=<?= $doc['id'] ?>" class="profile-btn profile-btn--sm profile-btn--danger-outline" data-confirm="Delete this document?"><i class="fas fa-trash"></i></a>
+                                        </div>
+                                    </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="profile-empty" style="padding:20px;"><p class="profile-empty__text">No service records uploaded.</p></div>
+                                <?php endif; ?>
+                                </div>
+                                <div class="profile-dropzone">
+                                    <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                                    <div class="profile-dropzone__title">Drop PDF or JPEG here or Browse</div>
+                                    <div class="profile-dropzone__subtitle profile-dropzone__selected"></div>
+                                    <div class="profile-dropzone__formats"><span class="profile-dropzone__tag">PDF</span><span class="profile-dropzone__tag">JPEG</span><span class="profile-dropzone__tag">Max 10MB</span></div>
+                                    <input type="file" name="service_record[]" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple aria-label="Upload service records">
+                                    <div class="profile-dropzone__progress"><div class="profile-dropzone__progress-bar"><div class="profile-dropzone__progress-fill"></div></div></div>
                                 </div>
                             </div>
-                            
                             <?php
                             renderDocumentSection(
                                 '27',
                                 'PHOTOCOPY OF AUTHENTICATED CERTIFICATE OF ELIGIBILITY/RATING/LICENSE (IF APPLICABLE)',
-                                'Applicants are required to upload scanned copies or photocopies of authenticated Certificates of Eligibility, Rating, or Professional License, relevant to the position being applied for, if applicable. All documents must be clear, complete, and readable.',
-                                'Format: <code style="background: var(--gray-50); padding: 4px 8px; border-radius: 4px; font-family: monospace;">SURNAME_FIRSTNAME_EL##_WPUHRMDO</code>',
-                                ['SANTOS_MARIAFE_EL01_WPUHRMDO.pdf', 'SANTOS_MARIAFE_EL02_WPUHRMDO.jpg', 'SANTOS_MARIAFE_EL03_WPUHRMDO.pdf'],
+                                'Applicants are required to upload scanned copies or photocopies of authenticated Certificates of Eligibility, Rating, or Professional License, relevant to the position being applied for, if applicable.',
+                                'SURNAME_FIRSTNAME_EL##_WPUHRMDO.pdf',
+                                ['SANTOS_MARIAFE_EL01_WPUHRMDO.pdf', 'SANTOS_MARIAFE_EL02_WPUHRMDO.jpg'],
                                 'eligibility_license',
                                 'EL',
                                 ['pdf', 'jpg', 'jpeg'],
@@ -1556,116 +1802,68 @@ $user = $userModel->findById($userId);
                                 true
                             );
                             ?>
-                            
-                            <hr style="margin: 32px 0; border-color: var(--gray-200);">
-                            
-                            <!-- Change Password Section -->
-                            <h5 style="margin-bottom: 12px; font-size: 1rem; font-weight: 600;"><i class="fas fa-lock"></i> Change Password</h5>
-                            <p style="font-size: 0.875rem; color: var(--gray-500); margin-bottom: 16px;">Leave blank if you don't want to change your password.</p>
-                            
-                            <div class="form-group">
-                                <label class="form-label">New Password</label>
-                                <input type="password" name="password" class="form-control" 
-                                       placeholder="Enter new password">
+                                </div>
                             </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label">Confirm Password</label>
-                                <input type="password" name="confirm_password" class="form-control" 
-                                       placeholder="Confirm new password">
+                            <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                                <button type="button" class="profile-btn profile-btn--secondary" data-wizard-prev><i class="fas fa-arrow-left"></i> Back</button>
+                                <button type="button" class="profile-btn profile-btn--primary" data-wizard-next>Review & Submit <i class="fas fa-arrow-right"></i></button>
                             </div>
-                            
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-save"></i> Save Changes
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+                        </div>
 
-            <!-- Work Experience Section -->
-            <div class="card">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3 class="card-title">
-                            <i class="fas fa-briefcase"></i> Work Experience
-                        </h3>
-                        <a href="add-experience.php" class="btn btn-sm btn-primary">
-                            <i class="fas fa-plus"></i> Add
-                        </a>
-                    </div>
-                    <div class="card-body">
-                        <?php if (empty($experiences)): ?>
-                            <div class="empty-state" style="padding: 40px 20px;">
-                                <i class="fas fa-briefcase"></i>
-                                <h5 style="font-size: 1.125rem; margin-top: 16px;">No Work Experience</h5>
-                                <p style="color: var(--gray-500); margin-bottom: 20px;">Add your work experience to strengthen your applications.</p>
-                                
+                        <!-- Step 6: Review & Submit -->
+                        <div class="profile-wizard-panel" id="wizard-panel-review" role="tabpanel">
+                            <div class="profile-section-card">
+                                <div class="profile-section-card__header">
+                                    <h3 class="profile-section-card__title"><i class="fas fa-clipboard-check"></i> Review Your Profile</h3>
+                                </div>
+                                <div class="profile-section-card__body">
+                                    <p class="profile-field-hint" style="margin-bottom:20px;">Review your information before saving. All sections remain editable via the navigation panel.</p>
+                                    <div class="profile-review-grid" id="profileReviewSummary"></div>
+                                </div>
                             </div>
-                        <?php else: ?>
-                            <?php foreach ($experiences as $exp): ?>
-                                <div style="padding: 16px; border-bottom: 1px solid var(--gray-200); margin-bottom: 12px; background: var(--gray-50); border-radius: 8px; border-left: 4px solid var(--primary-blue);">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                                        <div style="flex: 1;">
-                                            <div style="font-weight: 700; font-size: 1rem; color: var(--gray-900); margin-bottom: 4px;">
-                                                <?= htmlspecialchars($exp['position_title']) ?>
-                                            </div>
-                                            <div style="color: var(--primary-blue); font-weight: 600; margin-bottom: 8px;">
-                                                <?= htmlspecialchars($exp['company_name']) ?>
-                                            </div>
-                                            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.875rem; color: var(--gray-600);">
-                                                <i class="fas fa-calendar"></i>
-                                                <span>
-                                                    <?= date('M Y', strtotime($exp['start_date'])) ?> - 
-                                                    <?= $exp['is_current'] ? 'Present' : date('M Y', strtotime($exp['end_date'])) ?>
-                                                </span>
-                                                <span class="badge badge-primary"><?= number_format($exp['years_duration'], 1) ?>y</span>
+
+                            <div class="profile-section-card">
+                                <div class="profile-section-card__header">
+                                    <h3 class="profile-section-card__title"><i class="fas fa-lock"></i> Change Password</h3>
+                                </div>
+                                <div class="profile-section-card__body">
+                                    <p class="profile-field-hint">Leave blank if you don't want to change your password.</p>
+                                    <div class="profile-form-grid">
+                                        <div class="profile-field">
+                                            <div class="profile-floating-label">
+                                                <i class="fas fa-key profile-field-icon"></i>
+                                                <input type="password" name="password" placeholder=" " autocomplete="new-password">
+                                                <label>New Password</label>
                                             </div>
                                         </div>
-                                        <div style="display: flex; gap: 8px;">
-                                            <a href="edit-experience.php?id=<?= $exp['id'] ?>" class="btn btn-sm btn-outline" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <a href="../actions/delete-experience.php?id=<?= $exp['id'] ?>" 
-                                               class="btn btn-sm btn-outline confirm-delete-experience" 
-                                               style="color: var(--danger); border-color: var(--danger);" 
-                                               title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
+                                        <div class="profile-field">
+                                            <div class="profile-floating-label">
+                                                <i class="fas fa-key profile-field-icon"></i>
+                                                <input type="password" name="confirm_password" placeholder=" " autocomplete="new-password">
+                                                <label>Confirm Password</label>
+                                            </div>
                                         </div>
                                     </div>
-                                    <?php if ($exp['description']): ?>
-                                        <p style="font-size: 0.875rem; color: var(--gray-600); margin: 8px 0 0 0; line-height: 1.5;">
-                                            <?= nl2br(htmlspecialchars($exp['description'])) ?>
-                                        </p>
-                                    <?php endif; ?>
                                 </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <!-- Pagination -->
-                    <?php if ($totalPages > 1): ?>
-                    <div class="card-footer" style="display: flex; justify-content: center; align-items: center; padding: 16px; border-top: 1px solid var(--gray-200);">
-                        <div class="pagination">
-                            <?php if ($page > 1): ?>
-                                <a href="?page=<?= $page - 1 ?>" class="pagination-btn">
-                                    <i class="fas fa-chevron-left"></i> Previous
-                                </a>
-                            <?php endif; ?>
-                            
-                            <div class="pagination-info">
-                                Page <?= $page ?> of <?= $totalPages ?> (<?= $totalExperiences ?> total)
                             </div>
-                            
-                            <?php if ($page < $totalPages): ?>
-                                <a href="?page=<?= $page + 1 ?>" class="pagination-btn">
-                                    Next <i class="fas fa-chevron-right"></i>
-                                </a>
-                            <?php endif; ?>
+
+                            <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                                <button type="button" class="profile-btn profile-btn--secondary" data-wizard-prev><i class="fas fa-arrow-left"></i> Back</button>
+                                <button type="submit" class="profile-btn profile-btn--primary">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <?php endif; ?>
-                </div>
+
+                    </form>
+                </div><!-- /.profile-wizard-main -->
+            </div><!-- /.profile-wizard -->
+
+            <!-- Sticky Save Bar -->
+            <div class="profile-action-bar" id="profileActionBar" role="region" aria-label="Unsaved changes">
+                <span class="profile-action-bar__hint"><i class="fas fa-exclamation-circle"></i> You have unsaved changes</span>
+                <button type="button" class="profile-btn profile-btn--secondary" data-action-cancel>Cancel</button>
+                <button type="submit" form="profileForm" class="profile-btn profile-btn--primary"><i class="fas fa-save"></i> Save Changes</button>
             </div>
         </div>
         
@@ -1854,140 +2052,32 @@ $user = $userModel->findById($userId);
     <script src="../../assets/js/toast.js"></script>
     <script src="../../assets/js/form-submission-manager.js"></script>
     <script src="../../assets/js/office-theme.js"></script>
+    <script src="../../assets/js/applicant-theme.js"></script>
+    <script src="../../assets/js/profile.js"></script>
     <script>
-        // Handle conditional display of promotion/entry level sections
-        function toggleApplicationSections() {
-            const promotionCheckbox = document.querySelector('input[name="application_type[]"][value="PROMOTION"]');
-            const entryLevelCheckbox = document.querySelector('input[name="application_type[]"][value="ENTRY LEVEL"]');
-            const promotionSection = document.getElementById('promotion-section');
-            const entryLevelSection = document.getElementById('entry-level-section');
-            
-            if (promotionCheckbox && promotionSection) {
-                // Check if file exists (PHP sets display based on file existence)
-                const hasIpcrFileDisplay = promotionSection.querySelector('a[href*="uploads/documents"]');
-                // Show section if checkbox is checked OR if file exists (PHP already handles initial display)
-                if (promotionCheckbox.checked || hasIpcrFileDisplay) {
-                    promotionSection.style.display = 'block';
-                } else if (!hasIpcrFileDisplay) {
-                    // Only hide if no file exists and checkbox is unchecked
-                    promotionSection.style.display = 'none';
-                }
-            }
-            if (entryLevelCheckbox && entryLevelSection) {
-                // Check if file exists (PHP sets display based on file existence)
-                const hasPeFileDisplay = entryLevelSection.querySelector('a[href*="uploads/documents"]');
-                // Show section if checkbox is checked OR if file exists (PHP already handles initial display)
-                if (entryLevelCheckbox.checked || hasPeFileDisplay) {
-                    entryLevelSection.style.display = 'block';
-                } else if (!hasPeFileDisplay) {
-                    // Only hide if no file exists and checkbox is unchecked
-                    entryLevelSection.style.display = 'none';
-                }
-            }
-        }
-        
-        // Handle "Other" field in Career Service Eligibilities
-        function toggleCSEOther() {
-            const otherCheckbox = document.getElementById('cse-other-checkbox');
-            const otherInput = document.getElementById('cse-other-input');
-            
-            if (otherCheckbox && otherInput) {
-                otherInput.style.display = otherCheckbox.checked ? 'block' : 'none';
-                if (!otherCheckbox.checked) {
-                    otherInput.value = '';
-                }
-            }
-        }
-        
-        // Data Privacy Modal handlers
+        // Data Privacy Modal (preserved from original)
         function openDataPrivacyModal() {
             const modal = document.getElementById('dataPrivacyModal');
-            if (modal) {
-                modal.style.display = 'block';
-                document.body.style.overflow = 'hidden';
-            }
+            if (modal) { modal.style.display = 'block'; document.body.style.overflow = 'hidden'; }
         }
-        
         function closeDataPrivacyModal() {
             const modal = document.getElementById('dataPrivacyModal');
-            if (modal) {
-                modal.style.display = 'none';
-                document.body.style.overflow = '';
-            }
+            if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
         }
-        
-        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Show sections if checkboxes are already checked (e.g., after page reload)
-            toggleApplicationSections();
-            toggleCSEOther();
-            
-            // Debug: Log section visibility
-            const promotionSection = document.getElementById('promotion-section');
-            const entryLevelSection = document.getElementById('entry-level-section');
-            const promotionCheckbox = document.querySelector('input[name="application_type[]"][value="PROMOTION"]');
-            const entryLevelCheckbox = document.querySelector('input[name="application_type[]"][value="ENTRY LEVEL"]');
-            
-            console.log('Promotion checkbox checked:', promotionCheckbox ? promotionCheckbox.checked : 'not found');
-            console.log('Entry Level checkbox checked:', entryLevelCheckbox ? entryLevelCheckbox.checked : 'not found');
-            console.log('Promotion section display:', promotionSection ? promotionSection.style.display : 'not found');
-            console.log('Entry Level section display:', entryLevelSection ? entryLevelSection.style.display : 'not found');
-            
-            // Add event listeners
-            const appTypeCheckboxes = document.querySelectorAll('input[name="application_type[]"]');
-            appTypeCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', toggleApplicationSections);
-            });
-            
-            const cseOtherCheckbox = document.getElementById('cse-other-checkbox');
-            if (cseOtherCheckbox) {
-                cseOtherCheckbox.addEventListener('change', toggleCSEOther);
-            }
-            
-            // Data Privacy Modal event listeners
             const dataPrivacyLink = document.getElementById('dataPrivacyPolicyLink');
             const closeModalBtn = document.getElementById('closeDataPrivacyModal');
             const closeModalBtn2 = document.getElementById('closeDataPrivacyModalBtn');
             const modal = document.getElementById('dataPrivacyModal');
             const modalOverlay = modal ? modal.querySelector('.modal-overlay') : null;
-            
-            if (dataPrivacyLink) {
-                dataPrivacyLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    openDataPrivacyModal();
-                });
-            }
-            
-            if (closeModalBtn) {
-                closeModalBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    closeDataPrivacyModal();
-                });
-            }
-            
-            if (closeModalBtn2) {
-                closeModalBtn2.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    closeDataPrivacyModal();
-                });
-            }
-            
-            // Close modal when clicking outside
-            if (modalOverlay) {
-                modalOverlay.addEventListener('click', function(e) {
-                    if (e.target === modalOverlay) {
-                        closeDataPrivacyModal();
-                    }
-                });
-            }
-            
-            // Close modal with Escape key
-            document.addEventListener('keydown', function(e) {
+            if (dataPrivacyLink) dataPrivacyLink.addEventListener('click', e => { e.preventDefault(); openDataPrivacyModal(); });
+            if (closeModalBtn) closeModalBtn.addEventListener('click', e => { e.preventDefault(); closeDataPrivacyModal(); });
+            if (closeModalBtn2) closeModalBtn2.addEventListener('click', e => { e.preventDefault(); closeDataPrivacyModal(); });
+            if (modalOverlay) modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeDataPrivacyModal(); });
+            document.addEventListener('keydown', e => {
                 if (e.key === 'Escape') {
-                    const modal = document.getElementById('dataPrivacyModal');
-                    if (modal && modal.style.display === 'block') {
-                        closeDataPrivacyModal();
-                    }
+                    const m = document.getElementById('dataPrivacyModal');
+                    if (m && m.style.display === 'block') closeDataPrivacyModal();
                 }
             });
         });

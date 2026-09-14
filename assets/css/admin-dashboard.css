@@ -221,6 +221,8 @@ body.admin-dashboard.sidebar-collapsed .main-wrapper {
 
 /* ── Topbar ── */
 body.admin-dashboard .topbar {
+    position: relative;
+    z-index: 100;
     background: var(--dash-glass);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -459,12 +461,17 @@ body.admin-dashboard .profile-dropdown-item:hover {
 }
 
 body.admin-dashboard .notification-dropdown {
-    background: var(--dash-glass);
-    backdrop-filter: blur(20px);
+    background: var(--dash-card);
     border: 1px solid var(--dash-border);
     border-radius: var(--dash-radius-sm);
     box-shadow: var(--dash-shadow-hover);
     width: 400px;
+    z-index: 1100;
+}
+
+body.admin-dashboard .notification-list,
+body.admin-dashboard .notification-empty {
+    background: var(--dash-card);
 }
 
 /* ── Content ── */
