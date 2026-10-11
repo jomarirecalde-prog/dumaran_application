@@ -31,7 +31,7 @@ The error logs will show numbered steps (Step 1, Step 2, etc.) to help identify 
 - Check `php.ini` for the `error_log` directive to find the exact location
 
 ### Step 2: Test the Form
-1. Open your browser and navigate to: `http://localhost/Applicant_WPU/admin/pages/settings.php?tab=accounts`
+1. Open your browser and navigate to: `http://localhost/dumaran_hiring/admin/pages/settings.php?tab=accounts`
 2. Fill out the admin creation form with test data:
    - Full Name: Test Admin
    - Username: testadmin
@@ -110,7 +110,7 @@ The log will show you exactly where the process stops or fails.
 ### Verify Database Connection
 ```sql
 -- In phpMyAdmin or MySQL command line
-USE wpu_applicant_system;
+USE dumaran_hr;
 SELECT * FROM users WHERE role = 'admin';
 ```
 

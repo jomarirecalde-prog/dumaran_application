@@ -218,8 +218,10 @@ $closedPositions = 0;
 $draftPositions = 0;
 $departments = [];
 
+$applicationCountsByPosition = $positionModel->getApplicationCountsByPositionIds(array_column($allPositions, 'id'));
+
 foreach ($allPositions as $p) {
-    $appCount = $positionModel->getApplicationCount($p['id']);
+    $appCount = $applicationCountsByPosition[(int) $p['id']] ?? 0;
     $totalApplicationsAll += $appCount;
     $positionsWithCounts[] = array_merge($p, [
         'application_count' => (int) $appCount,
@@ -286,7 +288,7 @@ function posStatusInfo($position, $appCount) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Job Hiring Management - WPU Applicant System</title>
+    <title>Job Hiring Management - Dumaran Hiring System</title>
     <link rel="icon" type="image/x-icon" href="../../favicon.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -296,7 +298,7 @@ function posStatusInfo($position, $appCount) {
     <style>
         /* Legacy compat shim — main styles in positions-module.css */
         .form-check { display: flex; align-items: center; gap: 8px; }
-        .form-check-input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--pos-primary, #0056D2); }
+        .form-check-input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--pos-primary, #2050A0); }
     </style>
 </head>
 <body class="admin-dashboard positions-page">
@@ -358,9 +360,9 @@ function posStatusInfo($position, $appCount) {
             <!-- Hero Header -->
             <header class="pos-hero" aria-labelledby="hero-title">
                 <div class="pos-hero__content">
-                    <div class="pos-hero__eyebrow"><i class="fas fa-building"></i> WPU Employment & Selection</div>
+                    <div class="pos-hero__eyebrow"><i class="fas fa-building"></i> <?= htmlspecialchars(SITE_NAME, ENT_QUOTES, 'UTF-8') ?></div>
                     <h2 class="pos-hero__title" id="hero-title">Job Hiring Management</h2>
-                    <p class="pos-hero__subtitle">Create, manage, publish, and monitor hiring positions across Western Philippines University.</p>
+                    <p class="pos-hero__subtitle">Create, manage, publish, and monitor hiring positions across Municipality of Dumaran.</p>
                 </div>
                 <div class="pos-hero__actions">
                     <button type="button" class="pos-btn pos-btn--primary" onclick="openModal()" aria-label="Create new position">
@@ -462,7 +464,7 @@ function posStatusInfo($position, $appCount) {
                     <!-- Card View -->
                     <div id="cardView" class="pos-cards-grid">
                         <?php foreach ($positions as $position):
-                            $appCount = $positionModel->getApplicationCount($position['id']);
+                            $appCount = $applicationCountsByPosition[(int) $position['id']] ?? 0;
                             $status = posStatusInfo($position, $appCount);
                             $deadline = posDeadlineLabel($position['deadline'] ?? null);
                             $max = (int)($position['max_applications'] ?? 30);
@@ -532,7 +534,7 @@ function posStatusInfo($position, $appCount) {
                             </thead>
                             <tbody>
                                 <?php foreach ($positions as $position):
-                                    $appCount = $positionModel->getApplicationCount($position['id']);
+                                    $appCount = $applicationCountsByPosition[(int) $position['id']] ?? 0;
                                     $status = posStatusInfo($position, $appCount);
                                     $posData = array_merge($position, [
                                         'application_count' => $appCount,

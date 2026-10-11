@@ -57,13 +57,10 @@ foreach ($userApplications as $app) {
     $appliedPositions[$app['position_id']] = $app['status'];
 }
 
-// Get application counts for all positions
-$positionsWithCounts = [];
-foreach ($allPositions as $pos) {
-    $pos['application_count'] = $positionModel->getApplicationCount($pos['id']);
-    $positionsWithCounts[] = $pos;
+$applicationCountsByPosition = $positionModel->getApplicationCountsByPositionIds(array_column($allPositions, 'id'));
+foreach ($allPositions as $idx => $pos) {
+    $allPositions[$idx]['application_count'] = $applicationCountsByPosition[(int) $pos['id']] ?? 0;
 }
-$allPositions = $positionsWithCounts;
 
 // Pagination setup
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
@@ -297,7 +294,7 @@ $filterQueryBase = function ($extraPage = null) use ($searchTerm, $employmentTyp
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Browse Jobs - WPU Applicant System</title>
+    <title>Browse Jobs - Dumaran Hiring System</title>
     <link rel="icon" type="image/x-icon" href="../../favicon.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="../../assets/css/office-theme.css" rel="stylesheet">
@@ -309,8 +306,8 @@ $filterQueryBase = function ($extraPage = null) use ($searchTerm, $employmentTyp
     <aside class="sidebar" aria-label="Main navigation">
         <div class="sidebar-header">
             <a href="dashboard.php" class="sidebar-brand">
-                <img src="../../assets/logo.png" alt="WPU Logo" style="height: 32px; width: auto;">
-                <span>WPU Jobs</span>
+                <img src="../../assets/logo.webp" alt="Logo" style="height: 32px; width: auto;">
+                <span>Dumaran Hiring</span>
             </a>
         </div>
         <nav class="sidebar-nav">

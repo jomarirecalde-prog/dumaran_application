@@ -213,7 +213,7 @@ $totalLogsPages = ceil($totalLogs / $logsPerPage);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Settings - WPU Applicant System</title>
+    <title>Settings - Dumaran Hiring System</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="../../assets/css/office-theme.css" rel="stylesheet">
     <link href="../../assets/css/admin-dashboard.css" rel="stylesheet">
@@ -223,7 +223,7 @@ $totalLogsPages = ceil($totalLogs / $logsPerPage);
         .settings-highlight { animation: settingsHighlight 1.2s ease; }
         @keyframes settingsHighlight {
             0%, 100% { box-shadow: var(--set-shadow, 0 4px 24px rgba(15,23,42,.06)); }
-            50% { box-shadow: 0 0 0 3px rgba(0, 86, 210, 0.35); }
+            50% { box-shadow: 0 0 0 3px rgba(32, 80, 160, 0.35); }
         }
     </style>
 </head>
@@ -335,7 +335,7 @@ $totalLogsPages = ceil($totalLogs / $logsPerPage);
                                 <div class="info-cards-grid">
                                     <div class="info-card">
                                         <div class="info-card-label">System Name</div>
-                                        <div class="info-card-value">WPU Applicant System</div>
+                                        <div class="info-card-value"><?= htmlspecialchars(SITE_NAME, ENT_QUOTES, 'UTF-8') ?></div>
                                     </div>
                                     <div class="info-card">
                                         <div class="info-card-label">Version</div>
@@ -361,7 +361,7 @@ $totalLogsPages = ceil($totalLogs / $logsPerPage);
                                     <div class="form-group">
                                         <label class="form-label" for="systemEmail">System Email</label>
                                         <div class="input-icon-wrap">
-                                            <input type="email" class="form-control" id="systemEmail" placeholder="noreply@wpu.edu" aria-describedby="systemEmailHelp">
+                                            <input type="email" class="form-control" id="systemEmail" placeholder="noreply@dumaran.gov.ph" aria-describedby="systemEmailHelp">
                                             <i class="field-icon fas fa-envelope" aria-hidden="true"></i>
                                             <i class="field-validation fas" aria-hidden="true"></i>
                                         </div>
@@ -372,7 +372,7 @@ $totalLogsPages = ceil($totalLogs / $logsPerPage);
                                     <div class="form-group">
                                         <label class="form-label" for="replyToEmail">Reply-To Email</label>
                                         <div class="input-icon-wrap">
-                                            <input type="email" class="form-control" id="replyToEmail" placeholder="support@wpu.edu" aria-describedby="replyToEmailHelp">
+                                            <input type="email" class="form-control" id="replyToEmail" placeholder="support@dumaran.gov.ph" aria-describedby="replyToEmailHelp">
                                             <i class="field-icon fas fa-reply" aria-hidden="true"></i>
                                             <i class="field-validation fas" aria-hidden="true"></i>
                                         </div>
@@ -657,7 +657,7 @@ $totalLogsPages = ceil($totalLogs / $logsPerPage);
                                     <!-- Admin Statistics -->
                                     <div class="admin-stats-grid">
                                         <div class="admin-stat-card">
-                                            <div class="stat-icon" style="background:rgba(0,86,210,0.1);color:#0056D2"><i class="fas fa-users"></i></div>
+                                            <div class="stat-icon" style="background:rgba(32, 80, 160,0.1);color:#2050A0"><i class="fas fa-users"></i></div>
                                             <div class="stat-value"><?= count($adminAccounts) ?></div>
                                             <div class="stat-label">Total Admins</div>
                                         </div>
@@ -667,7 +667,7 @@ $totalLogsPages = ceil($totalLogs / $logsPerPage);
                                             <div class="stat-label">Online Now</div>
                                         </div>
                                         <div class="admin-stat-card">
-                                            <div class="stat-icon" style="background:rgba(59,130,246,0.1);color:#2563eb"><i class="fas fa-sign-in-alt"></i></div>
+                                            <div class="stat-icon" style="background:rgba(59,130,246,0.1);color:#2050A0"><i class="fas fa-sign-in-alt"></i></div>
                                             <div class="stat-value"><?= count(array_filter($systemLogs, function($l) { return stripos($l['action'], 'login') !== false && date('Y-m-d', strtotime($l['created_at'])) === date('Y-m-d'); })) ?></div>
                                             <div class="stat-label">Logins Today</div>
                                         </div>
@@ -774,10 +774,10 @@ $totalLogsPages = ceil($totalLogs / $logsPerPage);
                                     <span class="health-badge ok"><i class="fas fa-check"></i> OK</span>
                                 </div>
                                 <div class="health-card">
-                                    <div class="health-card-icon" style="background:rgba(59,130,246,0.1);color:#2563eb"><i class="fas fa-server"></i></div>
+                                    <div class="health-card-icon" style="background:rgba(59,130,246,0.1);color:#2050A0"><i class="fas fa-server"></i></div>
                                     <div class="health-card-label">Server</div>
                                     <div class="health-card-value" style="font-size:0.85rem"><?= htmlspecialchars($_SERVER['SERVER_SOFTWARE'] ?? 'Unknown') ?></div>
-                                    <div class="health-progress"><div class="health-progress-fill" style="width:90%;background:#2563eb"></div></div>
+                                    <div class="health-progress"><div class="health-progress-fill" style="width:90%;background:#2050A0"></div></div>
                                     <span class="health-badge ok"><i class="fas fa-check"></i> Running</span>
                                 </div>
                                 <div class="health-card">
@@ -795,10 +795,10 @@ $totalLogsPages = ceil($totalLogs / $logsPerPage);
                                     <span class="health-badge ok">Limit: <?= htmlspecialchars($memLimit) ?></span>
                                 </div>
                                 <div class="health-card">
-                                    <div class="health-card-icon" style="background:rgba(0,86,210,0.1);color:#0056D2"><i class="fas fa-user-clock"></i></div>
+                                    <div class="health-card-icon" style="background:rgba(32, 80, 160,0.1);color:#2050A0"><i class="fas fa-user-clock"></i></div>
                                     <div class="health-card-label">Sessions</div>
                                     <div class="health-card-value"><?= $sessionStatus ?></div>
-                                    <div class="health-progress"><div class="health-progress-fill" style="width:100%;background:#0056D2"></div></div>
+                                    <div class="health-progress"><div class="health-progress-fill" style="width:100%;background:#2050A0"></div></div>
                                     <span class="health-badge ok"><i class="fas fa-check"></i> Active</span>
                                 </div>
                                 <div class="health-card">
@@ -840,7 +840,7 @@ $totalLogsPages = ceil($totalLogs / $logsPerPage);
                         <div class="settings-card-body">
                             <div class="maintenance-grid">
                                 <div class="maintenance-card">
-                                    <div class="maintenance-card-icon" style="background:rgba(59,130,246,0.1);color:#2563eb"><i class="fas fa-sync"></i></div>
+                                    <div class="maintenance-card-icon" style="background:rgba(59,130,246,0.1);color:#2050A0"><i class="fas fa-sync"></i></div>
                                     <h4>Clear Cache</h4>
                                     <p>Remove cached files and temporary data to free up storage and refresh system performance.</p>
                                     <div class="maintenance-card-meta"><i class="fas fa-folder"></i> Cached files · Est. size varies</div>
@@ -1009,12 +1009,12 @@ $totalLogsPages = ceil($totalLogs / $logsPerPage);
                                             <?php
                                             $act = strtolower($log['action']);
                                             $actClass = 'log-action-default';
-                                            $dotBg = 'rgba(0,86,210,0.1)';
-                                            $dotColor = '#0056D2';
+                                            $dotBg = 'rgba(32, 80, 160,0.1)';
+                                            $dotColor = '#2050A0';
                                             if (strpos($act, 'login') !== false) { $actClass = 'log-action-login'; $dotBg = 'rgba(22,163,74,0.1)'; $dotColor = '#16A34A'; }
                                             elseif (strpos($act, 'logout') !== false) { $actClass = 'log-action-logout'; $dotBg = 'rgba(100,116,139,0.12)'; $dotColor = '#64748b'; }
                                             elseif (strpos($act, 'delete') !== false) { $actClass = 'log-action-delete'; $dotBg = 'rgba(220,38,38,0.1)'; $dotColor = '#DC2626'; }
-                                            elseif (strpos($act, 'password') !== false || strpos($act, 'update') !== false) { $actClass = 'log-action-update'; $dotBg = 'rgba(59,130,246,0.1)'; $dotColor = '#2563eb'; }
+                                            elseif (strpos($act, 'password') !== false || strpos($act, 'update') !== false) { $actClass = 'log-action-update'; $dotBg = 'rgba(59,130,246,0.1)'; $dotColor = '#2050A0'; }
                                             elseif (strpos($act, 'create') !== false || strpos($act, 'admin_created') !== false || strpos($act, 'register') !== false) { $actClass = 'log-action-create'; $dotBg = 'rgba(139,92,246,0.1)'; $dotColor = '#7c3aed'; }
                                             elseif (strpos($act, 'error') !== false) { $actClass = 'log-action-error'; $dotBg = 'rgba(245,158,11,0.12)'; $dotColor = '#F59E0B'; }
                                             $timeAgo = time() - strtotime($log['created_at']);

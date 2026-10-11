@@ -263,7 +263,7 @@ if (!empty($applications)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Applications - WPU Applicant System</title>
+    <title>My Applications - Dumaran Hiring System</title>
     <link rel="icon" type="image/x-icon" href="../../favicon.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="../../assets/css/office-theme.css" rel="stylesheet">
@@ -275,8 +275,8 @@ if (!empty($applications)) {
     <aside class="sidebar">
         <div class="sidebar-header">
             <a href="dashboard.php" class="sidebar-brand">
-                <img src="../../assets/logo.png" alt="WPU Logo" style="height: 32px; width: auto;">
-                <span>WPU Jobs</span>
+                <img src="../../assets/logo.webp" alt="Logo" style="height: 32px; width: auto;">
+                <span>Dumaran Hiring</span>
             </a>
         </div>
         

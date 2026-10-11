@@ -25,9 +25,9 @@ if (isLoggedIn() && $redirect_count < 3) {
 }
 
 $logoUrl = '../assets/logo.png';
-$absoluteLogoUrl = rtrim(BASE_URL, '/') . '/assets/logo.png';
-$campusUrl = '../assets/wpu.jpg';
-$absoluteCampusUrl = rtrim(BASE_URL, '/') . '/assets/wpu.jpg';
+$absoluteLogoUrl = rtrim(BASE_URL, '/') . '/assets/logo.webp';
+$campusUrl = '../assets/dumaran.jpg';
+$absoluteCampusUrl = rtrim(BASE_URL, '/') . '/assets/dumaran.webp';
 $debugMode = isset($_GET['debug']);
 
 $flashMessages = [];
@@ -43,9 +43,9 @@ if (isset($_GET['error']) && $_GET['error'] !== '') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Sign in to the Western Philippines University Employment and Selection System.">
-    <meta name="theme-color" content="#0056D2">
-    <title>Sign In - WPU Employment and Selection System</title>
+    <meta name="description" content="Sign in to the Dumaran Hiring System.">
+    <meta name="theme-color" content="#2050A0">
+    <title>Sign In - <?= htmlspecialchars(SITE_NAME, ENT_QUOTES, 'UTF-8') ?></title>
     <link rel="icon" type="image/x-icon" href="<?= BASE_URL ?>favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -85,15 +85,15 @@ if (isset($_GET['error']) && $_GET['error'] !== '') {
                 <div class="login-hero__content">
                     <img class="login-hero__logo"
                          src="<?= htmlspecialchars($logoUrl) ?>"
-                         alt="Western Philippines University logo"
+                         alt="<?= htmlspecialchars(ORG_NAME, ENT_QUOTES, 'UTF-8') ?> logo"
                          width="96"
                          height="96"
                          onerror="this.onerror=null;this.src='<?= htmlspecialchars($absoluteLogoUrl) ?>';">
-                    <p class="login-hero__university">Western Philippines University</p>
-                    <h1 class="login-hero__system">Employment and Selection System</h1>
-                    <p class="login-hero__tagline">Building the Future Workforce of WPU</p>
-                    <h2 class="login-hero__welcome">Welcome to WPU Careers</h2>
-                    <p class="login-hero__desc">Access your institutional account to manage applications, track selections, and connect with Western Philippines University's human resource services.</p>
+                    <p class="login-hero__university"><?= htmlspecialchars(ORG_NAME, ENT_QUOTES, 'UTF-8') ?></p>
+                    <h1 class="login-hero__system"><?= htmlspecialchars(SITE_NAME, ENT_QUOTES, 'UTF-8') ?></h1>
+                    <p class="login-hero__tagline">Building the Future Workforce of <?= htmlspecialchars(ORG_SHORT_NAME, ENT_QUOTES, 'UTF-8') ?></p>
+                    <h2 class="login-hero__welcome">Welcome to <?= htmlspecialchars(SITE_SHORT_NAME, ENT_QUOTES, 'UTF-8') ?></h2>
+                    <p class="login-hero__desc">Access your account to manage applications, track selections, and connect with <?= htmlspecialchars(ORG_NAME, ENT_QUOTES, 'UTF-8') ?>'s human resource services.</p>
                 </div>
             </aside>
 
@@ -107,15 +107,15 @@ if (isset($_GET['error']) && $_GET['error'] !== '') {
                     <div class="login-brand-mobile">
                         <img class="login-brand-mobile__logo"
                              src="<?= htmlspecialchars($logoUrl) ?>"
-                             alt="Western Philippines University logo"
+                             alt="<?= htmlspecialchars(ORG_NAME, ENT_QUOTES, 'UTF-8') ?> logo"
                              width="72"
                              height="72"
                              loading="lazy"
                              decoding="async"
                              onerror="this.onerror=null;this.src='<?= htmlspecialchars($absoluteLogoUrl) ?>';">
-                        <p class="login-brand-mobile__university">Western Philippines University</p>
-                        <p class="login-brand-mobile__system">Employment and Selection System</p>
-                        <p class="login-brand-mobile__tagline">Building the Future Workforce of WPU</p>
+                        <p class="login-brand-mobile__university"><?= htmlspecialchars(ORG_NAME, ENT_QUOTES, 'UTF-8') ?></p>
+                        <p class="login-brand-mobile__system"><?= htmlspecialchars(SITE_NAME, ENT_QUOTES, 'UTF-8') ?></p>
+                        <p class="login-brand-mobile__tagline">Building the Future Workforce of <?= htmlspecialchars(ORG_SHORT_NAME, ENT_QUOTES, 'UTF-8') ?></p>
                     </div>
 
                     <?php if ($debugMode): ?>
@@ -210,7 +210,7 @@ if (isset($_GET['error']) && $_GET['error'] !== '') {
                                 <input type="checkbox" id="rememberMe" name="remember_me" value="1">
                                 <span>Remember Me</span>
                             </label>
-                            <a href="mailto:hrmdo@wpu.edu.ph?subject=Password%20Reset%20Request%20-%20WPU%20ESS"
+                            <a href="mailto:<?= htmlspecialchars(ORG_HR_EMAIL, ENT_QUOTES, 'UTF-8') ?>?subject=Password%20Reset%20Request%20-%20<?= rawurlencode(SITE_SHORT_NAME) ?>"
                                class="forgot-link">Forgot Password?</a>
                         </div>
 
@@ -227,7 +227,7 @@ if (isset($_GET['error']) && $_GET['error'] !== '') {
                             </div>
                             <div class="trust-item">
                                 <i class="fas fa-university" aria-hidden="true"></i>
-                                <span>University Authorized Users Only</span>
+                                <span>Authorized Users Only</span>
                             </div>
                             <div class="trust-item">
                                 <i class="fas fa-shield-alt" aria-hidden="true"></i>
@@ -243,11 +243,11 @@ if (isset($_GET['error']) && $_GET['error'] !== '') {
                 </div>
 
                 <footer class="login-footer">
-                    <p class="login-footer__copy">&copy; 2026 Western Philippines University</p>
-                    <p class="login-footer__meta">Version 1.0.0 &middot; <a href="mailto:hrmdo@wpu.edu.ph">hrmdo@wpu.edu.ph</a></p>
+                    <p class="login-footer__copy">&copy; <?= date('Y') ?> <?= htmlspecialchars(ORG_NAME, ENT_QUOTES, 'UTF-8') ?></p>
+                    <p class="login-footer__meta">Version 1.0.0 &middot; <a href="mailto:<?= htmlspecialchars(ORG_HR_EMAIL, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(ORG_HR_EMAIL, ENT_QUOTES, 'UTF-8') ?></a></p>
                     <nav class="login-footer__links" aria-label="Legal links">
-                        <a href="https://wpu.edu.ph" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
-                        <a href="https://wpu.edu.ph" target="_blank" rel="noopener noreferrer">Terms of Use</a>
+                        <a href="<?= htmlspecialchars(ORG_WEBSITE, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+                        <a href="<?= htmlspecialchars(ORG_WEBSITE, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">Terms of Use</a>
                     </nav>
                 </footer>
             </main>

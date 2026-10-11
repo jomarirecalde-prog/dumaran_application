@@ -10,13 +10,13 @@ header('Cache-Control: no-cache');
 
 // Parse BASE_URL to get the path
 $baseUrlParts = parse_url(BASE_URL);
-$basePath = $baseUrlParts['path'] ?? '/Applicant_WPU/';
+$basePath = $baseUrlParts['path'] ?? '/dumaran_hiring/';
 
 $config = [
     'basePath' => $basePath,
     'baseUrl' => BASE_URL,
     'offlineUrl' => $basePath . 'offline.html',
-    'cacheName' => 'wpu-jobs-v2',
+    'cacheName' => 'dumaran-hiring-v2',
     'precacheAssets' => [
         $basePath . 'assets/css/office-theme.css',
         $basePath . 'assets/css/toast.css',

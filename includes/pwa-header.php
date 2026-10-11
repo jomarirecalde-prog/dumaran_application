@@ -8,10 +8,10 @@
 // PWA Meta Tags
 ?>
 <!-- PWA Meta Tags -->
-<meta name="application-name" content="WPU Jobs">
+<meta name="application-name" content="<?= htmlspecialchars(SITE_SHORT_NAME, ENT_QUOTES, 'UTF-8') ?>">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="WPU Jobs">
+<meta name="apple-mobile-web-app-title" content="<?= htmlspecialchars(SITE_SHORT_NAME, ENT_QUOTES, 'UTF-8') ?>">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="msapplication-TileColor" content="#1e3a5f">
 <meta name="msapplication-TileImage" content="<?= BASE_URL ?>assets/pwa/icon-144x144.png">

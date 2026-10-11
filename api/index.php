@@ -238,7 +238,7 @@ if (isset($_GET['format']) && $_GET['format'] === 'json') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Documentation - WPU Applicant System</title>
+    <title>API Documentation - Dumaran Hiring System</title>
     <link href="<?= BASE_URL ?>assets/vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -332,7 +332,7 @@ if (isset($_GET['format']) && $_GET['format'] === 'json') {
         <div class="version">Version <?= $apiDocs['version'] ?></div>
         
         <p style="color: #6b7280; line-height: 1.6; margin-bottom: 24px;">
-            This documentation provides information about the RESTful API endpoints available in the WPU Applicant System.
+            This documentation provides information about the RESTful API endpoints available in the Dumaran Hiring System.
             All endpoints return JSON responses.
         </p>
 

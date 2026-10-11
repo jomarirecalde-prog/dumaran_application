@@ -1,10 +1,29 @@
 <?php
+require_once __DIR__ . '/load_env.php';
+
 /**
  * Session and Security Configuration
  */
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+if (!defined('APP_DEBUG')) {
+    $appDebugHost = $_SERVER['HTTP_HOST'] ?? '';
+    $appDebugAddr = $_SERVER['REMOTE_ADDR'] ?? '';
+    define('APP_DEBUG', (
+        $appDebugAddr === '127.0.0.1'
+        || $appDebugAddr === '::1'
+        || (is_string($appDebugHost) && strpos($appDebugHost, 'localhost') === 0)
+    ));
+}
+
+if (APP_DEBUG) {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', '0');
+    ini_set('display_startup_errors', '0');
+    ini_set('log_errors', '1');
+    error_reporting(E_ALL);
+}
 
 // Configure session cookies for port forwarding compatibility
 // This must be done before session_start()
@@ -89,11 +108,19 @@ if (!headers_sent()) {
 }
 
 // Constants
-define('SITE_NAME', 'WPU Applicant System');
+define('SITE_NAME', 'Dumaran Hiring System');
+define('SITE_SHORT_NAME', 'Dumaran Hiring');
+define('ORG_NAME', 'Municipality of Dumaran');
+define('ORG_SHORT_NAME', 'Dumaran');
+define('ORG_LOCATION', 'Dumaran, Palawan');
+define('ORG_HR_EMAIL', 'hr@dumaran.gov.ph');
+define('ORG_WEBSITE', 'https://www.dumaranpalawan.gov.ph');
+define('ORG_DOCUMENT_SUFFIX', 'DUMHRMDO');
+define('ORG_APPLICATION_LETTER_RECIPIENT_HTML', '<strong>THE MUNICIPAL MAYOR<br>Municipality of Dumaran<br>Dumaran, Palawan</strong>');
 
 // Determine the application's base URL dynamically so assets still load through tunnels/port forwarding
 if (!defined('BASE_URL')) {
-    $fallbackBaseUrl = 'http://localhost/Applicant_WPU/';
+    $fallbackBaseUrl = 'http://localhost/dumaran_hiring/';
 
     // CLI contexts or missing host should keep the fallback
     if (php_sapi_name() === 'cli' || empty($_SERVER['HTTP_HOST'])) {
@@ -337,6 +364,40 @@ function requirePrivacyWaiver() {
  */
 function sanitize($data) {
     return htmlspecialchars(strip_tags(trim($data)));
+}
+
+/**
+ * Build display full name from name parts (First Middle Last).
+ */
+function buildFullNameFromParts($lastName, $firstName, $middleName = '') {
+    $parts = array_filter([
+        trim((string) $firstName),
+        trim((string) $middleName),
+        trim((string) $lastName),
+    ], static function ($part) {
+        return $part !== '';
+    });
+
+    return implode(' ', $parts);
+}
+
+/**
+ * Normalize registration/profile name fields: ensure parts and full_name stay in sync.
+ */
+function normalizeUserNameFields(array &$data) {
+    $lastName = trim($data['last_name'] ?? '');
+    $firstName = trim($data['first_name'] ?? '');
+    $middleName = trim($data['middle_name'] ?? '');
+    $fullName = trim($data['full_name'] ?? '');
+
+    if ($lastName !== '' || $firstName !== '') {
+        $data['last_name'] = $lastName;
+        $data['first_name'] = $firstName;
+        $data['middle_name'] = $middleName !== '' ? $middleName : null;
+        $data['full_name'] = buildFullNameFromParts($lastName, $firstName, $middleName);
+    } elseif ($fullName !== '') {
+        $data['full_name'] = $fullName;
+    }
 }
 
 /**

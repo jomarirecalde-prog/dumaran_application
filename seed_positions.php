@@ -1,6 +1,6 @@
 <?php
 /**
- * Seed at least 10 WPU positions with minimum requirements.
+ * Seed at least 10 sample positions with minimum requirements.
  * Run once: php seed_positions.php
  */
 
@@ -8,7 +8,7 @@ require_once __DIR__ . '/config/database.php';
 
 $positions = [
     [
-        'title' => 'University Extension Specialist IV SG 22',
+        'title' => 'LGU Extension Specialist IV SG 22',
         'description' => 'Responsible for planning and implementing extension programs in assigned communities.',
         'requirements' => "Bachelor's degree relevant to the position\nCareer Service eligibility\nWillingness to work in field assignments",
         'salary_grade' => 'SG 22',
@@ -16,15 +16,15 @@ $positions = [
         'career_service_eligibilities' => 'Professional Eligibility',
     ],
     [
-        'title' => 'University Extension Specialist III SG 20',
-        'description' => 'Assists in the development and delivery of university extension services.',
+        'title' => 'LGU Extension Specialist III SG 20',
+        'description' => 'Assists in the development and delivery of municipal extension services.',
         'requirements' => "Bachelor's degree\nNo prior experience required for entry level\nGood communication skills",
         'salary_grade' => 'SG 20',
         'salary_range' => 'PHP 57,806.00',
         'career_service_eligibilities' => 'Professional Eligibility',
     ],
     [
-        'title' => 'University Extension Specialist II SG 18',
+        'title' => 'LGU Extension Specialist II SG 18',
         'description' => 'Supports extension projects and community engagement activities.',
         'requirements' => "Bachelor's degree\nBasic computer literacy\nWilling to travel within Palawan",
         'salary_grade' => 'SG 18',
@@ -32,7 +32,7 @@ $positions = [
         'career_service_eligibilities' => 'Professional Eligibility',
     ],
     [
-        'title' => 'University Extension Specialist I SG 16',
+        'title' => 'LGU Extension Specialist I SG 16',
         'description' => 'Entry-level extension specialist role supporting program implementation.',
         'requirements' => "Bachelor's degree\nFresh graduates may apply\nInterest in community development",
         'salary_grade' => 'SG 16',
@@ -40,7 +40,7 @@ $positions = [
         'career_service_eligibilities' => 'Professional Eligibility',
     ],
     [
-        'title' => 'University Extension Associate I SG 12',
+        'title' => 'LGU Extension Associate I SG 12',
         'description' => 'Provides clerical and technical support to extension programs.',
         'requirements' => "College level or equivalent\nBasic documentation skills\nTeam player",
         'salary_grade' => 'SG 12',
@@ -144,7 +144,7 @@ try {
             ':salary_range' => $position['salary_range'],
             ':salary_grade' => $position['salary_grade'],
             ':career_service_eligibilities' => $position['career_service_eligibilities'],
-            ':location' => 'San Juan, Aborlan, Palawan',
+            ':location' => 'Municipal Hall, Dumaran, Palawan',
             ':employment_type' => 'full-time',
             ':deadline' => '2026-12-31',
             ':created_by' => $createdBy,

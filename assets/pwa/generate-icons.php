@@ -4,7 +4,7 @@
  * Run this script once to generate all required PWA icon sizes from the logo
  * 
  * Usage: php generate-icons.php
- * Or visit: http://localhost/Applicant_WPU/assets/pwa/generate-icons.php
+ * Or visit: http://localhost/dumaran_hiring/assets/pwa/generate-icons.php
  */
 
 // Icon sizes required for PWA

@@ -1,38 +1,39 @@
-/* WPU Employment and Selection System — Login Portal */
+/* Dumaran Hiring System — Login Portal */
 
+@import url('brand-tokens.css');
 @import url('toast.css');
 
 :root {
-    --primary: #0056D2;
-    --primary-dark: #0F4C81;
-    --accent: #F4B400;
-    --bg: #F7F9FC;
+    --primary: var(--brand-primary);
+    --primary-dark: var(--brand-primary-hover);
+    --accent: var(--brand-yellow);
+    --bg: var(--app-background);
     --card: rgba(255, 255, 255, 0.9);
     --card-border: rgba(255, 255, 255, 0.65);
-    --text: #0F172A;
-    --text-muted: #64748B;
+    --text: var(--text-primary);
+    --text-muted: var(--text-secondary);
     --text-light: #94A3B8;
-    --success: #16A34A;
-    --error: #DC2626;
-    --warning: #F59E0B;
-    --shadow-sm: 0 4px 16px rgba(15, 76, 129, 0.08);
-    --shadow-md: 0 12px 40px rgba(15, 76, 129, 0.12);
-    --shadow-lg: 0 24px 64px rgba(15, 76, 129, 0.16);
+    --success: var(--status-success);
+    --error: var(--status-error);
+    --warning: var(--status-warning);
+    --shadow-sm: 0 4px 16px rgba(25, 63, 128, 0.08);
+    --shadow-md: 0 12px 40px rgba(25, 63, 128, 0.12);
+    --shadow-lg: 0 24px 64px rgba(25, 63, 128, 0.16);
     --radius-lg: 22px;
     --radius-md: 14px;
     --radius-sm: 10px;
     --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --hero-overlay: linear-gradient(135deg, rgba(0, 86, 210, 0.88) 0%, rgba(15, 76, 129, 0.92) 55%, rgba(15, 30, 60, 0.85) 100%);
+    --hero-overlay: linear-gradient(135deg, rgba(32, 80, 160, 0.92) 0%, rgba(25, 63, 128, 0.94) 55%, rgba(15, 23, 42, 0.88) 100%);
     --input-bg: rgba(247, 249, 252, 0.85);
     --input-border: #E2E8F0;
-    --focus-ring: rgba(0, 86, 210, 0.18);
+    --focus-ring: rgba(32, 80, 160, 0.2);
     --glass-blur: blur(18px);
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --bg: #0B1220;
+        --bg: #0F172A;
         --card: rgba(17, 24, 39, 0.88);
         --card-border: rgba(255, 255, 255, 0.08);
         --text: #F8FAFC;
@@ -80,9 +81,9 @@ body.login-body {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(ellipse 80% 60% at 20% 20%, rgba(0, 86, 210, 0.12), transparent 55%),
+        radial-gradient(ellipse 80% 60% at 20% 20%, rgba(32, 80, 160, 0.12), transparent 55%),
         radial-gradient(ellipse 70% 50% at 80% 80%, rgba(244, 180, 0, 0.08), transparent 50%),
-        radial-gradient(ellipse 60% 40% at 60% 30%, rgba(15, 76, 129, 0.1), transparent 45%),
+        radial-gradient(ellipse 60% 40% at 60% 30%, rgba(25, 63, 128, 0.1), transparent 45%),
         var(--bg);
     animation: meshShift 18s ease-in-out infinite alternate;
 }
@@ -98,7 +99,7 @@ body.login-body {
 .login-bg__orb--1 {
     width: clamp(200px, 30vw, 420px);
     height: clamp(200px, 30vw, 420px);
-    background: rgba(0, 86, 210, 0.25);
+    background: rgba(32, 80, 160, 0.25);
     top: 10%;
     left: -5%;
     animation: floatOrb1 14s ease-in-out infinite;
@@ -116,7 +117,7 @@ body.login-body {
 .login-bg__orb--3 {
     width: clamp(120px, 18vw, 260px);
     height: clamp(120px, 18vw, 260px);
-    background: rgba(15, 76, 129, 0.22);
+    background: rgba(25, 63, 128, 0.22);
     top: 55%;
     left: 45%;
     animation: floatOrb3 12s ease-in-out infinite;
@@ -346,7 +347,7 @@ body.login-body {
 }
 
 .login-card:hover {
-    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0, 86, 210, 0.06);
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(32, 80, 160, 0.06);
 }
 
 @keyframes cardEntrance {
@@ -448,8 +449,8 @@ body.login-body {
 }
 
 .login-alert--info {
-    background: rgba(0, 86, 210, 0.08);
-    border: 1px solid rgba(0, 86, 210, 0.18);
+    background: rgba(32, 80, 160, 0.08);
+    border: 1px solid rgba(32, 80, 160, 0.18);
     color: var(--primary-dark);
 }
 
@@ -530,7 +531,7 @@ body.login-body {
 }
 
 .input-control:hover:not(:focus):not(.is-invalid) {
-    border-color: rgba(0, 86, 210, 0.35);
+    border-color: rgba(32, 80, 160, 0.35);
 }
 
 .input-control:focus {
@@ -606,7 +607,7 @@ body.login-body {
 
 .input-toggle:hover {
     color: var(--primary);
-    background: rgba(0, 86, 210, 0.06);
+    background: rgba(32, 80, 160, 0.06);
 }
 
 .input-toggle:focus-visible {
@@ -709,7 +710,7 @@ body.login-body {
     border-radius: var(--radius-md);
     cursor: pointer;
     overflow: hidden;
-    box-shadow: 0 6px 20px rgba(0, 86, 210, 0.35);
+    box-shadow: 0 6px 20px rgba(32, 80, 160, 0.35);
     transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition);
 }
 
@@ -724,7 +725,7 @@ body.login-body {
 
 .btn-signin:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 10px 28px rgba(0, 86, 210, 0.45);
+    box-shadow: 0 10px 28px rgba(32, 80, 160, 0.45);
 }
 
 .btn-signin:hover:not(:disabled)::before {

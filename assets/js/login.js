@@ -1,12 +1,12 @@
 /**
- * WPU Employment and Selection System — Login Portal UX
+ * Dumaran Hiring System — Login Portal UX
  * Frontend-only enhancements; does not alter authentication logic.
  */
 (function () {
     'use strict';
 
-    const STORAGE_KEY_EMAIL = 'wpu_login_remember_email';
-    const STORAGE_KEY_REMEMBER = 'wpu_login_remember_me';
+    const STORAGE_KEY_EMAIL = 'dumaran_login_remember_email';
+    const STORAGE_KEY_REMEMBER = 'dumaran_login_remember_me';
 
     const FRIENDLY_MESSAGES = {
         'invalid email or password': 'Incorrect email or password.',

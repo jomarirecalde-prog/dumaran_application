@@ -1,5 +1,5 @@
 /**
- * WPU Applicant System — Premium Toast Notification Manager
+ * Dumaran Hiring System — Premium Toast Notification Manager
  * Drop-in replacement preserving showSuccess/showError/showInfo/showWarning/showToast APIs
  */
 

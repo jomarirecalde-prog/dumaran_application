@@ -1,4 +1,4 @@
-// WPU Applicant System - Office Theme JavaScript
+// Dumaran Hiring System - Office Theme JavaScript
 
 // Mobile sidebar toggle with overlay
 function initSidebar() {

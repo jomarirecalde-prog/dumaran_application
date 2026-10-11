@@ -22,9 +22,8 @@ class NotificationManager {
         this.initNotificationSound();
         // Setup audio unlock on first user interaction
         this.setupAudioUnlock();
-        // Load initial unread count immediately
+        // Lightweight badge update on load; full list loads when the dropdown opens
         this.getUnreadCount();
-        this.loadNotifications();
         this.setupEventListeners();
         this.startSSE();
     }

@@ -1,5 +1,5 @@
 /**
- * WPU Applicant System — Premium Toast Notifications
+ * Dumaran Hiring System — Premium Toast Notifications
  * Modern, accessible, theme-aware notification cards
  */
 
@@ -27,18 +27,18 @@
     --toast-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
     /* Type palettes — muted, not oversaturated */
-    --toast-success-accent: #059669;
-    --toast-success-icon: #10b981;
-    --toast-success-bg: rgba(16, 185, 129, 0.06);
-    --toast-success-glow: rgba(16, 185, 129, 0.35);
+    --toast-success-accent: #15803D;
+    --toast-success-icon: #16a34a;
+    --toast-success-bg: rgba(21, 128, 61, 0.08);
+    --toast-success-glow: rgba(21, 128, 61, 0.35);
 
-    --toast-info-accent: #2563eb;
-    --toast-info-icon: #3b82f6;
-    --toast-info-bg: rgba(59, 130, 246, 0.06);
+    --toast-info-accent: #2050A0;
+    --toast-info-icon: #4A72B8;
+    --toast-info-bg: rgba(32, 80, 160, 0.08);
 
-    --toast-warning-accent: #d97706;
-    --toast-warning-icon: #f59e0b;
-    --toast-warning-bg: rgba(245, 158, 11, 0.07);
+    --toast-warning-accent: #795900;
+    --toast-warning-icon: #795900;
+    --toast-warning-bg: #FFFBEB;
 
     --toast-error-accent: #dc2626;
     --toast-error-icon: #ef4444;

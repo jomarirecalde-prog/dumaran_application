@@ -1,3 +1,4 @@
+@import url('brand-tokens.css');
 @import url('toast.css');
 
 .dashboard-sections {
@@ -13,37 +14,35 @@
         align-items: stretch;
     }
 }
-/* 
- * WPU Applicant System - Blue Minimalist Office Theme
- * Professional, Clean, and Mobile-Responsive
+/*
+ * Dumaran Hiring System — Municipal brand office theme
+ * Professional, clean, accessible, mobile-responsive
  */
 
 :root {
-    /* Blue Minimalist Color Palette */
-    --primary-blue: #1e40af;
-    --primary-blue-light: #3b82f6;
-    --primary-blue-dark: #1e3a8a;
-    --secondary-blue: #0ea5e9;
-    --accent-blue: #60a5fa;
-    
-    /* Neutral Colors */
-    --white: #ffffff;
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-400: #9ca3af;
-    --gray-500: #6b7280;
-    --gray-600: #4b5563;
-    --gray-700: #374151;
-    --gray-800: #1f2937;
-    --gray-900: #111827;
-    
-    /* Status Colors */
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --info: #3b82f6;
+    /* Legacy aliases → brand tokens (see brand-tokens.css) */
+    --primary-blue: var(--brand-primary);
+    --primary-blue-light: #4A72B8;
+    --primary-blue-dark: var(--brand-primary-hover);
+    --secondary-blue: var(--brand-primary-hover);
+    --accent-blue: #4A72B8;
+
+    --white: var(--surface-background);
+    --gray-50: var(--app-background);
+    --gray-100: #F1F5F9;
+    --gray-200: var(--border-color);
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: var(--text-secondary);
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: var(--text-primary);
+    --gray-900: #0F172A;
+
+    --success: var(--status-success);
+    --warning: var(--brand-yellow-text);
+    --danger: var(--status-error);
+    --info: var(--brand-primary);
     
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -66,8 +65,8 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
-    background-color: var(--gray-50);
-    color: var(--gray-800);
+    background-color: var(--app-background);
+    color: var(--text-primary);
     line-height: 1.6;
 }
 
@@ -129,7 +128,7 @@ body {
 }
 
 .sidebar-nav-item.active {
-    background-color: rgba(30, 64, 175, 0.05);
+    background-color: var(--brand-primary-light);
     color: var(--primary-blue);
     border-left-color: var(--primary-blue);
     font-weight: 600;
@@ -385,12 +384,12 @@ body {
 }
 
 .notification-item.unread {
-    background-color: rgba(30, 64, 175, 0.05);
+    background-color: var(--brand-primary-light);
     border-left: 3px solid var(--primary-blue);
 }
 
 .notification-item.unread:hover {
-    background-color: rgba(30, 64, 175, 0.1);
+    background-color: rgba(var(--brand-primary-rgb), 0.12);
 }
 
 .notification-title {
@@ -532,11 +531,12 @@ body {
 }
 
 .stat-card-icon.green {
-    background: linear-gradient(135deg, #059669, var(--success));
+    background: linear-gradient(135deg, var(--brand-green), #166534);
 }
 
 .stat-card-icon.yellow {
-    background: linear-gradient(135deg, #d97706, var(--warning));
+    background: linear-gradient(135deg, var(--brand-yellow-text), var(--brand-yellow));
+    color: var(--brand-yellow-text);
 }
 
 .stat-card-icon.red {
@@ -585,13 +585,15 @@ body {
 }
 
 .btn-secondary {
-    background: var(--gray-200);
-    color: var(--gray-700);
+    background: var(--surface-background);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
 }
 
 .btn-secondary:hover {
-    background: var(--gray-300);
-    color: var(--gray-800);
+    background: var(--gray-100);
+    color: var(--text-primary);
+    border-color: var(--gray-300);
 }
 
 .btn-outline {
@@ -611,8 +613,26 @@ body {
 }
 
 .btn-success:hover {
-    background: #059669;
+    background: #166534;
     color: white;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #B91C1C;
+    color: #fff;
+}
+
+.btn:focus-visible,
+.form-control:focus-visible,
+.topbar-btn:focus-visible,
+.sidebar-nav-item:focus-visible {
+    outline: 2px solid var(--primary-blue);
+    outline-offset: 2px;
 }
 
 .btn-sm {
@@ -635,28 +655,33 @@ body {
 }
 
 .badge-primary {
-    background: rgba(30, 64, 175, 0.1);
+    background: var(--brand-primary-light);
     color: var(--primary-blue);
 }
 
 .badge-success {
-    background: rgba(16, 185, 129, 0.1);
+    background: var(--brand-green-light);
     color: var(--success);
 }
 
 .badge-warning {
-    background: rgba(245, 158, 11, 0.1);
-    color: var(--warning);
+    background: var(--status-warning-bg);
+    color: var(--status-warning);
 }
 
 .badge-danger {
-    background: rgba(239, 68, 68, 0.1);
+    background: var(--status-error-bg);
     color: var(--danger);
 }
 
 .badge-info {
-    background: rgba(59, 130, 246, 0.1);
+    background: var(--brand-primary-light);
     color: var(--info);
+}
+
+.badge-highlight {
+    background: var(--brand-yellow);
+    color: var(--brand-yellow-text);
 }
 
 /* Forms */
@@ -686,7 +711,7 @@ body {
 .form-control:focus {
     outline: none;
     border-color: var(--primary-blue);
-    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--brand-primary-rgb), 0.15);
 }
 
 .form-control::placeholder {
@@ -770,7 +795,7 @@ textarea.form-control {
 .mobile-nav-item.active {
     color: var(--primary-blue);
     border-top-color: var(--primary-blue);
-    background-color: rgba(30, 64, 175, 0.03);
+    background-color: var(--brand-primary-light);
 }
 
 .mobile-nav-item:active {
@@ -816,27 +841,27 @@ textarea.form-control {
 }
 
 .alert-success {
-    background: rgba(16, 185, 129, 0.1);
-    color: #065f46;
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    background: var(--brand-green-light);
+    color: var(--status-success);
+    border: 1px solid rgba(var(--brand-green-rgb), 0.25);
 }
 
 .alert-warning {
-    background: rgba(245, 158, 11, 0.1);
-    color: #92400e;
-    border: 1px solid rgba(245, 158, 11, 0.2);
+    background: var(--status-warning-bg);
+    color: var(--status-warning);
+    border: 1px solid rgba(121, 89, 0, 0.2);
 }
 
 .alert-danger {
-    background: rgba(239, 68, 68, 0.1);
+    background: var(--status-error-bg);
     color: #991b1b;
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(220, 38, 38, 0.25);
 }
 
 .alert-info {
-    background: rgba(59, 130, 246, 0.1);
-    color: #1e40af;
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    background: var(--brand-primary-light);
+    color: var(--primary-blue);
+    border: 1px solid rgba(var(--brand-primary-rgb), 0.2);
 }
 
 /* Empty State */
@@ -1026,7 +1051,7 @@ textarea.form-control {
 .search-box input:focus {
     outline: none;
     border-color: var(--primary-blue);
-    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--brand-primary-rgb), 0.15);
 }
 
 .search-box i {
@@ -1302,8 +1327,8 @@ textarea.form-control {
 
 /* ── Dark Mode ── */
 body[data-theme="dark"] {
-    --white: #1e293b;
-    --gray-50: #0f172a;
+    --white: var(--surface-background);
+    --gray-50: var(--app-background);
     --gray-100: #1e293b;
     --gray-200: rgba(148, 163, 184, 0.15);
     --gray-300: rgba(148, 163, 184, 0.25);
@@ -1322,8 +1347,8 @@ body[data-theme="dark"] {
 
 @media (prefers-color-scheme: dark) {
     body[data-theme="system"] {
-        --white: #1e293b;
-        --gray-50: #0f172a;
+        --white: var(--surface-background);
+        --gray-50: var(--app-background);
         --gray-100: #1e293b;
         --gray-200: rgba(148, 163, 184, 0.15);
         --gray-300: rgba(148, 163, 184, 0.25);

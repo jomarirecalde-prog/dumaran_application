@@ -37,7 +37,7 @@ $checks = [
         'name' => 'BASE_URL Configuration',
         'status' => defined('BASE_URL') && !empty(BASE_URL),
         'value' => defined('BASE_URL') ? BASE_URL : 'Not defined',
-        'expected' => 'http://localhost/Applicant_WPU/',
+        'expected' => 'http://localhost/dumaran_hiring/',
         'help' => 'Defined in config/config.php'
     ],
     'client_id' => [
@@ -60,7 +60,7 @@ $checks = [
         'name' => 'Redirect URI',
         'status' => !empty($googleConfig['redirect_uri']),
         'value' => $googleConfig['redirect_uri'],
-        'expected' => 'http://localhost/Applicant_WPU/auth/google_oauth.php',
+        'expected' => 'http://localhost/dumaran_hiring/auth/google_oauth.php',
         'help' => 'Must match exactly in Google Cloud Console'
     ],
     'scope' => [
@@ -191,13 +191,13 @@ $allConfigured = array_reduce($checks, function($carry, $check) {
         }
         .instructions {
             background: #eff6ff;
-            border: 2px solid #3b82f6;
+            border: 2px solid #2050A0;
             padding: 20px;
             border-radius: 8px;
             margin-top: 20px;
         }
         .instructions h3 {
-            color: #1e40af;
+            color: #2050A0;
             margin-bottom: 12px;
         }
         .instructions ol {
@@ -212,12 +212,12 @@ $allConfigured = array_reduce($checks, function($carry, $check) {
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 0.9rem;
-            color: #1e40af;
+            color: #2050A0;
         }
         .btn {
             display: inline-block;
             padding: 12px 24px;
-            background: #2563eb;
+            background: #2050A0;
             color: white;
             text-decoration: none;
             border-radius: 8px;
@@ -235,7 +235,7 @@ $allConfigured = array_reduce($checks, function($carry, $check) {
     <div class="container">
         <div class="header">
             <h1><i class="fab fa-google"></i> Google OAuth Configuration Checker</h1>
-            <p>This tool helps verify that Google OAuth is properly configured for the WPU Applicant System.</p>
+            <p>This tool helps verify that Google OAuth is properly configured for the Dumaran Hiring System.</p>
         </div>
 
         <div class="status-card">

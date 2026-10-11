@@ -95,12 +95,12 @@ $codeExpiresAt = $user['email_verification_expires_at'] ?? null;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Email - WPU Applicant System</title>
+    <title>Verify Email - Dumaran Hiring System</title>
     <link href="<?= BASE_URL ?>assets/vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <link href="<?= BASE_URL ?>assets/css/office-theme.css" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            background: linear-gradient(135deg, #2050A0 0%, #2050A0 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -128,7 +128,7 @@ $codeExpiresAt = $user['email_verification_expires_at'] ?? null;
             }
         }
         .verify-header {
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            background: linear-gradient(135deg, #2050A0 0%, #2050A0 100%);
             padding: 36px 40px;
             text-align: center;
             color: white;
@@ -153,7 +153,7 @@ $codeExpiresAt = $user['email_verification_expires_at'] ?? null;
         }
         .alert-info {
             background: #dbeafe;
-            color: #1e40af;
+            color: #2050A0;
             border: 1px solid #93c5fd;
         }
         .alert-danger {
@@ -188,13 +188,13 @@ $codeExpiresAt = $user['email_verification_expires_at'] ?? null;
         }
         .otp-input input:focus {
             outline: none;
-            border-color: #2563eb;
+            border-color: #2050A0;
             background: white;
             box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         }
         .btn-primary {
             width: 100%;
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            background: linear-gradient(135deg, #2050A0 0%, #2050A0 100%);
             color: white;
             border: none;
             padding: 15px 24px;
@@ -240,7 +240,7 @@ $codeExpiresAt = $user['email_verification_expires_at'] ?? null;
             text-align: center;
         }
         .back-to-login a {
-            color: #2563eb;
+            color: #2050A0;
             font-weight: 600;
             text-decoration: none;
         }

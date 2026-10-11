@@ -1,12 +1,12 @@
 /**
- * WPU Applicant — Browse Jobs UI
+ * Dumaran Hiring System — Browse Jobs UI
  * Preserves modal / apply workflow; adds search, bookmarks, compare, theme.
  */
 (function () {
     'use strict';
 
-    const STORAGE_SAVED = 'wpu_applicant_saved_jobs';
-    const STORAGE_RECENT = 'wpu_applicant_job_searches';
+    const STORAGE_SAVED = 'dumaran_applicant_saved_jobs';
+    const STORAGE_RECENT = 'dumaran_applicant_job_searches';
 
     let searchData = { titles: [], locations: [], keywords: [] };
     let compareIds = new Set();

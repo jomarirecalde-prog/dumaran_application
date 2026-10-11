@@ -10,12 +10,12 @@ header('Content-Type: application/json');
 
 // Parse BASE_URL to get the path
 $baseUrlParts = parse_url(BASE_URL);
-$basePath = $baseUrlParts['path'] ?? '/Applicant_WPU/';
+$basePath = $baseUrlParts['path'] ?? '/dumaran_hiring/';
 
 $manifest = [
-    'name' => 'WPU Jobs - Applicant Portal',
-    'short_name' => 'WPU Jobs',
-    'description' => 'Western Philippines University Job Application Portal - Apply for positions and track your applications',
+    'name' => SITE_NAME,
+    'short_name' => SITE_SHORT_NAME,
+    'description' => SITE_NAME . ' — Apply for positions and track your applications',
     'start_url' => $basePath . 'applicant/pages/dashboard.php',
     'scope' => $basePath,
     'display' => 'standalone',

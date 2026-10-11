@@ -82,6 +82,38 @@ try {
     $errors[] = "✗ Failed to create user_application_documents: " . $e->getMessage();
 }
 
+// Migration 3: Add application_documents table (per-application uploads, ATS view)
+try {
+    $sql = "CREATE TABLE IF NOT EXISTS `application_documents` (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `application_id` int(11) NOT NULL,
+        `document_type` enum('resume','cover_letter','certificate','portfolio','other') NOT NULL,
+        `file_name` varchar(255) NOT NULL,
+        `file_path` varchar(255) NOT NULL,
+        `file_size` int(11) DEFAULT NULL,
+        `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`),
+        KEY `idx_application_documents_app_id` (`application_id`),
+        KEY `idx_application_documents_type` (`document_type`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
+
+    $pdo->exec($sql);
+    $migrations[] = "✓ application_documents table created/verified";
+
+    try {
+        $pdo->exec("ALTER TABLE `application_documents`
+            ADD CONSTRAINT `fk_app_docs_application`
+            FOREIGN KEY (`application_id`) REFERENCES `applications` (`id`) ON DELETE CASCADE");
+        $migrations[] = "✓ Foreign key for application_documents added";
+    } catch (PDOException $e) {
+        if (strpos($e->getMessage(), 'Duplicate') === false && strpos($e->getMessage(), 'already exists') === false) {
+            $migrations[] = "→ application_documents foreign key already exists";
+        }
+    }
+} catch (PDOException $e) {
+    $errors[] = "✗ Failed to create application_documents: " . $e->getMessage();
+}
+
 // Output results
 $isWeb = php_sapi_name() !== 'cli';
 

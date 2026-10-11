@@ -1,19 +1,39 @@
 <?php
+require_once __DIR__ . '/load_env.php';
+
 /**
- * Database Configuration for WPU Applicant System
+ * Database Configuration for Dumaran Hiring System
  */
 
 class Database {
-    private $host = 'localhost';
-    private $db_name = 'wpu_applicant_system';
-    private $username = 'root';
-    private $password = 'password';
-    private $charset = 'utf8mb4';
+    private $host;
+    private $db_name;
+    private $username;
+    private $password;
+    private $charset;
     public $pdo;
 
+    /** @var PDO|null Shared connection for the current PHP request */
+    private static $sharedPdo = null;
+
+    public function __construct()
+    {
+        $this->host = $_ENV['DB_HOST'] ?? 'localhost';
+        $this->db_name = $_ENV['DB_NAME'] ?? 'dumaran_hr';
+        $this->username = $_ENV['DB_USERNAME'] ?? 'root';
+        $this->password = $_ENV['DB_PASSWORD'] ?? 'password';
+        $this->charset = $_ENV['DB_CHARSET'] ?? 'utf8mb4';
+    }
+
     public function getConnection() {
-        // Reuse existing connection if available
+        if (self::$sharedPdo !== null) {
+            $this->pdo = self::$sharedPdo;
+            return $this->pdo;
+        }
+
+        // Reuse existing connection on this instance if available
         if ($this->pdo !== null) {
+            self::$sharedPdo = $this->pdo;
             return $this->pdo;
         }
         
@@ -22,6 +42,7 @@ class Database {
             $this->pdo = new PDO($dsn, $this->username, $this->password);
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            self::$sharedPdo = $this->pdo;
             // PDO auto-commits by default unless a transaction is explicitly started
         } catch(PDOException $e) {
             // Log error instead of outputting HTML

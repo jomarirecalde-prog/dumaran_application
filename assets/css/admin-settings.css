@@ -1,5 +1,5 @@
 /**
- * WPU Admin Settings — Enterprise Settings Dashboard
+ * Dumaran Hiring Admin Settings — Enterprise Settings Dashboard
  * Scoped to body.admin-dashboard on settings page
  */
 
@@ -8,10 +8,10 @@ body.admin-dashboard.settings-page {
     --set-radius-sm: 12px;
     --set-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
     --set-shadow-hover: 0 16px 48px rgba(15, 23, 42, 0.12);
-    --set-accent: var(--dash-primary, #0056D2);
-    --set-success: var(--dash-success, #16A34A);
+    --set-accent: var(--dash-primary, #2050A0);
+    --set-success: var(--dash-success, #15803D);
     --set-danger: var(--dash-danger, #DC2626);
-    --set-warning: var(--dash-warning, #F59E0B);
+    --set-warning: var(--dash-warning, #795900);
     --set-muted: var(--dash-text-muted, #64748b);
     --set-border: var(--dash-border, rgba(148, 163, 184, 0.25));
     --set-transition: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
@@ -58,14 +58,14 @@ body.admin-dashboard.settings-page .settings-header-icon {
     width: 52px;
     height: 52px;
     border-radius: 16px;
-    background: linear-gradient(135deg, var(--set-accent), #3b82f6);
+    background: linear-gradient(135deg, var(--set-accent), #4A72B8);
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.35rem;
     flex-shrink: 0;
-    box-shadow: 0 8px 24px rgba(0, 86, 210, 0.25);
+    box-shadow: 0 8px 24px rgba(32, 80, 160, 0.25);
 }
 
 body.admin-dashboard.settings-page .settings-header-text h1 {
@@ -134,7 +134,7 @@ body.admin-dashboard.settings-page .settings-tab i {
 
 body.admin-dashboard.settings-page .settings-tab:hover {
     color: var(--set-accent);
-    background: rgba(0, 86, 210, 0.06);
+    background: rgba(32, 80, 160, 0.06);
     border-bottom-color: transparent;
 }
 
@@ -145,7 +145,7 @@ body.admin-dashboard.settings-page .settings-tab:hover i {
 body.admin-dashboard.settings-page .settings-tab.active {
     color: #fff;
     background: linear-gradient(135deg, var(--set-accent), #2563eb);
-    box-shadow: 0 4px 16px rgba(0, 86, 210, 0.3);
+    box-shadow: 0 4px 16px rgba(32, 80, 160, 0.3);
     border-bottom-color: transparent;
 }
 
@@ -162,7 +162,7 @@ body.admin-dashboard.settings-page .settings-card {
 
 body.admin-dashboard.settings-page .settings-card:hover {
     box-shadow: var(--set-shadow-hover);
-    border-color: rgba(0, 86, 210, 0.15);
+    border-color: rgba(32, 80, 160, 0.15);
 }
 
 body.admin-dashboard.settings-page .settings-card-header {
@@ -222,7 +222,7 @@ body.admin-dashboard.settings-page .settings-label i {
     width: 32px;
     height: 32px;
     border-radius: 10px;
-    background: rgba(0, 86, 210, 0.08);
+    background: rgba(32, 80, 160, 0.08);
     color: var(--set-accent);
     display: flex;
     align-items: center;
@@ -303,7 +303,7 @@ body.admin-dashboard.settings-page .input-icon-wrap .form-control {
 
 body.admin-dashboard.settings-page .input-icon-wrap .form-control:focus {
     border-color: var(--set-accent);
-    box-shadow: 0 0 0 4px rgba(0, 86, 210, 0.12);
+    box-shadow: 0 0 0 4px rgba(32, 80, 160, 0.12);
 }
 
 body.admin-dashboard.settings-page .input-icon-wrap .form-control:focus + .field-icon,
@@ -461,7 +461,7 @@ body.admin-dashboard.settings-page .stepper-control button {
 }
 
 body.admin-dashboard.settings-page .stepper-control button:hover {
-    background: rgba(0, 86, 210, 0.1);
+    background: rgba(32, 80, 160, 0.1);
     color: var(--set-accent);
 }
 
@@ -504,13 +504,13 @@ body.admin-dashboard.settings-page .settings-save-btn {
     font-weight: 700;
     font-size: 0.95rem;
     cursor: pointer;
-    box-shadow: 0 8px 32px rgba(0, 86, 210, 0.35);
+    box-shadow: 0 8px 32px rgba(32, 80, 160, 0.35);
     transition: transform var(--set-transition), box-shadow var(--set-transition), opacity var(--set-transition);
 }
 
 body.admin-dashboard.settings-page .settings-save-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(0, 86, 210, 0.45);
+    box-shadow: 0 12px 40px rgba(32, 80, 160, 0.45);
 }
 
 body.admin-dashboard.settings-page .settings-save-btn:disabled {
@@ -583,7 +583,7 @@ body.admin-dashboard.settings-page .quick-action-btn {
 
 body.admin-dashboard.settings-page .quick-action-btn:hover {
     border-color: var(--set-accent);
-    background: rgba(0, 86, 210, 0.04);
+    background: rgba(32, 80, 160, 0.04);
     color: var(--set-accent);
     transform: translateX(4px);
 }
@@ -592,7 +592,7 @@ body.admin-dashboard.settings-page .quick-action-btn i {
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    background: rgba(0, 86, 210, 0.08);
+    background: rgba(32, 80, 160, 0.08);
     color: var(--set-accent);
     display: flex;
     align-items: center;
@@ -602,8 +602,8 @@ body.admin-dashboard.settings-page .quick-action-btn i {
 body.admin-dashboard.settings-page .security-tips {
     padding: 16px;
     border-radius: var(--set-radius-sm);
-    background: linear-gradient(135deg, rgba(0, 86, 210, 0.06), rgba(59, 130, 246, 0.04));
-    border: 1px solid rgba(0, 86, 210, 0.12);
+    background: linear-gradient(135deg, rgba(32, 80, 160, 0.06), rgba(59, 130, 246, 0.04));
+    border: 1px solid rgba(32, 80, 160, 0.12);
 }
 
 body.admin-dashboard.settings-page .security-tips h4 {
@@ -685,7 +685,7 @@ body.admin-dashboard.settings-page .password-strength-fill {
 
 body.admin-dashboard.settings-page .password-strength-fill.weak { width: 25%; background: var(--set-danger); }
 body.admin-dashboard.settings-page .password-strength-fill.medium { width: 50%; background: var(--set-warning); }
-body.admin-dashboard.settings-page .password-strength-fill.strong { width: 75%; background: #3b82f6; }
+body.admin-dashboard.settings-page .password-strength-fill.strong { width: 75%; background: #4A72B8; }
 body.admin-dashboard.settings-page .password-strength-fill.very-strong { width: 100%; background: var(--set-success); }
 
 body.admin-dashboard.settings-page .password-strength-label {
@@ -734,7 +734,7 @@ body.admin-dashboard.settings-page .password-toggle-btn {
 
 body.admin-dashboard.settings-page .password-toggle-btn:hover {
     color: var(--set-accent);
-    background: rgba(0, 86, 210, 0.08);
+    background: rgba(32, 80, 160, 0.08);
 }
 
 /* ── Admin Stats ── */
@@ -818,7 +818,7 @@ body.admin-dashboard.settings-page .admin-search-wrap input {
 body.admin-dashboard.settings-page .admin-search-wrap input:focus {
     outline: none;
     border-color: var(--set-accent);
-    box-shadow: 0 0 0 4px rgba(0, 86, 210, 0.1);
+    box-shadow: 0 0 0 4px rgba(32, 80, 160, 0.1);
 }
 
 body.admin-dashboard.settings-page .admin-filter-select {
@@ -849,7 +849,7 @@ body.admin-dashboard.settings-page .admin-item {
 body.admin-dashboard.settings-page .admin-item:hover {
     box-shadow: var(--set-shadow-hover);
     transform: translateY(-3px);
-    border-color: rgba(0, 86, 210, 0.2);
+    border-color: rgba(32, 80, 160, 0.2);
 }
 
 body.admin-dashboard.settings-page .admin-item-header {
@@ -878,7 +878,7 @@ body.admin-dashboard.settings-page .admin-avatar {
     font-weight: 700;
     color: white;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(0, 86, 210, 0.25);
+    box-shadow: 0 4px 12px rgba(32, 80, 160, 0.25);
 }
 
 body.admin-dashboard.settings-page .admin-name {
@@ -1204,7 +1204,7 @@ body.admin-dashboard.settings-page .logs-toolbar-btn {
 body.admin-dashboard.settings-page .logs-toolbar-btn:hover {
     border-color: var(--set-accent);
     color: var(--set-accent);
-    background: rgba(0, 86, 210, 0.04);
+    background: rgba(32, 80, 160, 0.04);
 }
 
 body.admin-dashboard.settings-page .logs-view-toggle {
@@ -1253,7 +1253,7 @@ body.admin-dashboard.settings-page .log-filter-chip {
 body.admin-dashboard.settings-page .log-filter-chip:hover,
 body.admin-dashboard.settings-page .log-filter-chip.active {
     border-color: var(--set-accent);
-    background: rgba(0, 86, 210, 0.08);
+    background: rgba(32, 80, 160, 0.08);
     color: var(--set-accent);
 }
 
@@ -1321,7 +1321,7 @@ body.admin-dashboard.settings-page .logs-table td {
 }
 
 body.admin-dashboard.settings-page .logs-table tr:hover td {
-    background: rgba(0, 86, 210, 0.02);
+    background: rgba(32, 80, 160, 0.02);
 }
 
 body.admin-dashboard.settings-page .log-action-badge {
@@ -1343,7 +1343,7 @@ body.admin-dashboard.settings-page .log-action-create,
 body.admin-dashboard.settings-page .log-action-admin_created,
 body.admin-dashboard.settings-page .log-action-register { background: rgba(139, 92, 246, 0.1); color: #7c3aed; }
 body.admin-dashboard.settings-page .log-action-error { background: rgba(245, 158, 11, 0.12); color: var(--set-warning); }
-body.admin-dashboard.settings-page .log-action-default { background: rgba(0, 86, 210, 0.08); color: var(--set-accent); }
+body.admin-dashboard.settings-page .log-action-default { background: rgba(32, 80, 160, 0.08); color: var(--set-accent); }
 
 body.admin-dashboard.settings-page .admin-details {
     flex: 1;

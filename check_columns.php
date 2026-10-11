@@ -1,7 +1,7 @@
 <?php
 /**
  * Quick script to check if IPCR and PE file path columns exist in users table
- * Run this from browser: http://localhost/Applicant_WPU/check_columns.php
+ * Run this from browser: http://localhost/dumaran_hiring/check_columns.php
  */
 
 require_once 'config/database.php';

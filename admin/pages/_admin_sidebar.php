@@ -42,9 +42,9 @@ $adminSidebarSections = [
 ?>
     <aside class="sidebar" role="navigation" aria-label="Main navigation">
         <div class="sidebar-header">
-            <a href="dashboard.php" class="sidebar-brand" aria-label="WPU Admin Home">
-                <img src="../../assets/logo.png" alt="WPU Logo" style="height: 32px; width: auto;">
-                <span>WPU Admin</span>
+            <a href="dashboard.php" class="sidebar-brand" aria-label="<?= htmlspecialchars(SITE_SHORT_NAME, ENT_QUOTES, 'UTF-8') ?> Admin Home">
+                <img src="../../assets/logo.webp" alt="<?= htmlspecialchars(SITE_SHORT_NAME, ENT_QUOTES, 'UTF-8') ?> logo" style="height: 32px; width: auto;">
+                <span><?= htmlspecialchars(SITE_SHORT_NAME, ENT_QUOTES, 'UTF-8') ?> Admin</span>
             </a>
             <button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Toggle sidebar">
                 <i class="fas fa-angles-left"></i>

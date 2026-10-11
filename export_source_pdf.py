@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Export project source code to a single PDF document.
-Usage: python export_source_pdf.py [--output Applicant_WPU_Source.pdf]
+Usage: python export_source_pdf.py [--output dumaran_hiring_Source.pdf]
 """
 
 import argparse
@@ -257,8 +257,8 @@ def main():
     parser = argparse.ArgumentParser(description="Export project source code to PDF")
     parser.add_argument(
         "--output", "-o",
-        default=str(ROOT / "Applicant_WPU_Source_Code.pdf"),
-        help="Output PDF path (default: Applicant_WPU_Source_Code.pdf in project root)",
+        default=str(ROOT / "dumaran_hiring_Source_Code.pdf"),
+        help="Output PDF path (default: dumaran_hiring_Source_Code.pdf in project root)",
     )
     args = parser.parse_args()
 

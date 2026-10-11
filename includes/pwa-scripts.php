@@ -9,7 +9,7 @@
 <script>
     // Set PWA base URL for service worker scope
     window.PWA_BASE_URL = '<?= BASE_URL ?>';
-    window.PWA_BASE_PATH = '<?= parse_url(BASE_URL, PHP_URL_PATH) ?? '/Applicant_WPU/' ?>';
+    window.PWA_BASE_PATH = '<?= parse_url(BASE_URL, PHP_URL_PATH) ?? '/dumaran_hiring/' ?>';
 </script>
 <script src="<?= BASE_URL ?>assets/js/pwa.js"></script>
 

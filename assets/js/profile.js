@@ -6,15 +6,15 @@
     'use strict';
 
     const STEPS = [
-        { id: 'personal', label: 'Personal', icon: 'fa-user' },
+        { id: 'personal', label: 'Personal Information', icon: 'fa-user' },
         { id: 'education', label: 'Education', icon: 'fa-graduation-cap' },
         { id: 'experience', label: 'Experience', icon: 'fa-briefcase' },
         { id: 'eligibility', label: 'Eligibility', icon: 'fa-certificate' },
         { id: 'documents', label: 'Documents', icon: 'fa-folder-open' },
-        { id: 'review', label: 'Review', icon: 'fa-check-circle' },
+        { id: 'review', label: 'Review & Submit', icon: 'fa-check-circle' },
     ];
 
-    const DRAFT_KEY = 'wpu_profile_draft';
+    const DRAFT_KEY = 'dumaran_profile_draft';
 
     let currentStep = 0;
     let formDirty = false;
@@ -41,8 +41,10 @@
         initActionBar(form);
         initAutoSaveDraft(form);
         initUnsavedWarning(form);
+        initPasswordToggle();
         updateCompletion();
         buildReviewSummary();
+        updateWizardHeader();
 
         if (form) {
             initialFormSnapshot = serializeForm(form);
@@ -63,6 +65,7 @@
         navButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const idx = parseInt(btn.getAttribute('data-wizard-step'), 10);
+                if (Number.isNaN(idx)) return;
                 goToStep(idx);
             });
         });
@@ -87,6 +90,11 @@
 
     function goToStep(index, animate = true) {
         if (index < 0 || index >= STEPS.length) return;
+        if (index !== currentStep && formDirty) {
+            if (!confirm('You have unsaved changes. Continue without saving?')) {
+                return;
+            }
+        }
         currentStep = index;
 
         document.querySelectorAll('.profile-wizard-panel').forEach((panel, i) => {
@@ -96,9 +104,12 @@
 
         document.querySelectorAll('[data-wizard-step]').forEach(btn => {
             const stepIdx = parseInt(btn.getAttribute('data-wizard-step'), 10);
+            if (Number.isNaN(stepIdx)) return;
             btn.classList.toggle('active', stepIdx === index);
             btn.setAttribute('aria-current', stepIdx === index ? 'step' : 'false');
         });
+
+        updateWizardHeader();
 
         const panel = document.getElementById('wizard-panel-' + STEPS[index].id);
         if (panel) {
@@ -106,6 +117,15 @@
         }
 
         if (index === STEPS.length - 1) buildReviewSummary();
+    }
+
+    function updateWizardHeader() {
+        const stepLabel = document.getElementById('wizardStepLabel');
+        const stepTitle = document.getElementById('wizardStepTitle');
+        const fill = document.getElementById('wizardStepProgressFill');
+        if (stepLabel) stepLabel.textContent = `Step ${currentStep + 1} of ${STEPS.length}`;
+        if (stepTitle) stepTitle.textContent = STEPS[currentStep].label;
+        if (fill) fill.style.width = `${((currentStep + 1) / STEPS.length) * 100}%`;
     }
 
     /* ── Dynamic sections (Promotion / Entry Level) ── */
@@ -117,12 +137,12 @@
 
         function sync() {
             if (promotionSection) {
-                const hasFile = promotionSection.querySelector('[data-has-file="1"]');
+                const hasFile = promotionSection.querySelector('[data-file-ready="1"]');
                 const show = (promotionCb && promotionCb.checked) || hasFile;
                 promotionSection.classList.toggle('expanded', !!show);
             }
             if (entrySection) {
-                const hasFile = entrySection.querySelector('[data-has-file="1"]');
+                const hasFile = entrySection.querySelector('[data-file-ready="1"]');
                 const show = (entryCb && entryCb.checked) || hasFile;
                 entrySection.classList.toggle('expanded', !!show);
             }
@@ -174,34 +194,62 @@
             zone.addEventListener('drop', e => {
                 if (e.dataTransfer.files.length && input) {
                     input.files = e.dataTransfer.files;
-                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    handleDropzoneFiles(zone, input);
                 }
             });
 
             input.addEventListener('change', () => {
-                if (!input.files.length) return;
-                markDirty();
-                simulateUploadProgress(zone);
-                const names = Array.from(input.files).map(f => f.name).join(', ');
-                const hint = zone.querySelector('.profile-dropzone__selected');
-                if (hint) hint.textContent = 'Selected: ' + names;
+                handleDropzoneFiles(zone, input);
             });
         });
     }
 
-    function simulateUploadProgress(zone) {
-        zone.classList.add('uploading');
-        const fill = zone.querySelector('.profile-dropzone__progress-fill');
-        if (!fill) return;
-        let pct = 0;
-        const interval = setInterval(() => {
-            pct += 15;
-            fill.style.width = Math.min(pct, 100) + '%';
-            if (pct >= 100) {
-                clearInterval(interval);
-                setTimeout(() => zone.classList.remove('uploading'), 400);
+    function handleDropzoneFiles(zone, input) {
+        const errorEl = zone.querySelector('.profile-dropzone__error');
+        const hint = zone.querySelector('.profile-dropzone__selected');
+        zone.classList.remove('has-error');
+        if (errorEl) errorEl.textContent = '';
+
+        if (!input.files.length) {
+            if (hint) hint.textContent = '';
+            return;
+        }
+
+        const maxBytes = parseInt(zone.getAttribute('data-max-bytes') || '10485760', 10);
+        const allowed = (zone.getAttribute('data-accept-ext') || '')
+            .split(',')
+            .map(s => s.trim().toLowerCase())
+            .filter(Boolean);
+
+        const invalid = [];
+        const oversized = [];
+        Array.from(input.files).forEach(file => {
+            const ext = file.name.split('.').pop()?.toLowerCase() || '';
+            if (allowed.length && !allowed.includes(ext)) invalid.push(file.name);
+            if (file.size > maxBytes) oversized.push(file.name);
+        });
+
+        if (invalid.length || oversized.length) {
+            input.value = '';
+            if (hint) hint.textContent = '';
+            zone.classList.add('has-error');
+            if (errorEl) {
+                const parts = [];
+                if (invalid.length) parts.push(`Unsupported format: ${invalid.join(', ')}`);
+                if (oversized.length) parts.push(`File exceeds 10MB: ${oversized.join(', ')}`);
+                errorEl.textContent = parts.join(' ');
             }
-        }, 80);
+            return;
+        }
+
+        markDirty();
+        const summary = Array.from(input.files).map(f => {
+            const kb = f.size >= 1024 ? (f.size / 1024).toFixed(1) + ' KB' : f.size + ' B';
+            return `${f.name} (${kb})`;
+        }).join('; ');
+        if (hint) {
+            hint.textContent = 'Selected (save profile to upload): ' + summary;
+        }
     }
 
     /* ── Copy format ── */
@@ -211,9 +259,11 @@
                 e.preventDefault();
                 const text = btn.getAttribute('data-copy-format');
                 navigator.clipboard.writeText(text).then(() => {
+                    announceLive('Format copied to clipboard.');
                     if (typeof showSuccess === 'function') showSuccess('Format copied to clipboard');
-                    else btn.textContent = 'Copied!';
-                    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+                    const original = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => { btn.textContent = original || 'Copy'; }, 2000);
                 });
             });
         });
@@ -319,6 +369,7 @@
 
             document.querySelectorAll(`[data-wizard-step="${step}"]`).forEach(btn => {
                 btn.classList.toggle('incomplete', !done);
+                btn.classList.toggle('complete', done);
             });
         });
 
@@ -328,6 +379,8 @@
         const heroPct = document.getElementById('profileHeroPct');
 
         if (fill) fill.style.width = pct + '%';
+        const progressBar = document.getElementById('profileProgressBar');
+        if (progressBar) progressBar.setAttribute('aria-valuenow', String(pct));
         if (pctEl) pctEl.textContent = pct + '%';
         if (heroPct) heroPct.textContent = pct + '%';
 
@@ -388,8 +441,13 @@
     }
 
     function isDocumentsComplete() {
-        const fileCards = document.querySelectorAll('.profile-file-card[data-has-file="1"]');
-        return fileCards.length >= 3;
+        const requiredTypes = ['APLET', 'PDS', 'WES'];
+        let ready = 0;
+        requiredTypes.forEach(type => {
+            const section = document.querySelector(`.profile-doc-section[data-doc-type="${type}"]`);
+            if (section && section.querySelector('[data-file-ready="1"]')) ready++;
+        });
+        return ready >= requiredTypes.length;
     }
 
     /* ── Review summary ── */
@@ -398,27 +456,138 @@
         const form = document.getElementById('profileForm');
         if (!container || !form) return;
 
-        const fields = [
-            { name: 'full_name', label: 'Full Name' },
-            { name: 'age', label: 'Age' },
-            { name: 'email', label: 'Email' },
-            { name: 'phone', label: 'Phone' },
-            { name: 'address', label: 'Address' },
-            { name: 'highest_educational_attainment', label: 'Education' },
+        const sections = [
+            {
+                title: 'Personal Information',
+                step: 0,
+                complete: isPersonalComplete(),
+                fields: [
+                    { name: 'full_name', label: 'Full Name' },
+                    { name: 'age', label: 'Age' },
+                    { name: 'email', label: 'Email' },
+                    { name: 'phone', label: 'Phone' },
+                    { name: 'address', label: 'Address' },
+                ],
+                extra: () => {
+                    const sex = form.querySelector('input[name="sex"]:checked');
+                    const civil = form.querySelector('input[name="civil_status"]:checked');
+                    return [
+                        { label: 'Sex', value: sex ? sex.value : '—' },
+                        { label: 'Civil Status', value: civil ? civil.value : '—' },
+                    ];
+                },
+            },
+            {
+                title: 'Education',
+                step: 1,
+                complete: isEducationComplete(),
+                fields: [
+                    { name: 'highest_educational_attainment', label: 'Highest Attainment' },
+                    { name: 'bachelors_degree', label: "Bachelor's Degree" },
+                    { name: 'masters_degree', label: "Master's Degree" },
+                    { name: 'doctorate_degree', label: 'Doctorate' },
+                ],
+            },
+            {
+                title: 'Work Experience',
+                step: 2,
+                complete: isExperienceComplete(),
+                fields: [{ name: 'work_experience_display', label: 'Summary' }],
+            },
+            {
+                title: 'Eligibility',
+                step: 3,
+                complete: isEligibilityComplete(),
+                fields: [
+                    { name: 'training_programs', label: 'Training Programs' },
+                    { name: 'special_needs', label: 'Special Needs' },
+                ],
+                extra: () => {
+                    const cse = Array.from(form.querySelectorAll('input[name="career_service_eligibilities[]"]:checked'))
+                        .map(el => el.value);
+                    const other = form.querySelector('[name="career_service_eligibilities_other"]');
+                    if (cse.includes('Other') && other && other.value.trim()) {
+                        cse.push(other.value.trim());
+                    }
+                    return [{ label: 'Career Service Eligibility', value: cse.length ? cse.join(', ') : '—' }];
+                },
+            },
+            {
+                title: 'Application Documents',
+                step: 4,
+                complete: isDocumentsComplete(),
+                custom: () => {
+                    const docSections = document.querySelectorAll('#wizard-panel-documents .profile-doc-section[data-doc-type]');
+                    const items = [];
+                    docSections.forEach(sec => {
+                        const titleEl = sec.querySelector('.profile-doc-section__title');
+                        const title = titleEl ? titleEl.textContent.trim() : sec.getAttribute('data-doc-type');
+                        const ready = sec.querySelector('[data-file-ready="1"]');
+                        items.push({
+                            label: title,
+                            value: ready ? 'Uploaded' : 'Missing or file not on server',
+                        });
+                    });
+                    return items;
+                },
+            },
         ];
 
-        container.innerHTML = fields.map(f => {
-            const el = form.querySelector(`[name="${f.name}"]`);
-            const val = el ? (el.value || '—') : '—';
-            return `<div class="profile-review-item"><div class="profile-review-item__label">${f.label}</div><div class="profile-review-item__value">${escapeHtml(val)}</div></div>`;
+        container.innerHTML = sections.map(section => {
+            let items = section.fields.map(f => {
+                const el = form.querySelector(`[name="${f.name}"]`);
+                const val = el ? (el.value || '—') : '—';
+                return { label: f.label, value: val };
+            });
+            if (section.extra) items = items.concat(section.extra());
+            if (section.custom) items = section.custom();
+
+            const missingNote = section.complete
+                ? ''
+                : '<p class="profile-review-block__missing"><i class="fas fa-exclamation-circle" aria-hidden="true"></i> Some required information in this section is incomplete.</p>';
+
+            const grid = items.map(item =>
+                `<div class="profile-review-item"><div class="profile-review-item__label">${escapeHtml(item.label)}</div><div class="profile-review-item__value">${escapeHtml(String(item.value))}</div></div>`
+            ).join('');
+
+            return `
+                <section class="profile-review-block">
+                    <div class="profile-review-block__head">
+                        <h4>${escapeHtml(section.title)}</h4>
+                        <button type="button" class="profile-btn profile-btn--sm profile-btn--secondary" data-goto-step="${section.step}"><i class="fas fa-pen" aria-hidden="true"></i> Edit</button>
+                    </div>
+                    ${missingNote}
+                    <div class="profile-review-grid">${grid}</div>
+                </section>`;
         }).join('');
 
-        const sex = form.querySelector('input[name="sex"]:checked');
-        const civil = form.querySelector('input[name="civil_status"]:checked');
-        container.innerHTML += `
-            <div class="profile-review-item"><div class="profile-review-item__label">Sex</div><div class="profile-review-item__value">${sex ? escapeHtml(sex.value) : '—'}</div></div>
-            <div class="profile-review-item"><div class="profile-review-item__label">Civil Status</div><div class="profile-review-item__value">${civil ? escapeHtml(civil.value) : '—'}</div></div>
-        `;
+        container.querySelectorAll('[data-goto-step]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const step = parseInt(btn.getAttribute('data-goto-step'), 10);
+                if (!Number.isNaN(step)) goToStep(step);
+            });
+        });
+    }
+
+    function announceLive(message) {
+        const live = document.getElementById('profileLiveStatus');
+        if (live) live.textContent = message;
+    }
+
+    function initPasswordToggle() {
+        document.querySelectorAll('.profile-password-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-password-target');
+                const input = id ? document.getElementById(id) : null;
+                if (!input) return;
+                const show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+                btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+                const icon = btn.querySelector('i');
+                if (icon) icon.className = show ? 'fas fa-eye-slash' : 'fas fa-eye';
+            });
+        });
     }
 
     function escapeHtml(str) {
@@ -564,11 +733,58 @@
         if (!bar) return;
 
         bar.querySelector('[data-action-cancel]')?.addEventListener('click', () => {
-            if (confirm('Discard unsaved changes?')) {
-                form.reset();
+            if (!formDirty || confirm('Discard unsaved changes?')) {
+                restoreFormFromSnapshot(form);
                 formDirty = false;
                 bar.classList.remove('visible');
+                document.querySelectorAll('.profile-dropzone__selected').forEach(el => { el.textContent = ''; });
+                document.querySelectorAll('.profile-dropzone').forEach(z => {
+                    z.classList.remove('has-error');
+                    const err = z.querySelector('.profile-dropzone__error');
+                    if (err) err.textContent = '';
+                });
+                initDynamicSections();
+                initCSEOther();
                 updateCompletion();
+                buildReviewSummary();
+            }
+        });
+    }
+
+    function restoreFormFromSnapshot(form) {
+        if (!initialFormSnapshot) {
+            form.reset();
+            return;
+        }
+        const snapshot = {};
+        initialFormSnapshot.split('&').forEach(pair => {
+            const [k, v] = pair.split('=');
+            if (!k) return;
+            const key = decodeURIComponent(k);
+            const val = decodeURIComponent(v || '');
+            if (!snapshot[key]) snapshot[key] = [];
+            snapshot[key].push(val);
+        });
+
+        form.querySelectorAll('input, textarea, select').forEach(field => {
+            const name = field.name;
+            if (!name || name.includes('csrf') || name.includes('form_token')) return;
+            if (field.type === 'file') {
+                field.value = '';
+                return;
+            }
+            if (field.type === 'checkbox' || field.type === 'radio') {
+                const values = snapshot[name] || [];
+                field.checked = values.includes(field.value);
+                return;
+            }
+            const values = snapshot[name];
+            if (values && values.length) {
+                field.value = values[0];
+            } else if (field.tagName === 'SELECT') {
+                field.selectedIndex = 0;
+            } else if (field.type !== 'hidden') {
+                field.value = '';
             }
         });
     }

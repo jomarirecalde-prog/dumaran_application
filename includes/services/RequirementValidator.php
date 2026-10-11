@@ -33,14 +33,25 @@ class RequirementValidator {
         if (!$user) {
             throw new Exception('User not found');
         }
-        
+
+        $totalExperience = $this->userModel->getTotalExperience($userId);
+        return $this->validateRequirementsFromRecords($user, $position, $totalExperience);
+    }
+
+    /**
+     * Validate requirements using preloaded user/position records (no extra DB queries).
+     */
+    public function validateRequirementsFromRecords(array $user, array $position, $totalExperience = null) {
+        if ($totalExperience === null) {
+            $totalExperience = 0;
+        }
+
         $validation = [
             'meets_requirements' => true,
             'details' => []
         ];
         
         // 1. Check experience requirement
-        $totalExperience = $this->userModel->getTotalExperience($userId);
         $minExperience = $position['min_experience_years'] ?? 0;
         $meetsExperience = $totalExperience >= $minExperience;
         
@@ -136,6 +147,39 @@ class RequirementValidator {
         $validation['summary'] = $this->generateSummary($validation);
         
         return $validation;
+    }
+
+    /**
+     * Compute ATS match score from a metric row (see Application::getAdminApplicationMetricRows).
+     */
+    public function computeMatchScoreFromMetricRow(array $row) {
+        $user = [
+            'career_service_eligibilities' => $row['career_service_eligibilities'] ?? '',
+            'training_programs' => $row['training_programs'] ?? '',
+        ];
+        $position = [
+            'min_experience_years' => $row['min_experience_years'] ?? 0,
+            'career_service_eligibilities' => $row['position_cse'] ?? '',
+            'training_hours' => $row['training_hours'] ?? null,
+            'salary_grade' => null,
+        ];
+        $totalExperience = (float) ($row['total_experience_years'] ?? 0);
+        $validation = $this->validateRequirementsFromRecords($user, $position, $totalExperience);
+
+        $checks = 0;
+        $passed = 0;
+        foreach ($validation['details'] ?? [] as $detail) {
+            if (isset($detail['meets'])) {
+                $checks++;
+                if ($detail['meets']) {
+                    $passed++;
+                }
+            }
+        }
+        if ($checks === 0) {
+            return !empty($validation['meets_requirements']) ? 100 : 0;
+        }
+        return (int) round(($passed / $checks) * 100);
     }
     
     /**

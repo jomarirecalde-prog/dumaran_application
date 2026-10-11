@@ -1,11 +1,11 @@
 /**
- * WPU Applications Module — Enterprise ATS Interactions
+ * Dumaran Hiring Applications Module — Enterprise ATS Interactions
  */
 (function () {
     'use strict';
 
-    const STORAGE_THEME = 'wpu-admin-theme';
-    const STORAGE_RECENT = 'wpu-ats-recent-searches';
+    const STORAGE_THEME = 'dumaran-admin-theme';
+    const STORAGE_RECENT = 'dumaran-ats-recent-searches';
     const cfg = window.ATS_CONFIG || {};
 
     let pendingArchiveFormId = null;

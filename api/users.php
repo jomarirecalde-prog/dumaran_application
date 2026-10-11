@@ -151,11 +151,16 @@ class UsersController extends ApiController {
                   ->required('email')
                   ->email('email')
                   ->required('password')
-                  ->minLength('password', 6)
-                  ->required('full_name');
+                  ->minLength('password', 6);
         
         if ($validator->fails()) {
             Response::validationError($validator->getErrors());
+        }
+
+        $hasNameParts = !empty(trim($this->requestData['last_name'] ?? ''))
+            && !empty(trim($this->requestData['first_name'] ?? ''));
+        if (!$hasNameParts && empty(trim($this->requestData['full_name'] ?? ''))) {
+            Response::validationError(['name' => 'Last name and first name are required']);
         }
         
         $user = $this->userService->registerUser($this->requestData);

@@ -6,22 +6,31 @@ requireAdmin();
 // Try to load models and data, with error handling
 try {
     require_once '../../includes/models.php';
+    require_once '../../includes/services/Cache.php';
     
     $userModel = new User();
     $positionModel = new Position();
     $applicationModel = new Application();
+    $dashboardCache = new Cache();
 
-    // Get dashboard statistics
-    $totalApplicants = count($userModel->findAll('role = ?', [ROLE_APPLICANT]));
-    $totalPositions = count($positionModel->findAll('is_active = 1'));
-    $totalApplications = count($applicationModel->findAll());
-    $pendingApplications = count($applicationModel->findAll('status = ?', [STATUS_PENDING]));
+    $summaryCounts = $dashboardCache->remember('admin_dashboard_summary_counts', function () use ($applicationModel) {
+        return $applicationModel->getAdminDashboardSummaryCounts();
+    }, 45);
 
-    // Get recent applications
-    $recentApplications = $applicationModel->getApplicationsWithDetails();
+    $totalApplicants = $summaryCounts['applicants'];
+    $totalPositions = $summaryCounts['active_positions'];
+    $totalApplications = $summaryCounts['total_applications'];
+    $pendingApplications = $summaryCounts['pending_applications'];
+
+    // Recent list for UI; full analytics use lightweight metric rows
+    $recentApplications = $applicationModel->getApplicationsWithDetails('', [], false, 50);
+    $dashboardMetricRows = $applicationModel->getAdminApplicationMetricRows(false);
     
     // Get active positions
     $activePositions = $positionModel->getActivePositions();
+    $applicationCountsByPosition = $positionModel->getApplicationCountsByPositionIds(
+        array_column($activePositions, 'id')
+    );
     
 } catch (Exception $e) {
     // Database error - show setup message
@@ -34,12 +43,15 @@ try {
     $totalApplications = 0;
     $pendingApplications = 0;
     $recentApplications = [];
+    $dashboardMetricRows = [];
     $activePositions = [];
+    $applicationCountsByPosition = [];
 }
 
 $user = ['full_name' => $_SESSION['full_name'] ?? 'Admin', 'email' => $_SESSION['email'] ?? ''];
 
 // ── View-layer metrics (derived from existing data, no additional queries) ──
+$analyticsApplications = !empty($dashboardMetricRows) ? $dashboardMetricRows : $recentApplications;
 $approvedApplications = 0;
 $rejectedApplications = 0;
 $newToday = 0;
@@ -55,7 +67,7 @@ $today = date('Y-m-d');
 $hour = (int) date('H');
 $greeting = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Evening');
 
-foreach ($recentApplications as $app) {
+foreach ($analyticsApplications as $app) {
     $st = $app['status'] ?? STATUS_PENDING;
     if (isset($statusCounts[$st])) {
         $statusCounts[$st]++;
@@ -135,7 +147,7 @@ if (count($monthlyLabels) > 6) {
 
 foreach ($activePositions as $pos) {
     $dept = !empty($pos['location']) ? $pos['location'] : 'General';
-    $count = isset($positionModel) ? $positionModel->getApplicationCount($pos['id']) : 0;
+    $count = $applicationCountsByPosition[(int) $pos['id']] ?? 0;
     $departmentData[$dept] = ($departmentData[$dept] ?? 0) + $count;
 
     if (!empty($pos['deadline'])) {
@@ -175,7 +187,7 @@ for ($i = 5; $i >= 0; $i--) {
     $weekStart = strtotime("-{$i} weeks");
     $weekEnd = strtotime('-' . ($i - 1) . ' weeks');
     $weekCount = 0;
-    foreach ($recentApplications as $app) {
+    foreach ($analyticsApplications as $app) {
         $ts = strtotime($app['applied_at']);
         if ($ts >= $weekStart && $ts < $weekEnd) {
             $weekCount++;
@@ -243,7 +255,7 @@ $dashboardJson = json_encode([
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Admin Dashboard - WPU Applicant System</title>
+    <title>Admin Dashboard - Dumaran Hiring System</title>
     <link rel="icon" type="image/x-icon" href="../../favicon.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="../../assets/css/office-theme.css" rel="stylesheet">
@@ -352,7 +364,7 @@ $dashboardJson = json_encode([
                 </div>
                 <?php endif; ?>
                 <?php if ($newToday > 0): ?>
-                <div class="dash-priority-banner dash-animate-in" data-priority="90" style="background:linear-gradient(135deg,rgba(0,86,210,0.1),rgba(15,76,129,0.06));border-color:rgba(0,86,210,0.25)">
+                <div class="dash-priority-banner dash-animate-in" data-priority="90" style="background:linear-gradient(135deg,rgba(32, 80, 160,0.1),rgba(15,76,129,0.06));border-color:rgba(32, 80, 160,0.25)">
                     <i class="fas fa-user-plus" style="color:var(--dash-primary)" aria-hidden="true"></i>
                     <div>
                         <strong><?= $newToday ?> new applicant<?= $newToday !== 1 ? 's' : '' ?> today</strong>
@@ -466,7 +478,7 @@ $dashboardJson = json_encode([
                             <?php
                             $stages = [
                                 ['key' => 'pending', 'label' => 'Pending', 'color' => '#F59E0B'],
-                                ['key' => 'screening', 'label' => 'Screening', 'color' => '#0056D2'],
+                                ['key' => 'screening', 'label' => 'Screening', 'color' => '#2050A0'],
                                 ['key' => 'interview', 'label' => 'Interview', 'color' => '#0F4C81'],
                                 ['key' => 'final_review', 'label' => 'Final Review', 'color' => '#6366f1'],
                                 ['key' => 'approved', 'label' => 'Approved', 'color' => '#16A34A'],
@@ -598,7 +610,7 @@ $dashboardJson = json_encode([
                 <?php else: ?>
                 <div class="dash-pos-grid">
                     <?php foreach (array_slice($activePositions, 0, 6) as $position):
-                        $appCount = isset($positionModel) ? $positionModel->getApplicationCount($position['id']) : 0;
+                        $appCount = $applicationCountsByPosition[(int) $position['id']] ?? 0;
                         $maxApps = !empty($position['max_applications']) ? (int)$position['max_applications'] : 0;
                         $filledPct = $maxApps > 0 ? min(100, round(($appCount / $maxApps) * 100)) : min(100, $appCount * 10);
                         $dept = !empty($position['location']) ? $position['location'] : 'General';
@@ -714,7 +726,7 @@ $dashboardJson = json_encode([
             <!-- Footer -->
             <footer class="dash-footer">
                 <div>
-                    <strong>WPU Employment &amp; Selection System</strong> v2.0
+                    <strong><?= htmlspecialchars(SITE_NAME, ENT_QUOTES, 'UTF-8') ?></strong> v2.0
                     <span style="margin-left:8px">· Server <?= isset($databaseError) ? 'Offline' : 'Online' ?></span>
                 </div>
                 <div class="dash-footer-links">

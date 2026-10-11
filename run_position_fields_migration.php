@@ -1,7 +1,7 @@
 <?php
 /**
  * Migration: Add salary_grade, training_hours, and career_service_eligibilities to positions table
- * Run this from browser: http://localhost/Applicant_WPU/run_position_fields_migration.php
+ * Run this from browser: http://localhost/dumaran_hiring/run_position_fields_migration.php
  */
 
 require_once 'config/database.php';

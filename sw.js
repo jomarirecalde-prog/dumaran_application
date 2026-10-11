@@ -1,25 +1,25 @@
 /**
- * WPU Jobs - Service Worker
+ * Dumaran Hiring - Service Worker
  * Provides offline support and caching for the applicant portal
  */
 
 // Default configuration - will be updated when config is fetched
-let CACHE_NAME = 'wpu-jobs-v2';
-let OFFLINE_URL = '/Applicant_WPU/offline.html';
-let BASE_PATH = '/Applicant_WPU/';
+let CACHE_NAME = 'dumaran-hiring-v2';
+let OFFLINE_URL = '/dumaran_hiring/offline.html';
+let BASE_PATH = '/dumaran_hiring/';
 
 // Assets to cache on install (default paths)
 let PRECACHE_ASSETS = [
-  '/Applicant_WPU/assets/css/office-theme.css',
-  '/Applicant_WPU/assets/css/toast.css',
-  '/Applicant_WPU/assets/js/office-theme.js',
-  '/Applicant_WPU/assets/js/toast.js',
-  '/Applicant_WPU/assets/js/notifications.js',
-  '/Applicant_WPU/assets/logo.png',
-  '/Applicant_WPU/assets/pwa/icon-192x192.png',
-  '/Applicant_WPU/assets/pwa/icon-512x512.png',
-  '/Applicant_WPU/favicon.ico',
-  '/Applicant_WPU/offline.html',
+  '/dumaran_hiring/assets/css/office-theme.css',
+  '/dumaran_hiring/assets/css/toast.css',
+  '/dumaran_hiring/assets/js/office-theme.js',
+  '/dumaran_hiring/assets/js/toast.js',
+  '/dumaran_hiring/assets/js/notifications.js',
+  '/dumaran_hiring/assets/logo.png',
+  '/dumaran_hiring/assets/pwa/icon-192x192.png',
+  '/dumaran_hiring/assets/pwa/icon-512x512.png',
+  '/dumaran_hiring/favicon.ico',
+  '/dumaran_hiring/offline.html',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
@@ -220,12 +220,12 @@ self.addEventListener('push', (event) => {
         { action: 'open', title: 'Open' },
         { action: 'close', title: 'Dismiss' }
       ],
-      tag: data.tag || 'wpu-notification',
+      tag: data.tag || 'dumaran-hiring-notification',
       renotify: true
     };
     
     event.waitUntil(
-      self.registration.showNotification(data.title || 'WPU Jobs', options)
+      self.registration.showNotification(data.title || 'Dumaran Hiring', options)
     );
   } catch (error) {
     console.error('[SW] Error handling push notification:', error);

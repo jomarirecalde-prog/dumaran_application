@@ -33,7 +33,7 @@ $activePositions = array_slice($positionModel->getActivePositions(), 0, 4);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - WPU Applicant System</title>
+    <title>Dashboard - Dumaran Hiring System</title>
     <link href="../assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <style>
@@ -253,7 +253,7 @@ $activePositions = array_slice($positionModel->getActivePositions(), 0, 4);
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h5 class="mb-0"><i class="fas fa-graduation-cap"></i> WPU Jobs</h5>
+                    <h5 class="mb-0"><i class="fas fa-graduation-cap"></i> Dumaran Hiring</h5>
                 </div>
                 <div class="dropdown">
                     <button class="btn btn-link text-white" data-bs-toggle="dropdown">

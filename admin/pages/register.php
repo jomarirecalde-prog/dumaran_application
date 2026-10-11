@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Admin Account - WPU Applicant System</title>
+    <title>Create Admin Account - Dumaran Hiring System</title>
     <link href="../../assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -227,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <nav class="sidebar" id="sidebar">
         <div class="p-3">
             <h4 class="text-center mb-4">
-                <i class="fas fa-graduation-cap"></i> WPU Admin
+                <i class="fas fa-graduation-cap"></i> <?= htmlspecialchars(SITE_SHORT_NAME, ENT_QUOTES, 'UTF-8') ?> Admin
             </h4>
             <ul class="nav flex-column">
                 <li class="nav-item">

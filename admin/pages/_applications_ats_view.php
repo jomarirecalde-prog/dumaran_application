@@ -6,7 +6,7 @@ if (!isset($applicationModel)) {
 
 $pipelineStages = [
     ['key' => 'pending', 'label' => 'Pending', 'color' => '#F59E0B', 'href' => 'applications.php?status=' . STATUS_PENDING],
-    ['key' => 'review', 'label' => 'Doc Review', 'color' => '#0056D2', 'href' => 'applications.php?status=' . STATUS_PENDING],
+    ['key' => 'review', 'label' => 'Doc Review', 'color' => '#2050A0', 'href' => 'applications.php?status=' . STATUS_PENDING],
     ['key' => 'validation', 'label' => 'Requirements', 'color' => '#0F4C81', 'href' => 'applications.php?status=' . STATUS_PENDING],
     ['key' => 'interview', 'label' => 'Interview', 'color' => '#6366f1', 'href' => 'applications.php?status=' . STATUS_APPROVED],
     ['key' => 'approved', 'label' => 'Approved', 'color' => '#16A34A', 'href' => 'applications.php?status=' . STATUS_APPROVED],

@@ -63,8 +63,11 @@ class UserService {
             $errors[] = 'Password must be at least 6 characters';
         }
         
-        if (empty($data['full_name'])) {
-            $errors[] = 'Full name is required';
+        normalizeUserNameFields($data);
+
+        $hasNameParts = !empty(trim($data['last_name'] ?? '')) && !empty(trim($data['first_name'] ?? ''));
+        if (!$hasNameParts && empty(trim($data['full_name'] ?? ''))) {
+            $errors[] = 'Last name and first name are required';
         }
         
         if (!empty($errors)) {

@@ -171,13 +171,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($mimeType !== 'application/pdf') {
                     $errors[] = "IPCR file must be a valid PDF file.";
                 } else {
-                    // Generate filename according to convention: SURNAME_FIRSTNAME_IPCR_WPUHRMDO.pdf
+                    // Generate filename according to convention: SURNAME_FIRSTNAME_IPCR_DUMHRMDO.pdf
                     $nameParts = explode(',', $fullName);
                     if (count($nameParts) >= 2) {
                         $surname = trim(strtoupper($nameParts[0]));
                         $firstName = trim(strtoupper($nameParts[1]));
                         $firstName = str_replace(' ', '_', $firstName); // Replace spaces with underscores
-                        $customFileName = $surname . '_' . $firstName . '_IPCR_WPUHRMDO';
+                        $customFileName = $surname . '_' . $firstName . '_IPCR_DUMHRMDO';
                         
                         // Delete old file if exists
                         if ($ipcrFilePath) {
@@ -255,13 +255,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($mimeType !== 'application/pdf') {
                     $errors[] = "PE file must be a valid PDF file.";
                 } else {
-                    // Generate filename according to convention: SURNAME_FIRSTNAME_PE_WPUHRMDO.pdf
+                    // Generate filename according to convention: SURNAME_FIRSTNAME_PE_DUMHRMDO.pdf
                     $nameParts = explode(',', $fullName);
                     if (count($nameParts) >= 2) {
                         $surname = trim(strtoupper($nameParts[0]));
                         $firstName = trim(strtoupper($nameParts[1]));
                         $firstName = str_replace(' ', '_', $firstName); // Replace spaces with underscores
-                        $customFileName = $surname . '_' . $firstName . '_PE_WPUHRMDO';
+                        $customFileName = $surname . '_' . $firstName . '_PE_DUMHRMDO';
                         
                         // Delete old file if exists
                         if ($peFilePath) {
@@ -338,7 +338,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         continue;
                     }
                     
-                    // Generate filename according to convention: SURNAME_FIRSTNAME_TS##_WPUHRMDO
+                    // Generate filename according to convention: SURNAME_FIRSTNAME_TS##_DUMHRMDO
                     $nameParts = explode(',', $fullName);
                     if (count($nameParts) >= 2) {
                         $surname = trim(strtoupper($nameParts[0]));
@@ -349,7 +349,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $sequenceNumber = $currentCount + 1;
                         $sequenceStr = str_pad($sequenceNumber, 2, '0', STR_PAD_LEFT); // TS01, TS02, etc.
                         
-                        $customFileName = $surname . '_' . $firstName . '_TS' . $sequenceStr . '_WPUHRMDO';
+                        $customFileName = $surname . '_' . $firstName . '_TS' . $sequenceStr . '_DUMHRMDO';
                         
                         // Upload new file
                         $uploadDir = __DIR__ . '/uploads/documents/';
@@ -591,14 +591,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         };
         
         // Handle all document type uploads
-        $handleDocumentUpload('application_letter', 'APLET', ['pdf'], ['application/pdf'], 'SURNAME_FIRSTNAME_APLET_WPUHRMDO');
-        $handleDocumentUpload('personal_data_sheet', 'PDS', ['pdf'], ['application/pdf'], 'SURNAME_FIRSTNAME_PDS_WPUHRMDO');
-        $handleDocumentUpload('work_experience_sheet', 'WES', ['pdf'], ['application/pdf'], 'SURNAME_FIRSTNAME_WES_WPUHRMDO');
-        $handleDocumentUpload('transcript_of_records', 'TOR', ['pdf', 'jpg', 'jpeg'], ['application/pdf', 'image/jpeg', 'image/jpg'], 'SURNAME_FIRSTNAME_TOR_WPUHRMDO');
-        $handleDocumentUpload('diploma', 'DIP', ['pdf', 'jpg', 'jpeg'], ['application/pdf', 'image/jpeg', 'image/jpg'], 'SURNAME_FIRSTNAME_DIP_WPUHRMDO');
-        $handleDocumentUpload('certificate_of_employment', 'COE', ['pdf', 'jpg', 'jpeg'], ['application/pdf', 'image/jpeg', 'image/jpg'], 'SURNAME_FIRSTNAME_COE##_WPUHRMDO');
-        $handleDocumentUpload('service_record', 'SRE', ['pdf', 'jpg', 'jpeg'], ['application/pdf', 'image/jpeg', 'image/jpg'], 'SURNAME_FIRSTNAME_SRE##_WPUHRMDO');
-        $handleDocumentUpload('eligibility_license', 'EL', ['pdf', 'jpg', 'jpeg'], ['application/pdf', 'image/jpeg', 'image/jpg'], 'SURNAME_FIRSTNAME_EL##_WPUHRMDO');
+        $handleDocumentUpload('application_letter', 'APLET', ['pdf'], ['application/pdf'], 'SURNAME_FIRSTNAME_APLET_DUMHRMDO');
+        $handleDocumentUpload('personal_data_sheet', 'PDS', ['pdf'], ['application/pdf'], 'SURNAME_FIRSTNAME_PDS_DUMHRMDO');
+        $handleDocumentUpload('work_experience_sheet', 'WES', ['pdf'], ['application/pdf'], 'SURNAME_FIRSTNAME_WES_DUMHRMDO');
+        $handleDocumentUpload('transcript_of_records', 'TOR', ['pdf', 'jpg', 'jpeg'], ['application/pdf', 'image/jpeg', 'image/jpg'], 'SURNAME_FIRSTNAME_TOR_DUMHRMDO');
+        $handleDocumentUpload('diploma', 'DIP', ['pdf', 'jpg', 'jpeg'], ['application/pdf', 'image/jpeg', 'image/jpg'], 'SURNAME_FIRSTNAME_DIP_DUMHRMDO');
+        $handleDocumentUpload('certificate_of_employment', 'COE', ['pdf', 'jpg', 'jpeg'], ['application/pdf', 'image/jpeg', 'image/jpg'], 'SURNAME_FIRSTNAME_COE##_DUMHRMDO');
+        $handleDocumentUpload('service_record', 'SRE', ['pdf', 'jpg', 'jpeg'], ['application/pdf', 'image/jpeg', 'image/jpg'], 'SURNAME_FIRSTNAME_SRE##_DUMHRMDO');
+        $handleDocumentUpload('eligibility_license', 'EL', ['pdf', 'jpg', 'jpeg'], ['application/pdf', 'image/jpeg', 'image/jpg'], 'SURNAME_FIRSTNAME_EL##_DUMHRMDO');
         
         if (empty($errors)) {
             $updateData = [
@@ -752,9 +752,23 @@ $userApplications = $applicationModel->getUserApplications($userId);
 $applicationsSubmitted = count($userApplications);
 $pendingApplications = count(array_filter($userApplications, fn($a) => ($a['status'] ?? '') === STATUS_PENDING));
 $interviewInvitations = count(array_filter($userApplications, fn($a) => !empty($a['interview_date'])));
-$documentsUploaded = count($trainingCertificates) + count($applicationDocuments);
-if (!empty($user['ipcr_file_path'])) $documentsUploaded++;
-if (!empty($user['pe_file_path'])) $documentsUploaded++;
+$documentsUploaded = 0;
+foreach ($trainingCertificates as $cert) {
+    if (!empty($cert['file_path']) && file_exists(__DIR__ . '/uploads/documents/' . $cert['file_path'])) {
+        $documentsUploaded++;
+    }
+}
+foreach ($applicationDocuments as $doc) {
+    if (!empty($doc['file_path']) && file_exists(__DIR__ . '/uploads/documents/' . $doc['file_path'])) {
+        $documentsUploaded++;
+    }
+}
+if (!empty($user['ipcr_file_path']) && file_exists(__DIR__ . '/uploads/documents/' . $user['ipcr_file_path'])) {
+    $documentsUploaded++;
+}
+if (!empty($user['pe_file_path']) && file_exists(__DIR__ . '/uploads/documents/' . $user['pe_file_path'])) {
+    $documentsUploaded++;
+}
 
 // Avatar initials helper
 function profileInitials($fullName) {
@@ -769,6 +783,12 @@ $profileInitials = profileInitials($user['full_name'] ?? 'A');
 $memberSince = !empty($user['created_at']) ? date('M j, Y', strtotime($user['created_at'])) : '—';
 $lastUpdated = !empty($user['updated_at']) ? date('M j, Y g:i A', strtotime($user['updated_at'])) : '—';
 $infoMessage = $_GET['info'] ?? '';
+
+function profileFileCardAttributes(bool $fileExists): string {
+    return $fileExists
+        ? 'data-has-file="1" data-file-ready="1"'
+        : 'data-has-file="0"';
+}
 
 function renderDocumentSection($number, $title, $description, $formatCode, $examples, $fileInputName, $documentType, $allowedFormats, $documentsByType, $isMultiple = false) {
     $docs = isset($documentsByType[$documentType]) ? $documentsByType[$documentType] : [];
@@ -805,12 +825,16 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                 $isPdf = strtolower(pathinfo($doc['file_path'], PATHINFO_EXTENSION)) === 'pdf';
                 $fileSize = !empty($doc['file_size']) ? round($doc['file_size'] / 1024, 1) . ' KB' : '';
             ?>
-            <div class="profile-file-card" data-has-file="1">
+            <div class="profile-file-card" <?= profileFileCardAttributes($docFileExists) ?>>
                 <div class="profile-file-card__icon profile-file-card__icon--<?= $isPdf ? 'pdf' : 'image' ?>"><i class="fas fa-<?= $isPdf ? 'file-pdf' : 'file-image' ?>"></i></div>
                 <div class="profile-file-card__info">
                     <div class="profile-file-card__name"><?= htmlspecialchars($doc['file_name']) ?></div>
                     <div class="profile-file-card__meta"><?= $fileSize ?></div>
-                    <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check"></i> Completed</span>
+                    <?php if ($docFileExists): ?>
+                    <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check" aria-hidden="true"></i> Completed</span>
+                    <?php else: ?>
+                    <span class="profile-file-card__status profile-file-card__status--missing"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> File missing — re-upload</span>
+                    <?php endif; ?>
                 </div>
                 <div class="profile-file-card__actions">
                     <?php if ($docFileExists): ?>
@@ -828,16 +852,16 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
             </div>
         <?php endif; ?>
         </div>
-        <div class="profile-dropzone">
-            <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt"></i></div>
-            <div class="profile-dropzone__title">Drop <?= strtoupper(implode(' or ', $allowedFormats)) ?> here or Browse</div>
+        <div class="profile-dropzone" data-max-bytes="10485760" data-accept-ext="<?= htmlspecialchars(implode(',', $allowedFormats)) ?>">
+            <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt" aria-hidden="true"></i></div>
+            <div class="profile-dropzone__title">Drop <?= strtoupper(implode(' or ', $allowedFormats)) ?> here or <span class="profile-dropzone__browse">browse files</span></div>
             <div class="profile-dropzone__subtitle profile-dropzone__selected"></div>
             <div class="profile-dropzone__formats">
                 <?php foreach ($allowedFormats as $f): ?><span class="profile-dropzone__tag"><?= strtoupper($f) ?></span><?php endforeach; ?>
                 <span class="profile-dropzone__tag">Max 10MB</span>
             </div>
+            <div class="profile-dropzone__error" role="alert"></div>
             <input type="file" name="<?= $fileInputName ?><?= $isMultipleAllowed ? '[]' : '' ?>" accept="<?= $acceptAttr ?>" <?= $isMultipleAllowed ? 'multiple' : '' ?> aria-label="Upload <?= htmlspecialchars($title) ?>">
-            <div class="profile-dropzone__progress"><div class="profile-dropzone__progress-bar"><div class="profile-dropzone__progress-fill"></div></div></div>
         </div>
     </div>
     <?php
@@ -847,8 +871,8 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Profile - WPU Applicant System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Dumaran Hiring System</title>
     <link rel="icon" type="image/x-icon" href="../../favicon.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="../../assets/css/office-theme.css" rel="stylesheet">
@@ -861,8 +885,8 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
     <aside class="sidebar">
         <div class="sidebar-header">
             <a href="dashboard.php" class="sidebar-brand">
-                <img src="../../assets/logo.png" alt="WPU Logo" style="height: 32px; width: auto;">
-                <span>WPU Jobs</span>
+                <img src="../../assets/logo.webp" alt="Logo" style="height: 32px; width: auto;">
+                <span>Dumaran Hiring</span>
             </a>
         </div>
         
@@ -904,14 +928,21 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
     <div class="main-wrapper">
         <!-- Top Bar -->
         <div class="topbar">
-            <button class="mobile-menu-toggle">
-                <i class="fas fa-bars"></i>
+            <button type="button" class="mobile-menu-toggle" aria-label="Open menu" aria-expanded="false">
+                <i class="fas fa-bars" aria-hidden="true"></i>
             </button>
-            <h1 class="topbar-title">Profile</h1>
+            <div class="profile-topbar-heading">
+                <nav class="profile-breadcrumb" aria-label="Breadcrumb">
+                    <a href="dashboard.php">Dashboard</a>
+                    <span aria-hidden="true">/</span>
+                    <span aria-current="page">Profile</span>
+                </nav>
+                <h1 class="topbar-title">Profile</h1>
+            </div>
             <div class="topbar-actions">
                 <?php include '../../includes/applicant-theme-toggle.php'; ?>
-                <a href="../../auth/logout.php" class="topbar-btn confirm-logout" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                <a href="../../auth/logout.php" class="topbar-btn confirm-logout" title="Logout" aria-label="Log out">
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                 </a>
             </div>
         </div>
@@ -948,13 +979,8 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                         </div>
                         <div class="profile-hero__actions">
                             <span class="profile-badge profile-badge--incomplete" id="profileStatusBadge">
-                                <i class="fas fa-clock"></i> In Progress
+                                <i class="fas fa-clock" aria-hidden="true"></i> In Progress
                             </span>
-                            <div class="profile-theme-toggle" role="group" aria-label="Theme">
-                                <button type="button" data-theme-set="light" aria-pressed="false">Light</button>
-                                <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
-                                <button type="button" data-theme-set="system" aria-pressed="true" class="active">System</button>
-                            </div>
                         </div>
                     </div>
                     <div class="profile-hero__dates">
@@ -971,7 +997,7 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                     <h3 class="profile-completion-card__title">Profile Completion</h3>
                     <span class="profile-completion-card__pct" id="profileProgressPct">0%</span>
                 </div>
-                <div class="profile-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="profile-progress-bar" id="profileProgressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Profile completion">
                     <div class="profile-progress-bar__fill" id="profileProgressFill"></div>
                 </div>
                 <div class="profile-completion-checklist">
@@ -991,9 +1017,9 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                         <i class="fas fa-circle"></i> Documents
                     </button>
                 </div>
-                <div style="margin-top: 16px; font-size: 0.8125rem; color: var(--profile-text-muted);">
+                <p class="profile-completion-missing">
                     <strong>Missing:</strong> <span id="profileMissingList"></span>
-                </div>
+                </p>
             </section>
 
             <!-- Dashboard Stats -->
@@ -1009,7 +1035,7 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                     <div class="profile-stat-card__icon profile-stat-card__icon--purple"><i class="fas fa-award"></i></div>
                     <div>
                         <div class="profile-stat-card__value"><?= count($trainingCertificates) ?></div>
-                        <div class="profile-stat-card__label">Certificates</div>
+                        <div class="profile-stat-card__label">Training Certificates</div>
                     </div>
                 </div>
                 <div class="profile-stat-card">
@@ -1041,6 +1067,8 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                     </div>
                 </div>
             </div>
+
+            <div id="profileLiveStatus" class="profile-sr-only" aria-live="polite" aria-atomic="true"></div>
 
             <!-- Notifications -->
             <div class="profile-notifications">
@@ -1131,6 +1159,15 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                 </div>
 
                 <div class="profile-wizard-main">
+                    <div class="profile-wizard-header" aria-live="polite">
+                        <div class="profile-wizard-header__text">
+                            <span class="profile-wizard-header__step" id="wizardStepLabel">Step 1 of 6</span>
+                            <h2 class="profile-wizard-header__title" id="wizardStepTitle">Personal Information</h2>
+                        </div>
+                        <div class="profile-wizard-header__track" aria-hidden="true">
+                            <div class="profile-wizard-header__fill" id="wizardStepProgressFill"></div>
+                        </div>
+                    </div>
                     <form method="POST" action="" id="profileForm" class="prevent-double-submit" enctype="multipart/form-data">
                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                         <?php FormTokenManager::renderFormTokenInput('update_profile'); ?>
@@ -1406,7 +1443,7 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                             <div class="profile-type-card__inner">
                                                 <div class="profile-type-card__icon"><i class="fas fa-level-up-alt"></i></div>
                                                 <strong>Promotion</strong>
-                                                <p>For government employees applying for higher or next-in-rank positions at WPU or other agencies.</p>
+                                                <p>For government employees applying for higher or next-in-rank positions at <?= htmlspecialchars(ORG_NAME, ENT_QUOTES, 'UTF-8') ?> or other agencies.</p>
                                             </div>
                                         </label>
                                         <label class="profile-type-card">
@@ -1436,10 +1473,10 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                         <div class="profile-format-card">
                                             <div class="profile-format-card__label">Required Format</div>
                                             <div class="profile-format-card__code">
-                                                <span>SURNAME_FIRSTNAME_IPCR_WPUHRMDO.pdf</span>
-                                                <button type="button" class="profile-format-card__copy" data-copy-format="SURNAME_FIRSTNAME_IPCR_WPUHRMDO.pdf">Copy</button>
+                                                <span>SURNAME_FIRSTNAME_IPCR_DUMHRMDO.pdf</span>
+                                                <button type="button" class="profile-format-card__copy" data-copy-format="SURNAME_FIRSTNAME_IPCR_DUMHRMDO.pdf">Copy</button>
                                             </div>
-                                            <p class="profile-field-hint" style="margin-top:8px;">Example: SANTOS_MARIAFE_IPCR_WPUHRMDO.pdf</p>
+                                            <p class="profile-field-hint" style="margin-top:8px;">Example: SANTOS_MARIAFE_IPCR_DUMHRMDO.pdf</p>
                                         </div>
                                         <label class="profile-section-label">Uploaded Files</label>
                                         <div class="profile-files-grid">
@@ -1448,12 +1485,16 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                             $ipcrFullPath = __DIR__ . '/' . $ipcrDisplayPath;
                                             $ipcrFileExists = file_exists($ipcrFullPath);
                                         ?>
-                                            <div class="profile-file-card" data-has-file="1">
+                                            <div class="profile-file-card" <?= profileFileCardAttributes($ipcrFileExists) ?>>
                                                 <div class="profile-file-card__icon profile-file-card__icon--pdf"><i class="fas fa-file-pdf"></i></div>
                                                 <div class="profile-file-card__info">
                                                     <div class="profile-file-card__name"><?= htmlspecialchars($user['ipcr_file_path']) ?></div>
                                                     <div class="profile-file-card__meta">PDF Document</div>
-                                                    <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check"></i> Completed</span>
+                                                    <?php if ($ipcrFileExists): ?>
+                                                    <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check" aria-hidden="true"></i> Completed</span>
+                                                    <?php else: ?>
+                                                    <span class="profile-file-card__status profile-file-card__status--missing"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> File missing — re-upload</span>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <div class="profile-file-card__actions">
                                                     <?php if ($ipcrFileExists): ?>
@@ -1470,16 +1511,16 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                             </div>
                                         <?php endif; ?>
                                         </div>
-                                        <div class="profile-dropzone">
-                                            <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                                            <div class="profile-dropzone__title">Drop PDF here or Browse Files</div>
+                                        <div class="profile-dropzone" data-max-bytes="10485760" data-accept-ext="pdf">
+                                            <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt" aria-hidden="true"></i></div>
+                                            <div class="profile-dropzone__title">Drop PDF here or <span class="profile-dropzone__browse">browse files</span></div>
                                             <div class="profile-dropzone__subtitle profile-dropzone__selected"></div>
                                             <div class="profile-dropzone__formats">
                                                 <span class="profile-dropzone__tag">PDF</span>
                                                 <span class="profile-dropzone__tag">Max 10MB</span>
                                             </div>
+                                            <div class="profile-dropzone__error" role="alert"></div>
                                             <input type="file" name="ipcr_file" accept=".pdf,application/pdf" aria-label="Upload IPCR document">
-                                            <div class="profile-dropzone__progress"><div class="profile-dropzone__progress-bar"><div class="profile-dropzone__progress-fill"></div></div></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1495,8 +1536,8 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                         <div class="profile-format-card">
                                             <div class="profile-format-card__label">Required Format</div>
                                             <div class="profile-format-card__code">
-                                                <span>SURNAME_FIRSTNAME_PE_WPUHRMDO.pdf</span>
-                                                <button type="button" class="profile-format-card__copy" data-copy-format="SURNAME_FIRSTNAME_PE_WPUHRMDO.pdf">Copy</button>
+                                                <span>SURNAME_FIRSTNAME_PE_DUMHRMDO.pdf</span>
+                                                <button type="button" class="profile-format-card__copy" data-copy-format="SURNAME_FIRSTNAME_PE_DUMHRMDO.pdf">Copy</button>
                                             </div>
                                         </div>
                                         <label class="profile-section-label">Uploaded Files</label>
@@ -1506,11 +1547,15 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                             $peFullPath = __DIR__ . '/' . $peDisplayPath;
                                             $peFileExists = file_exists($peFullPath);
                                         ?>
-                                            <div class="profile-file-card" data-has-file="1">
+                                            <div class="profile-file-card" <?= profileFileCardAttributes($peFileExists) ?>>
                                                 <div class="profile-file-card__icon profile-file-card__icon--pdf"><i class="fas fa-file-pdf"></i></div>
                                                 <div class="profile-file-card__info">
                                                     <div class="profile-file-card__name"><?= htmlspecialchars($user['pe_file_path']) ?></div>
-                                                    <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check"></i> Completed</span>
+                                                    <?php if ($peFileExists): ?>
+                                                    <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check" aria-hidden="true"></i> Completed</span>
+                                                    <?php else: ?>
+                                                    <span class="profile-file-card__status profile-file-card__status--missing"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> File missing — re-upload</span>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <div class="profile-file-card__actions">
                                                     <?php if ($peFileExists): ?>
@@ -1525,13 +1570,13 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                             <div class="profile-empty" style="padding:24px;"><p class="profile-empty__text">No PE document uploaded yet.</p></div>
                                         <?php endif; ?>
                                         </div>
-                                        <div class="profile-dropzone">
-                                            <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                                            <div class="profile-dropzone__title">Drop PDF here or Browse Files</div>
+                                        <div class="profile-dropzone" data-max-bytes="10485760" data-accept-ext="pdf">
+                                            <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt" aria-hidden="true"></i></div>
+                                            <div class="profile-dropzone__title">Drop PDF here or <span class="profile-dropzone__browse">browse files</span></div>
                                             <div class="profile-dropzone__subtitle profile-dropzone__selected"></div>
                                             <div class="profile-dropzone__formats"><span class="profile-dropzone__tag">PDF</span><span class="profile-dropzone__tag">Max 10MB</span></div>
+                                            <div class="profile-dropzone__error" role="alert"></div>
                                             <input type="file" name="pe_file" accept=".pdf,application/pdf" aria-label="Upload PE document">
-                                            <div class="profile-dropzone__progress"><div class="profile-dropzone__progress-bar"><div class="profile-dropzone__progress-fill"></div></div></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1552,8 +1597,8 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                     <div class="profile-format-card">
                                         <div class="profile-format-card__label">Required Format</div>
                                         <div class="profile-format-card__code">
-                                            <span>SURNAME_FIRSTNAME_TS##_WPUHRMDO</span>
-                                            <button type="button" class="profile-format-card__copy" data-copy-format="SURNAME_FIRSTNAME_TS01_WPUHRMDO.pdf">Copy</button>
+                                            <span>SURNAME_FIRSTNAME_TS##_DUMHRMDO</span>
+                                            <button type="button" class="profile-format-card__copy" data-copy-format="SURNAME_FIRSTNAME_TS01_DUMHRMDO.pdf">Copy</button>
                                         </div>
                                     </div>
                                     <div class="profile-files-grid">
@@ -1567,12 +1612,16 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                             $isPdf = strtolower(pathinfo($certFilePath, PATHINFO_EXTENSION)) === 'pdf';
                                             $fileSize = !empty($cert['file_size']) ? round($cert['file_size'] / 1024, 1) . ' KB' : '';
                                         ?>
-                                        <div class="profile-file-card" data-has-file="1">
+                                        <div class="profile-file-card" <?= profileFileCardAttributes($certFileExists) ?>>
                                             <div class="profile-file-card__icon profile-file-card__icon--<?= $isPdf ? 'pdf' : 'image' ?>"><i class="fas fa-<?= $isPdf ? 'file-pdf' : 'file-image' ?>"></i></div>
                                             <div class="profile-file-card__info">
                                                 <div class="profile-file-card__name"><?= htmlspecialchars($cert['file_name'] ?? $certFilePath) ?></div>
                                                 <div class="profile-file-card__meta"><?= $fileSize ?></div>
-                                                <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check"></i> Completed</span>
+                                                <?php if ($certFileExists): ?>
+                                                <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check" aria-hidden="true"></i> Completed</span>
+                                                <?php else: ?>
+                                                <span class="profile-file-card__status profile-file-card__status--missing"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> File missing — re-upload</span>
+                                                <?php endif; ?>
                                             </div>
                                             <div class="profile-file-card__actions">
                                                 <?php if ($certFileExists): ?>
@@ -1591,13 +1640,13 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                         </div>
                                     <?php endif; ?>
                                     </div>
-                                    <div class="profile-dropzone">
-                                        <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                                        <div class="profile-dropzone__title">Drop files here or Browse</div>
+                                    <div class="profile-dropzone" data-max-bytes="10485760" data-accept-ext="pdf,jpg,jpeg">
+                                        <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt" aria-hidden="true"></i></div>
+                                        <div class="profile-dropzone__title">Drop files here or <span class="profile-dropzone__browse">browse files</span></div>
                                         <div class="profile-dropzone__subtitle profile-dropzone__selected"></div>
                                         <div class="profile-dropzone__formats"><span class="profile-dropzone__tag">PDF</span><span class="profile-dropzone__tag">JPEG</span><span class="profile-dropzone__tag">Max 10MB</span></div>
+                                        <div class="profile-dropzone__error" role="alert"></div>
                                         <input type="file" name="training_certificates[]" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple aria-label="Upload training certificates">
-                                        <div class="profile-dropzone__progress"><div class="profile-dropzone__progress-bar"><div class="profile-dropzone__progress-fill"></div></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -1666,9 +1715,9 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                             renderDocumentSection(
                                 '21',
                                 'APPLICATION LETTER',
-                                'Applicants are required to upload an Application Letter addressed to:<br><strong>DR. AMABEL S. LIAO<br>University President<br>Western Philippines University<br>Aborlan, Palawan</strong><br><br>The Application Letter must be properly addressed, signed, and clearly readable.',
-                                'SURNAME_FIRSTNAME_APLET_WPUHRMDO.pdf',
-                                'SANTOS_MARIAFE_APLET_WPUHRMDO.pdf',
+                                'Applicants are required to upload an Application Letter addressed to:<br>' . ORG_APPLICATION_LETTER_RECIPIENT_HTML . '<br><br>The Application Letter must be properly addressed, signed, and clearly readable.',
+                                'SURNAME_FIRSTNAME_APLET_DUMHRMDO.pdf',
+                                'SANTOS_MARIAFE_APLET_DUMHRMDO.pdf',
                                 'application_letter',
                                 'APLET',
                                 ['pdf'],
@@ -1680,8 +1729,8 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                 '22',
                                 'PERSONAL DATA SHEET',
                                 'CS FORM NO. 212, REVISED 2025<br><br>Applicants are required to upload a fully accomplished CS Form No. 212, <strong>Revised 2025</strong> – Personal Data Sheet (PDS). The form must be properly filled out, signed, and notarized or duly administered by an authorized administering officer. A recent passport-sized photograph must be affixed to the form.',
-                                'SURNAME_FIRSTNAME_PDS_WPUHRMDO.pdf',
-                                'SANTOS_MARIAFE_PDS_WPUHRMDO.pdf',
+                                'SURNAME_FIRSTNAME_PDS_DUMHRMDO.pdf',
+                                'SANTOS_MARIAFE_PDS_DUMHRMDO.pdf',
                                 'personal_data_sheet',
                                 'PDS',
                                 ['pdf'],
@@ -1693,8 +1742,8 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                 '23',
                                 'WORK EXPERIENCE SHEET',
                                 'Applicants are required to upload a fully accomplished Work Experience <strong>Sheet</strong>, which is an attachment to CS Form No. 212 – Personal Data Sheet (PDS). All relevant work experiences must be completely and accurately indicated in the prescribed form.',
-                                'SURNAME_FIRSTNAME_WES_WPUHRMDO.pdf',
-                                'SANTOS_MARIAFE_WES_WPUHRMDO.pdf',
+                                'SURNAME_FIRSTNAME_WES_DUMHRMDO.pdf',
+                                'SANTOS_MARIAFE_WES_DUMHRMDO.pdf',
                                 'work_experience_sheet',
                                 'WES',
                                 ['pdf'],
@@ -1706,8 +1755,8 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                 '24',
                                 'TRANSCRIPT OF RECORDS',
                                 'Applicants are required to upload a Transcript of Records (TOR) relevant to the position being applied for. The document must be clear, complete, and readable, showing all academic records.',
-                                'SURNAME_FIRSTNAME_TOR_WPUHRMDO.pdf',
-                                ['SANTOS_MARIAFE_TOR_WPUHRMDO.pdf', 'SANTOS_MARIAFE_TOR_WPUHRMDO.jpg'],
+                                'SURNAME_FIRSTNAME_TOR_DUMHRMDO.pdf',
+                                ['SANTOS_MARIAFE_TOR_DUMHRMDO.pdf', 'SANTOS_MARIAFE_TOR_DUMHRMDO.jpg'],
                                 'transcript_of_records',
                                 'TOR',
                                 ['pdf', 'jpg', 'jpeg'],
@@ -1719,8 +1768,8 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                 '25',
                                 'DIPLOMA',
                                 'Applicants are required to upload a Diploma relevant to the position being applied for. The document must be clear, complete, and readable.',
-                                'SURNAME_FIRSTNAME_DIP_WPUHRMDO.pdf',
-                                ['SANTOS_MARIAFE_DIP_WPUHRMDO.pdf', 'SANTOS_MARIAFE_DIP_WPUHRMDO.jpg'],
+                                'SURNAME_FIRSTNAME_DIP_DUMHRMDO.pdf',
+                                ['SANTOS_MARIAFE_DIP_DUMHRMDO.pdf', 'SANTOS_MARIAFE_DIP_DUMHRMDO.jpg'],
                                 'diploma',
                                 'DIP',
                                 ['pdf', 'jpg', 'jpeg'],
@@ -1732,8 +1781,8 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                 '26',
                                 'CERTIFICATE OF EMPLOYMENT (IF APPLICABLE)',
                                 'Applicants are required to upload scanned copies or photocopies of their Certificate(s) of Employment (COE) relevant to the position being applied for, if applicable.',
-                                'SURNAME_FIRSTNAME_COE##_WPUHRMDO.pdf',
-                                ['SANTOS_MARIAFE_COE01_WPUHRMDO.pdf', 'SANTOS_MARIAFE_COE02_WPUHRMDO.jpg'],
+                                'SURNAME_FIRSTNAME_COE##_DUMHRMDO.pdf',
+                                ['SANTOS_MARIAFE_COE01_DUMHRMDO.pdf', 'SANTOS_MARIAFE_COE02_DUMHRMDO.jpg'],
                                 'certificate_of_employment',
                                 'COE',
                                 ['pdf', 'jpg', 'jpeg'],
@@ -1748,8 +1797,8 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                 <div class="profile-format-card">
                                     <div class="profile-format-card__label">Required Format</div>
                                     <div class="profile-format-card__code">
-                                        <span>SURNAME_FIRSTNAME_SRE##_WPUHRMDO.pdf</span>
-                                        <button type="button" class="profile-format-card__copy" data-copy-format="SURNAME_FIRSTNAME_SRE01_WPUHRMDO.pdf">Copy</button>
+                                        <span>SURNAME_FIRSTNAME_SRE##_DUMHRMDO.pdf</span>
+                                        <button type="button" class="profile-format-card__copy" data-copy-format="SURNAME_FIRSTNAME_SRE01_DUMHRMDO.pdf">Copy</button>
                                     </div>
                                 </div>
                                 <div class="profile-files-grid">
@@ -1760,11 +1809,15 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                         $docFileExists = file_exists($docFullPath);
                                         $isPdf = strtolower(pathinfo($doc['file_path'], PATHINFO_EXTENSION)) === 'pdf';
                                     ?>
-                                    <div class="profile-file-card" data-has-file="1">
+                                    <div class="profile-file-card" <?= profileFileCardAttributes($docFileExists) ?>>
                                         <div class="profile-file-card__icon profile-file-card__icon--<?= $isPdf ? 'pdf' : 'image' ?>"><i class="fas fa-<?= $isPdf ? 'file-pdf' : 'file-image' ?>"></i></div>
                                         <div class="profile-file-card__info">
                                             <div class="profile-file-card__name"><?= htmlspecialchars($doc['file_name']) ?></div>
-                                            <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check"></i> Completed</span>
+                                            <?php if ($docFileExists): ?>
+                                            <span class="profile-file-card__status profile-file-card__status--ok"><i class="fas fa-check" aria-hidden="true"></i> Completed</span>
+                                            <?php else: ?>
+                                            <span class="profile-file-card__status profile-file-card__status--missing"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> File missing — re-upload</span>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="profile-file-card__actions">
                                             <?php if ($docFileExists): ?>
@@ -1779,13 +1832,13 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                     <div class="profile-empty" style="padding:20px;"><p class="profile-empty__text">No service records uploaded.</p></div>
                                 <?php endif; ?>
                                 </div>
-                                <div class="profile-dropzone">
-                                    <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                                    <div class="profile-dropzone__title">Drop PDF or JPEG here or Browse</div>
+                                <div class="profile-dropzone" data-max-bytes="10485760" data-accept-ext="pdf,jpg,jpeg">
+                                    <div class="profile-dropzone__icon"><i class="fas fa-cloud-upload-alt" aria-hidden="true"></i></div>
+                                    <div class="profile-dropzone__title">Drop PDF or JPEG here or <span class="profile-dropzone__browse">browse files</span></div>
                                     <div class="profile-dropzone__subtitle profile-dropzone__selected"></div>
                                     <div class="profile-dropzone__formats"><span class="profile-dropzone__tag">PDF</span><span class="profile-dropzone__tag">JPEG</span><span class="profile-dropzone__tag">Max 10MB</span></div>
+                                    <div class="profile-dropzone__error" role="alert"></div>
                                     <input type="file" name="service_record[]" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple aria-label="Upload service records">
-                                    <div class="profile-dropzone__progress"><div class="profile-dropzone__progress-bar"><div class="profile-dropzone__progress-fill"></div></div></div>
                                 </div>
                             </div>
                             <?php
@@ -1793,8 +1846,8 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                 '27',
                                 'PHOTOCOPY OF AUTHENTICATED CERTIFICATE OF ELIGIBILITY/RATING/LICENSE (IF APPLICABLE)',
                                 'Applicants are required to upload scanned copies or photocopies of authenticated Certificates of Eligibility, Rating, or Professional License, relevant to the position being applied for, if applicable.',
-                                'SURNAME_FIRSTNAME_EL##_WPUHRMDO.pdf',
-                                ['SANTOS_MARIAFE_EL01_WPUHRMDO.pdf', 'SANTOS_MARIAFE_EL02_WPUHRMDO.jpg'],
+                                'SURNAME_FIRSTNAME_EL##_DUMHRMDO.pdf',
+                                ['SANTOS_MARIAFE_EL01_DUMHRMDO.pdf', 'SANTOS_MARIAFE_EL02_DUMHRMDO.jpg'],
                                 'eligibility_license',
                                 'EL',
                                 ['pdf', 'jpg', 'jpeg'],
@@ -1817,30 +1870,42 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                                     <h3 class="profile-section-card__title"><i class="fas fa-clipboard-check"></i> Review Your Profile</h3>
                                 </div>
                                 <div class="profile-section-card__body">
-                                    <p class="profile-field-hint" style="margin-bottom:20px;">Review your information before saving. All sections remain editable via the navigation panel.</p>
-                                    <div class="profile-review-grid" id="profileReviewSummary"></div>
+                                    <p class="profile-field-hint profile-review-intro">Review your information before saving. Saving updates your applicant profile only; it does not submit a job application unless you apply separately.</p>
+                                    <div id="profileReviewSummary"></div>
                                 </div>
                             </div>
 
-                            <div class="profile-section-card">
+                            <div class="profile-section-card profile-security-card">
                                 <div class="profile-section-card__header">
-                                    <h3 class="profile-section-card__title"><i class="fas fa-lock"></i> Change Password</h3>
+                                    <h3 class="profile-section-card__title"><i class="fas fa-lock"></i> Account Security</h3>
                                 </div>
                                 <div class="profile-section-card__body">
-                                    <p class="profile-field-hint">Leave blank if you don't want to change your password.</p>
+                                    <p class="profile-field-hint">Leave password fields blank to keep your current password.</p>
                                     <div class="profile-form-grid">
                                         <div class="profile-field">
-                                            <div class="profile-floating-label">
-                                                <i class="fas fa-key profile-field-icon"></i>
-                                                <input type="password" name="password" placeholder=" " autocomplete="new-password">
-                                                <label>New Password</label>
+                                            <label class="profile-section-label" for="profilePassword">New Password</label>
+                                            <div class="profile-password-wrap">
+                                                <div class="profile-floating-label profile-floating-label--password">
+                                                    <i class="fas fa-key profile-field-icon"></i>
+                                                    <input type="password" name="password" id="profilePassword" placeholder=" " autocomplete="new-password">
+                                                    <label for="profilePassword">New Password</label>
+                                                </div>
+                                                <button type="button" class="profile-password-toggle" data-password-target="profilePassword" aria-label="Show new password" aria-pressed="false">
+                                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                                </button>
                                             </div>
                                         </div>
                                         <div class="profile-field">
-                                            <div class="profile-floating-label">
-                                                <i class="fas fa-key profile-field-icon"></i>
-                                                <input type="password" name="confirm_password" placeholder=" " autocomplete="new-password">
-                                                <label>Confirm Password</label>
+                                            <label class="profile-section-label" for="profileConfirmPassword">Confirm Password</label>
+                                            <div class="profile-password-wrap">
+                                                <div class="profile-floating-label profile-floating-label--password">
+                                                    <i class="fas fa-key profile-field-icon"></i>
+                                                    <input type="password" name="confirm_password" id="profileConfirmPassword" placeholder=" " autocomplete="new-password">
+                                                    <label for="profileConfirmPassword">Confirm Password</label>
+                                                </div>
+                                                <button type="button" class="profile-password-toggle" data-password-target="profileConfirmPassword" aria-label="Show confirm password" aria-pressed="false">
+                                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -1880,7 +1945,7 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                     <a href="#" id="dataPrivacyPolicyLink" class="privacy-link">Data Privacy Policy</a>.
                 </p>
                 <p class="footer-copyright">
-                    © <?= date('Y') ?> Western Philippines University. All rights reserved.
+                    © <?= date('Y') ?> <?= htmlspecialchars(ORG_NAME, ENT_QUOTES, 'UTF-8') ?>. All rights reserved.
                 </p>
             </div>
         </footer>
@@ -1924,7 +1989,7 @@ function renderDocumentSection($number, $title, $description, $formatCode, $exam
                 <div class="modal-body" style="padding: 24px;">
                     <div style="line-height: 1.8; color: var(--gray-700); font-size: 0.95rem;">
                         <p style="margin-bottom: 16px;">
-                            In accordance with <strong>Republic Act No. 10173</strong>, otherwise known as the <strong>Data Privacy Act of 2012</strong>, and its Implementing Rules and Regulations, I hereby authorize <strong>Western Philippines University (WPU)</strong>, through its authorized offices, to collect, process, store, and use my personal information submitted in connection with my application for employment.
+                            In accordance with <strong>Republic Act No. 10173</strong>, otherwise known as the <strong>Data Privacy Act of 2012</strong>, and its Implementing Rules and Regulations, I hereby authorize <strong><?= htmlspecialchars(ORG_NAME, ENT_QUOTES, 'UTF-8') ?></strong>, through its authorized offices, to collect, process, store, and use my personal information submitted in connection with my application for employment.
                         </p>
                         <p style="margin-bottom: 16px;">
                             I understand and agree that the personal data I provided, including but not limited to my personal details, educational background, employment history, and other supporting documents, shall be used solely for recruitment, evaluation, selection, and other legitimate human resource–related purposes. I further acknowledge that these data may be shared with authorized personnel and relevant government agencies, as required by law or applicable regulations, including the Civil Service Commission.

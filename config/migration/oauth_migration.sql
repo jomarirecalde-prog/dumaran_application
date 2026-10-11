@@ -1,7 +1,7 @@
 -- Migration script to add Google OAuth support to existing database
 -- Run this script if you already have the database and want to add OAuth functionality
 
-USE wpu_applicant_system;
+USE dumaran_hr;
 
 -- Add new columns for OAuth support
 ALTER TABLE users 

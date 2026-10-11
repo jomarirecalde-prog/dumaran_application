@@ -1,8 +1,8 @@
-# WPU Applicant System - Installation & Setup Guide
+# Dumaran Hiring System - Installation & Setup Guide
 
 ## System Overview
 
-The WPU Applicant System is a comprehensive job application platform that allows:
+The Dumaran Hiring System is a comprehensive job application platform that allows:
 - **Applicants** to browse job positions, apply for roles, and track their applications
 - **Administrators** to post job positions, manage applications, and review candidates
 - **Mobile Support** with dedicated mobile-optimized interface
@@ -55,7 +55,7 @@ The WPU Applicant System is a comprehensive job application platform that allows
 
 1. Start XAMPP and ensure Apache and MySQL are running
 2. Access phpMyAdmin: `http://localhost/phpmyadmin`
-3. Create a new database named `wpu_applicant_system`
+3. Create a new database named `dumaran_hr`
 4. Import the database schema:
    ```sql
    -- Navigate to: config/database_schema.sql
@@ -68,7 +68,7 @@ The WPU Applicant System is a comprehensive job application platform that allows
 1. Update database credentials in `config/database.php` if needed:
    ```php
    private $host = 'localhost';
-   private $db_name = 'wpu_applicant_system';
+   private $db_name = 'dumaran_hr';
    private $username = 'root';  // Your MySQL username
    private $password = '';      // Your MySQL password
    ```
@@ -82,14 +82,14 @@ The WPU Applicant System is a comprehensive job application platform that allows
 
 ### 4. Access the Application
 
-1. **Main Entry Point**: `http://localhost/Applicant_WPU/`
-2. **Desktop Login**: `http://localhost/Applicant_WPU/login.php`
+1. **Main Entry Point**: `http://localhost/dumaran_hiring/`
+2. **Desktop Login**: `http://localhost/dumaran_hiring/login.php`
 3. **Mobile Interface**: Automatically detected and redirected
 
 ## Default Login Credentials
 
 ### Administrator Account
-- **Email**: `admin@wpu.ac.id`
+- **Email**: `admin@dumaran.gov.ph`
 - **Password**: `password`
 - **Role**: Admin
 
@@ -99,7 +99,7 @@ After setup, create applicant accounts using the registration form.
 ## File Structure
 
 ```
-Applicant_WPU/
+dumaran_hiring/
 ├── config/
 │   ├── database.php          # Database connection
 │   ├── config.php           # Main configuration
@@ -129,9 +129,9 @@ Applicant_WPU/
 ### 1. Admin Functionality Test
 
 1. **Login as Admin**
-   - Navigate to: `http://localhost/Applicant_WPU/login.php`
+   - Navigate to: `http://localhost/dumaran_hiring/login.php`
    - Select "Admin" role
-   - Use credentials: `admin@wpu.ac.id` / `password`
+   - Use credentials: `admin@dumaran.gov.ph` / `password`
 
 2. **Test Position Management**
    - Go to "Manage Positions"
@@ -176,7 +176,7 @@ Applicant_WPU/
 ### 3. Mobile Interface Test
 
 1. **Access from Mobile Device**
-   - Visit: `http://localhost/Applicant_WPU/` from mobile
+   - Visit: `http://localhost/dumaran_hiring/` from mobile
    - Verify automatic mobile detection
    - Test responsive design elements
 
@@ -208,7 +208,7 @@ Applicant_WPU/
 1. **Database Connection Error**
    - Verify MySQL is running in XAMPP
    - Check database credentials in `config/database.php`
-   - Ensure database `wpu_applicant_system` exists
+   - Ensure database `dumaran_hr` exists
 
 2. **File Upload Issues**
    - Check upload directory permissions: `chmod 755 uploads/`
@@ -293,4 +293,4 @@ For ongoing support:
 - ✅ PHP backend implementation
 - ✅ Responsive design for mobile compatibility
 
-The WPU Applicant System is now ready for use!
+The Dumaran Hiring System is now ready for use!

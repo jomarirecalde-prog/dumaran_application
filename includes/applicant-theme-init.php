@@ -1,8 +1,8 @@
 <script>
 (function () {
     try {
-        var KEY = 'wpu-applicant-theme';
-        var LEGACY = ['dashboard-theme', 'profile-theme', 'wpu_applicant_jobs_theme'];
+        var KEY = 'dumaran-applicant-theme';
+        var LEGACY = ['dashboard-theme', 'profile-theme', 'wpu_applicant_jobs_theme', 'wpu-applicant-theme'];
         var theme = localStorage.getItem(KEY);
         if (!theme) {
             for (var i = 0; i < LEGACY.length; i++) {

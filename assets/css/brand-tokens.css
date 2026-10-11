@@ -1,0 +1,73 @@
+/**
+ * Municipality of Dumaran, Palawan — Global brand design tokens
+ * Single source for light / dark / system theme variables.
+ */
+
+:root {
+    --brand-primary: #2050A0;
+    --brand-primary-hover: #193F80;
+    --brand-primary-light: #EFF5FF;
+    --brand-green: #15803D;
+    --brand-green-light: #F0FDF4;
+    --brand-yellow: #FFE040;
+    --brand-yellow-text: #795900;
+
+    --app-background: #F8FAFC;
+    --surface-background: #FFFFFF;
+    --text-primary: #171717;
+    --text-secondary: #64748B;
+    --border-color: #E5E7EB;
+    --input-background: #FFFFFF;
+
+    --status-success: #15803D;
+    --status-error: #DC2626;
+    --status-warning: #795900;
+    --status-error-bg: #FEF2F2;
+    --status-warning-bg: #FFFBEB;
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+
+    --shadow-card: 0 2px 8px rgba(15, 23, 42, 0.04);
+    --transition-ui: 180ms ease;
+
+    --brand-primary-rgb: 32, 80, 160;
+    --brand-green-rgb: 21, 128, 61;
+}
+
+body[data-theme="dark"],
+[data-theme="dark"] {
+    --app-background: #0F172A;
+    --surface-background: #111827;
+    --text-primary: #F8FAFC;
+    --text-secondary: #CBD5E1;
+    --border-color: #334155;
+    --input-background: #111827;
+    --brand-primary-light: rgba(32, 80, 160, 0.22);
+    --brand-green-light: rgba(21, 128, 61, 0.15);
+    --status-warning-bg: rgba(121, 89, 0, 0.2);
+    --status-error-bg: rgba(220, 38, 38, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+    body[data-theme="system"],
+    [data-theme="system"] {
+        --app-background: #0F172A;
+        --surface-background: #111827;
+        --text-primary: #F8FAFC;
+        --text-secondary: #CBD5E1;
+        --border-color: #334155;
+        --input-background: #111827;
+        --brand-primary-light: rgba(32, 80, 160, 0.22);
+        --brand-green-light: rgba(21, 128, 61, 0.15);
+        --status-warning-bg: rgba(121, 89, 0, 0.2);
+        --status-error-bg: rgba(220, 38, 38, 0.12);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --transition-ui: 0.01ms;
+    }
+}

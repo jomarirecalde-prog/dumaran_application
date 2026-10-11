@@ -1,13 +1,13 @@
 /**
- * WPU Admin Dashboard — Premium Enterprise Interactions
+ * Dumaran Hiring Admin Dashboard — Premium Enterprise Interactions
  */
 (function () {
     'use strict';
 
-    const STORAGE_THEME = 'wpu-admin-theme';
-    const STORAGE_SIDEBAR = 'wpu-admin-sidebar-collapsed';
-    const STORAGE_LANG = 'wpu-admin-lang';
-    const STORAGE_RECENT_SEARCH = 'wpu-admin-recent-searches';
+    const STORAGE_THEME = 'dumaran-admin-theme';
+    const STORAGE_SIDEBAR = 'dumaran-admin-sidebar-collapsed';
+    const STORAGE_LANG = 'dumaran-admin-lang';
+    const STORAGE_RECENT_SEARCH = 'dumaran-admin-recent-searches';
 
     let chartInstances = [];
     let chartsInitialized = false;
@@ -52,7 +52,7 @@
         return {
             text: dark ? '#94a3b8' : '#64748b',
             grid: dark ? 'rgba(148,163,184,0.1)' : 'rgba(148,163,184,0.2)',
-            primary: '#0056D2',
+            primary: '#2050A0',
             secondary: '#0F4C81',
             accent: '#FFC107',
             success: '#16A34A',
@@ -206,7 +206,7 @@
                     label: 'Applications',
                     data: data.monthlyValues || [],
                     borderColor: colors.primary,
-                    backgroundColor: 'rgba(0, 86, 210, 0.1)',
+                    backgroundColor: 'rgba(32, 80, 160, 0.1)',
                     fill: true,
                     tension: 0.4,
                     borderWidth: 3,
@@ -247,7 +247,7 @@
                 datasets: [{
                     label: 'Applications',
                     data: data.departmentValues || [],
-                    backgroundColor: 'rgba(0, 86, 210, 0.75)',
+                    backgroundColor: 'rgba(32, 80, 160, 0.75)',
                     borderRadius: 8,
                     borderSkipped: false
                 }]

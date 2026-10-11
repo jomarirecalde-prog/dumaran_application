@@ -11,12 +11,12 @@ This migration adds the following columns to the `applications` table:
 ### How to Apply
 
 1. Open phpMyAdmin or your MySQL client
-2. Select the `wpu_applicant_system` database
+2. Select the `dumaran_hr` database
 3. Run the SQL script: `add_interview_columns.sql`
 
 Or via command line:
 ```bash
-mysql -u your_username -p wpu_applicant_system < add_interview_columns.sql
+mysql -u your_username -p dumaran_hr < add_interview_columns.sql
 ```
 
 ### What This Enables

@@ -1,5 +1,5 @@
 /**
- * Confirmation Dialog System for WPU Applicant System
+ * Confirmation Dialog System for Dumaran Hiring System
  * Provides user-friendly confirmation dialogs for critical actions
  */
 

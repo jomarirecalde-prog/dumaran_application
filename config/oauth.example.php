@@ -36,7 +36,7 @@
  * ---------------------------------
  * - Click "Select a project" at the top
  * - Click "NEW PROJECT" if you don't have one
- * - Give it a name like "WPU Applicant System"
+ * - Give it a name like "Dumaran Hiring System"
  * - Click "CREATE"
  * 
  * Step 3: Enable Required APIs
@@ -52,17 +52,17 @@
  * - Select "OAuth 2.0 Client IDs"
  * - If prompted, configure the OAuth consent screen:
  *   - User Type: External (for testing) or Internal (if you have Google Workspace)
- *   - Fill in app name: "WPU Applicant System"
+ *   - Fill in app name: "Dumaran Hiring System"
  *   - Add your email as support email
  *   - Add scopes: userinfo.email and userinfo.profile
  *   - Add test users if using External type
  * - Back to Credentials, click "CREATE CREDENTIALS" > "OAuth client ID"
  * - Application type: "Web application"
- * - Name: "WPU Applicant System - Web"
+ * - Name: "Dumaran Hiring System - Web"
  * - Authorized JavaScript origins (optional):
  *   http://localhost
  * - Authorized redirect URIs:
- *   http://localhost/Applicant_WPU/auth/google_oauth.php
+ *   http://localhost/dumaran_hiring/auth/google_oauth.php
  *   (Add your production URL when deploying)
  * - Click "CREATE"
  * 
@@ -74,7 +74,7 @@
  * 
  * Step 6: Test the Integration
  * -----------------------------
- * - Visit your login page: http://localhost/Applicant_WPU/shared/login.php
+ * - Visit your login page: http://localhost/dumaran_hiring/shared/login.php
  * - Click "Continue with Google"
  * - You should be redirected to Google's login page
  * - After logging in, you'll be redirected back to your dashboard
@@ -85,7 +85,7 @@
  * 
  * Error: "redirect_uri_mismatch"
  * - The redirect URI in Google Console must EXACTLY match:
- *   http://localhost/Applicant_WPU/auth/google_oauth.php
+ *   http://localhost/dumaran_hiring/auth/google_oauth.php
  * - Check for trailing slashes, http vs https, etc.
  * 
  * Error: "invalid_client"

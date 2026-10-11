@@ -1,14 +1,14 @@
 /**
- * WPU Positions Module — Enterprise Recruitment UI
+ * Dumaran Hiring Positions Module — Enterprise Recruitment UI
  * Frontend-only: search, filters, views, stepper, drawer, templates
  */
 (function () {
     'use strict';
 
-    const STORAGE_VIEW = 'wpu_positions_view';
-    const STORAGE_THEME = 'wpu_positions_theme';
-    const STORAGE_RECENT = 'wpu_positions_recent_searches';
-    const STORAGE_PRESETS = 'wpu_positions_filter_presets';
+    const STORAGE_VIEW = 'dumaran_positions_view';
+    const STORAGE_THEME = 'dumaran_positions_theme';
+    const STORAGE_RECENT = 'dumaran_positions_recent_searches';
+    const STORAGE_PRESETS = 'dumaran_positions_filter_presets';
 
     let allPositions = [];
     let filteredPositions = [];
@@ -23,14 +23,14 @@
     const TEMPLATES = {
         instructor: {
             title: 'Instructor I',
-            description: 'Teach assigned courses, develop syllabi, and participate in academic activities at Western Philippines University.',
+            description: 'Teach assigned courses, develop syllabi, and participate in academic activities at Municipality of Dumaran.',
             requirements: 'Master\'s degree in relevant field; at least 2 years teaching experience; strong communication skills.',
             min_experience_years: 2,
             salary_grade: 'SG 18',
             salary_range: '₱35,000 - ₱45,000',
             training_hours: 40,
             employment_type: 'full-time',
-            location: 'Main Campus, Puerto Princesa',
+            location: 'Municipal Hall, Dumaran, Palawan',
             career_service_eligibilities: ['Professional Eligibility']
         },
         admin_assistant: {
@@ -42,7 +42,7 @@
             salary_range: '₱22,000 - ₱28,000',
             training_hours: 24,
             employment_type: 'full-time',
-            location: 'Main Campus, Puerto Princesa',
+            location: 'Municipal Hall, Dumaran, Palawan',
             career_service_eligibilities: ['Sub-Professional Eligibility', 'Professional Eligibility']
         },
         registrar: {
@@ -53,7 +53,7 @@
             salary_grade: 'SG 11',
             salary_range: '₱25,000 - ₱32,000',
             employment_type: 'full-time',
-            location: 'Main Campus, Puerto Princesa',
+            location: 'Municipal Hall, Dumaran, Palawan',
             career_service_eligibilities: ['Professional Eligibility']
         },
         hr_officer: {
@@ -65,7 +65,7 @@
             salary_range: '₱30,000 - ₱38,000',
             training_hours: 40,
             employment_type: 'full-time',
-            location: 'Main Campus, Puerto Princesa',
+            location: 'Municipal Hall, Dumaran, Palawan',
             career_service_eligibilities: ['Professional Eligibility']
         },
         it_personnel: {
@@ -76,7 +76,7 @@
             salary_grade: 'SG 15',
             salary_range: '₱30,000 - ₱40,000',
             employment_type: 'full-time',
-            location: 'Main Campus, Puerto Princesa',
+            location: 'Municipal Hall, Dumaran, Palawan',
             career_service_eligibilities: ['Professional Eligibility']
         },
         security: {
@@ -87,7 +87,7 @@
             salary_grade: 'SG 4',
             salary_range: '₱16,000 - ₱20,000',
             employment_type: 'full-time',
-            location: 'Main Campus, Puerto Princesa',
+            location: 'Municipal Hall, Dumaran, Palawan',
             career_service_eligibilities: ['Sub-Professional Eligibility']
         },
         faculty: {
@@ -99,7 +99,7 @@
             salary_range: '₱45,000 - ₱55,000',
             training_hours: 80,
             employment_type: 'full-time',
-            location: 'Main Campus, Puerto Princesa',
+            location: 'Municipal Hall, Dumaran, Palawan',
             career_service_eligibilities: ['Professional Eligibility', 'Bar/Board Eligibility (RA 1080)']
         }
     };
@@ -744,7 +744,7 @@
             p.is_active == 1 ? 'Active' : 'Inactive', p.salary_grade || '', p.salary_range || '',
             p.application_count || 0, p.deadline || ''
         ]);
-        downloadCSV([headers, ...rows], 'wpu-positions-export.csv');
+        downloadCSV([headers, ...rows], 'dumaran-positions-export.csv');
         showToast('Export downloaded successfully', 'success');
     }
 

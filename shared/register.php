@@ -30,12 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = sanitize($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
-        $fullName = sanitize($_POST['full_name'] ?? '');
+        $lastName = sanitize($_POST['last_name'] ?? '');
+        $firstName = sanitize($_POST['first_name'] ?? '');
+        $middleName = sanitize($_POST['middle_name'] ?? '');
         $phone = sanitize($_POST['phone'] ?? '');
         $address = sanitize($_POST['address'] ?? '');
 
         // Validate input
-        if (empty($username) || empty($email) || empty($password) || empty($fullName)) {
+        if (empty($username) || empty($email) || empty($password) || empty($lastName) || empty($firstName)) {
             $error = 'All required fields must be filled';
         } elseif ($password !== $confirmPassword) {
             $error = 'Passwords do not match';
@@ -51,7 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'email' => $email,
                     'password' => $password,
                     'role' => ROLE_APPLICANT,
-                    'full_name' => $fullName,
+                    'last_name' => $lastName,
+                    'first_name' => $firstName,
+                    'middle_name' => $middleName,
                     'phone' => $phone,
                     'address' => $address
                 ];
@@ -82,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - WPU Applicant System</title>
+    <title>Register - Dumaran Hiring System</title>
     <link rel="icon" type="image/x-icon" href="<?= BASE_URL ?>favicon.ico">
     <link href="<?= BASE_URL ?>assets/vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <link href="<?= BASE_URL ?>assets/css/office-theme.css" rel="stylesheet">
@@ -93,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-sizing: border-box;
         }
         body {
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            background: linear-gradient(135deg, #2050A0 0%, #2050A0 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -122,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         .register-header {
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            background: linear-gradient(135deg, #2050A0 0%, #2050A0 100%);
             padding: 40px 40px;
             text-align: center;
             color: white;
@@ -190,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .form-control:focus {
             outline: none;
-            border-color: #2563eb;
+            border-color: #2050A0;
             background: white;
             box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         }
@@ -203,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .btn-register {
             width: 100%;
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            background: linear-gradient(135deg, #2050A0 0%, #2050A0 100%);
             color: white;
             border: none;
             padding: 15px 24px;
@@ -251,13 +255,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #ea4335;
         }
         .link-primary {
-            color: #2563eb;
+            color: #2050A0;
             text-decoration: none;
             font-weight: 600;
             transition: color 0.2s ease;
         }
         .link-primary:hover {
-            color: #1e40af;
+            color: #2050A0;
             text-decoration: underline;
         }
         .divider {
@@ -345,8 +349,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             grid-template-columns: 1fr 1fr;
             gap: 16px;
         }
+        .form-row--names {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
         @media (max-width: 640px) {
-            .form-row {
+            .form-row,
+            .form-row--names {
                 grid-template-columns: 1fr;
             }
             .register-header {
@@ -380,10 +388,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                     <?php FormTokenManager::renderFormTokenInput('register_user'); ?>
                     
-                    <div class="form-group">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" class="form-control" name="full_name" placeholder="Enter your full name" 
-                               required maxlength="100" value="<?= htmlspecialchars($_POST['full_name'] ?? '') ?>">
+                    <div class="form-row form-row--names">
+                        <div class="form-group">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" name="last_name" placeholder="Last name"
+                                   required maxlength="80" autocomplete="family-name"
+                                   value="<?= htmlspecialchars($_POST['last_name'] ?? '') ?>">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" name="first_name" placeholder="First name"
+                                   required maxlength="80" autocomplete="given-name"
+                                   value="<?= htmlspecialchars($_POST['first_name'] ?? '') ?>">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Middle Name <span style="font-weight:400;color:#6b7280;">(Optional)</span></label>
+                            <input type="text" class="form-control" name="middle_name" placeholder="Middle name"
+                                   maxlength="80" autocomplete="additional-name"
+                                   value="<?= htmlspecialchars($_POST['middle_name'] ?? '') ?>">
+                        </div>
                     </div>
 
                     <div class="form-group">

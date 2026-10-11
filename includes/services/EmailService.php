@@ -16,6 +16,10 @@ class EmailService {
     private $config;
     private $mail;
 
+    private function siteName(): string {
+        return defined('SITE_NAME') ? SITE_NAME : 'Dumaran Hiring System';
+    }
+
     public function __construct() {
         // Load email configuration
         $configPath = __DIR__ . '/../../config/email.php';
@@ -30,9 +34,9 @@ class EmailService {
                 'smtp_auth' => true,
                 'smtp_username' => '',
                 'smtp_password' => '',
-                'from_email' => 'noreply@wpuapplicant.com',
-                'from_name' => 'WPU Applicant System',
-                'reply_to' => 'support@wpuapplicant.com',
+                'from_email' => 'noreply@dumaran.gov.ph',
+                'from_name' => $this->siteName(),
+                'reply_to' => 'support@dumaran.gov.ph',
                 'debug_level' => 0,
             ];
         }
@@ -105,13 +109,14 @@ class EmailService {
      * Send welcome email
      */
     public function sendWelcomeEmail($user) {
-        $subject = 'Welcome to WPU Applicant System';
+        $siteName = $this->siteName();
+        $subject = 'Welcome to ' . $siteName;
         
         $body = $this->getEmailTemplate([
-            'title' => 'Welcome to WPU Applicant System',
+            'title' => 'Welcome to ' . $siteName,
             'greeting' => "Hello {$user['full_name']},",
             'content' => "
-                <p>Thank you for registering with WPU Applicant System!</p>
+                <p>Thank you for registering with {$siteName}!</p>
                 <p>You can now:</p>
                 <ul>
                     <li>Browse available job positions</li>
@@ -209,6 +214,7 @@ class EmailService {
         $reviewedDate = isset($application['reviewed_at']) && $application['reviewed_at'] 
             ? date('F j, Y', strtotime($application['reviewed_at'])) 
             : date('F j, Y');
+        $siteName = $this->siteName();
         
         $body = $this->getEmailTemplate([
             'title' => 'Application Approved',
@@ -217,7 +223,7 @@ class EmailService {
                 <div style='background: #d1fae5; border-left: 4px solid #10b981; padding: 24px; border-radius: 8px; margin: 24px 0; text-align: center;'>
                     <div style='font-size: 48px; margin-bottom: 16px;'>🎉</div>
                     <h2 style='color: #065f46; margin: 0 0 12px 0; font-size: 24px;'>Congratulations!</h2>
-                    <p style='color: #047857; margin: 0; font-size: 16px;'>Your application has been <strong style='color: #065f46;'>approved</strong>!</p>
+                    <p style='color: #15803D; margin: 0; font-size: 16px;'>Your application has been <strong style='color: #065f46;'>approved</strong>!</p>
                 </div>
                 
                 <p>We are thrilled to inform you that your application for <strong>{$position['title']}</strong> has been <strong style='color: #10b981;'>successfully approved</strong> by our recruitment team.</p>
@@ -241,8 +247,8 @@ class EmailService {
                     </div>
                 </div>
                 
-                <div style='background: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 8px; margin: 20px 0;'>
-                    <strong style='color: #1e40af;'>📬 What's Next?</strong>
+                <div style='background: #EFF5FF; border-left: 4px solid #2050A0; padding: 16px; border-radius: 8px; margin: 20px 0;'>
+                    <strong style='color: #2050A0;'>📬 What's Next?</strong>
                     <p style='color: #1e3a8a; margin: 12px 0 0 0; line-height: 1.8;'>
                         Our team will be in touch with you shortly to discuss the next steps in the hiring process. 
                         Please keep an eye on your email and ensure your contact information is up to date.
@@ -251,7 +257,7 @@ class EmailService {
                 
                 <p style='margin-top: 24px;'>We were impressed with your qualifications and experience, and we look forward to the possibility of welcoming you to our team!</p>
                 
-                <p>Thank you for your interest in joining Wester Philippines University.</p>
+                <p>Thank you for your interest in joining {$siteName}.</p>
             ",
             'action' => [
                 'text' => 'View Application Details',
@@ -369,7 +375,8 @@ class EmailService {
      * Email template
      */
     private function getEmailTemplate($data) {
-        $title = $data['title'] ?? 'WPU Applicant System';
+        $siteName = $this->siteName();
+        $title = $data['title'] ?? $siteName;
         $greeting = $data['greeting'] ?? 'Hello,';
         $content = $data['content'] ?? '';
         $action = $data['action'] ?? null;
@@ -380,7 +387,7 @@ class EmailService {
                 <table width='100%' cellpadding='0' cellspacing='0'>
                     <tr>
                         <td align='center' style='padding: 24px 0;'>
-                            <a href='{$action['url']}' style='background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;'>
+                            <a href='{$action['url']}' style='background: linear-gradient(135deg, #2050A0 0%, #2050A0 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;'>
                                 {$action['text']}
                             </a>
                         </td>
@@ -404,9 +411,9 @@ class EmailService {
                         <table width='600' cellpadding='0' cellspacing='0' style='background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);'>
                             <!-- Header -->
                             <tr>
-                                <td style='background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); padding: 32px; text-align: center; border-radius: 12px 12px 0 0;'>
+                                <td style='background: linear-gradient(135deg, #2050A0 0%, #2050A0 100%); padding: 32px; text-align: center; border-radius: 12px 12px 0 0;'>
                                     <h1 style='color: white; margin: 0; font-size: 24px; font-weight: 700;'>
-                                        WPU Applicant System
+                                        {$siteName}
                                     </h1>
                                 </td>
                             </tr>
@@ -428,10 +435,10 @@ class EmailService {
                             <tr>
                                 <td style='background: #f9fafb; padding: 24px; text-align: center; border-radius: 0 0 12px 12px; border-top: 1px solid #e5e7eb;'>
                                     <p style='color: #6b7280; margin: 0; font-size: 14px;'>
-                                        © " . date('Y') . " WPU Applicant System. All rights reserved.
+                                        © " . date('Y') . " {$siteName}. All rights reserved.
                                     </p>
                                     <p style='color: #9ca3af; margin: 8px 0 0 0; font-size: 13px;'>
-                                        If you have any questions, please contact us at support@wpuapplicant.com
+                                        If you have any questions, please contact us at support@dumaran.gov.ph
                                     </p>
                                 </td>
                             </tr>

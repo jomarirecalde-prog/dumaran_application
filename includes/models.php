@@ -1,9 +1,12 @@
 <?php
 /**
- * Database Models for WPU Applicant System
+ * Database Models for Dumaran Hiring System
  */
 
 require_once __DIR__ . '/../config/database.php';
+if (!function_exists('normalizeUserNameFields')) {
+    require_once __DIR__ . '/../config/config.php';
+}
 
 class BaseModel {
     protected $db;
@@ -42,6 +45,40 @@ class BaseModel {
         return $stmt->fetchAll();
     }
 
+    /**
+     * Count rows matching an optional WHERE clause (avoids loading full result sets).
+     */
+    public function count($where = '', $params = []) {
+        $sql = "SELECT COUNT(*) AS cnt FROM {$this->table}";
+        if ($where !== '') {
+            $sql .= " WHERE {$where}";
+        }
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch();
+        return (int) ($row['cnt'] ?? 0);
+    }
+
+    /**
+     * Fetch multiple rows keyed by primary key id.
+     *
+     * @return array<int, array>
+     */
+    public function findByIds(array $ids) {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if ($ids === []) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE id IN ({$placeholders})");
+        $stmt->execute($ids);
+        $map = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $map[(int) $row['id']] = $row;
+        }
+        return $map;
+    }
+
     public function delete($id) {
         $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE id = ?");
         return $stmt->execute([$id]);
@@ -70,8 +107,10 @@ class User extends BaseModel {
     }
 
     public function create($data) {
-        $sql = "INSERT INTO users (username, email, password, role, full_name, phone, address, age, sex, google_id, oauth_provider) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        normalizeUserNameFields($data);
+
+        $sql = "INSERT INTO users (username, email, password, role, full_name, last_name, first_name, middle_name, phone, address, age, sex, google_id, oauth_provider) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
         
         $params = [
@@ -80,6 +119,9 @@ class User extends BaseModel {
             isset($data['password']) ? password_hash($data['password'], PASSWORD_DEFAULT) : null,
             $data['role'] ?? 'applicant',
             $data['full_name'],
+            $data['last_name'] ?? null,
+            $data['first_name'] ?? null,
+            $data['middle_name'] ?? null,
             $data['phone'] ?? null,
             $data['address'] ?? null,
             $data['age'] ?? null,
@@ -103,6 +145,10 @@ class User extends BaseModel {
     }
 
     public function update($id, $data) {
+        if (isset($data['last_name']) || isset($data['first_name']) || isset($data['middle_name']) || isset($data['full_name'])) {
+            normalizeUserNameFields($data);
+        }
+
         $fields = [];
         $values = [];
         
@@ -423,7 +469,31 @@ class Position extends BaseModel {
         $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM applications WHERE position_id = ?");
         $stmt->execute([$positionId]);
         $result = $stmt->fetch();
-        return $result['count'];
+        return (int) $result['count'];
+    }
+
+    /**
+     * Application counts for many positions in one query.
+     *
+     * @param int[] $positionIds
+     * @return array<int, int> position_id => count
+     */
+    public function getApplicationCountsByPositionIds(array $positionIds) {
+        $positionIds = array_values(array_unique(array_filter(array_map('intval', $positionIds))));
+        if ($positionIds === []) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($positionIds), '?'));
+        $sql = "SELECT position_id, COUNT(*) AS cnt FROM applications
+                WHERE position_id IN ({$placeholders})
+                GROUP BY position_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($positionIds);
+        $counts = array_fill_keys($positionIds, 0);
+        foreach ($stmt->fetchAll() as $row) {
+            $counts[(int) $row['position_id']] = (int) $row['cnt'];
+        }
+        return $counts;
     }
 }
 
@@ -511,12 +581,38 @@ class EmploymentType extends BaseModel {
 class Application extends BaseModel {
     protected $table = 'applications';
 
+    /** @var bool|null Cached schema check for reviewed_at column */
+    private static $hasReviewedAtColumn = null;
+
+    private function invalidateAdminDashboardCache() {
+        try {
+            require_once __DIR__ . '/services/Cache.php';
+            (new Cache())->delete('admin_dashboard_summary_counts');
+        } catch (Throwable $e) {
+            error_log('Dashboard cache invalidation skipped: ' . $e->getMessage());
+        }
+    }
+
+    private function applicationsHasReviewedAtColumn() {
+        if (self::$hasReviewedAtColumn !== null) {
+            return self::$hasReviewedAtColumn;
+        }
+        try {
+            $checkStmt = $this->db->prepare("SHOW COLUMNS FROM applications LIKE 'reviewed_at'");
+            $checkStmt->execute();
+            self::$hasReviewedAtColumn = $checkStmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            self::$hasReviewedAtColumn = false;
+        }
+        return self::$hasReviewedAtColumn;
+    }
+
     public function create($data) {
         $sql = "INSERT INTO applications (user_id, position_id, cover_letter, resume_file, 
                 total_experience_years, meets_requirements) 
                 VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
+        $ok = $stmt->execute([
             $data['user_id'],
             $data['position_id'],
             $data['cover_letter'] ?? null,
@@ -524,6 +620,10 @@ class Application extends BaseModel {
             $data['total_experience_years'] ?? 0,
             $data['meets_requirements'] ?? false
         ]);
+        if ($ok) {
+            $this->invalidateAdminDashboardCache();
+        }
+        return $ok;
     }
 
     public function update($id, $data) {
@@ -532,17 +632,8 @@ class Application extends BaseModel {
         
         // Check if status is being updated to approved or rejected
         if (isset($data['status']) && in_array($data['status'], [STATUS_APPROVED, STATUS_REJECTED])) {
-            // Check if reviewed_at column exists
-            try {
-                $checkStmt = $this->db->prepare("SHOW COLUMNS FROM applications LIKE 'reviewed_at'");
-                $checkStmt->execute();
-                if ($checkStmt->rowCount() > 0) {
-                    // Add reviewed_at timestamp
-                    $data['reviewed_at'] = date('Y-m-d H:i:s');
-                }
-            } catch (PDOException $e) {
-                // Column doesn't exist, continue without it
-                error_log("reviewed_at column check failed: " . $e->getMessage());
+            if ($this->applicationsHasReviewedAtColumn()) {
+                $data['reviewed_at'] = date('Y-m-d H:i:s');
             }
         }
         
@@ -562,7 +653,11 @@ class Application extends BaseModel {
         
         try {
             $stmt = $this->db->prepare($sql);
-            return $stmt->execute($values);
+            $ok = $stmt->execute($values);
+            if ($ok) {
+                $this->invalidateAdminDashboardCache();
+            }
+            return $ok;
         } catch (PDOException $e) {
             error_log("Application update failed: " . $e->getMessage());
             error_log("SQL: " . $sql);
@@ -577,7 +672,7 @@ class Application extends BaseModel {
         return $stmt->fetch();
     }
 
-    public function getApplicationsWithDetails($where = '', $params = [], $includeArchived = false) {
+    public function getApplicationsWithDetails($where = '', $params = [], $includeArchived = false, $limit = null, $offset = null) {
         $sql = "SELECT a.*, u.full_name as applicant_name, u.email as applicant_email, 
                        p.title as position_title, p.min_experience_years
                 FROM applications a
@@ -603,10 +698,122 @@ class Application extends BaseModel {
         }
         
         $sql .= " ORDER BY a.applied_at DESC";
+
+        if ($limit !== null) {
+            $sql .= " LIMIT " . (int) $limit;
+            if ($offset !== null) {
+                $sql .= " OFFSET " . (int) $offset;
+            }
+        }
         
         $stmt = $this->db->prepare($sql);
         $stmt->execute($whereParams);
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Admin list filters with server-side pagination (same joins as getApplicationsWithDetails).
+     */
+    public function getAdminApplicationsList(array $filters, $limit, $offset) {
+        [$whereSql, $params] = $this->buildAdminApplicationsFilterSql($filters);
+        return $this->getApplicationsWithDetails($whereSql, $params, !empty($filters['include_archived']), (int) $limit, (int) $offset);
+    }
+
+    public function countAdminApplicationsList(array $filters) {
+        [$whereSql, $params] = $this->buildAdminApplicationsFilterSql($filters);
+        $sql = "SELECT COUNT(*) AS cnt
+                FROM applications a
+                JOIN users u ON a.user_id = u.id
+                JOIN positions p ON a.position_id = p.id";
+        $whereParts = [];
+        if (empty($filters['include_archived'])) {
+            $whereParts[] = "(a.is_archived = 0 OR a.is_archived IS NULL)";
+        }
+        if ($whereSql !== '') {
+            $whereParts[] = $whereSql;
+        }
+        if ($whereParts !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $whereParts);
+        }
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch();
+        return (int) ($row['cnt'] ?? 0);
+    }
+
+    /**
+     * Lightweight rows for ATS dashboard metrics (single query, no per-row validation queries).
+     */
+    public function getAdminApplicationMetricRows($includeArchived = true) {
+        $sql = "SELECT a.id, a.user_id, a.position_id, a.status, a.is_archived, a.applied_at,
+                       a.reviewed_at, a.updated_at, a.interview_date, a.meets_requirements,
+                       a.total_experience_years,
+                       u.full_name AS applicant_name, u.career_service_eligibilities, u.training_programs,
+                       p.title AS position_title, p.min_experience_years,
+                       p.career_service_eligibilities AS position_cse,
+                       p.training_hours, p.location AS position_location
+                FROM applications a
+                JOIN users u ON a.user_id = u.id
+                JOIN positions p ON a.position_id = p.id";
+        if (!$includeArchived) {
+            $sql .= " WHERE (a.is_archived = 0 OR a.is_archived IS NULL)";
+        }
+        $sql .= " ORDER BY a.applied_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Summary counts for admin dashboard cards.
+     *
+     * @return array{applicants:int,active_positions:int,total_applications:int,pending_applications:int}
+     */
+    public function getAdminDashboardSummaryCounts() {
+        $stmt = $this->db->query("
+            SELECT
+                (SELECT COUNT(*) FROM users WHERE role = 'applicant') AS applicants,
+                (SELECT COUNT(*) FROM positions WHERE is_active = 1 AND (deadline IS NULL OR deadline >= CURDATE())) AS active_positions,
+                (SELECT COUNT(*) FROM applications WHERE (is_archived = 0 OR is_archived IS NULL)) AS total_applications,
+                (SELECT COUNT(*) FROM applications WHERE status = 'pending' AND (is_archived = 0 OR is_archived IS NULL)) AS pending_applications
+        ");
+        $row = $stmt->fetch();
+        return [
+            'applicants' => (int) ($row['applicants'] ?? 0),
+            'active_positions' => (int) ($row['active_positions'] ?? 0),
+            'total_applications' => (int) ($row['total_applications'] ?? 0),
+            'pending_applications' => (int) ($row['pending_applications'] ?? 0),
+        ];
+    }
+
+    /**
+     * @return array{0: string, 1: array}
+     */
+    private function buildAdminApplicationsFilterSql(array $filters) {
+        $parts = [];
+        $params = [];
+
+        if (!empty($filters['include_archived'])) {
+            // no default archive exclusion in WHERE fragment (handled by caller on count/list)
+        }
+
+        if (!empty($filters['status']) && $filters['status'] !== 'all') {
+            $parts[] = 'a.status = ?';
+            $params[] = $filters['status'];
+        }
+
+        if (!empty($filters['position_id']) && $filters['position_id'] !== 'all') {
+            $parts[] = 'a.position_id = ?';
+            $params[] = (int) $filters['position_id'];
+        }
+
+        if (!empty($filters['search'])) {
+            $parts[] = '(u.full_name LIKE ? OR u.email LIKE ? OR p.title LIKE ? OR a.cover_letter LIKE ?)';
+            $term = '%' . $filters['search'] . '%';
+            $params = array_merge($params, [$term, $term, $term, $term]);
+        }
+
+        return [implode(' AND ', $parts), $params];
     }
 
     public function getUserApplications($userId) {
@@ -618,7 +825,11 @@ class Application extends BaseModel {
      */
     public function archive($id) {
         $stmt = $this->db->prepare("UPDATE applications SET is_archived = 1, archived_at = NOW() WHERE id = ?");
-        return $stmt->execute([$id]);
+        $ok = $stmt->execute([$id]);
+        if ($ok) {
+            $this->invalidateAdminDashboardCache();
+        }
+        return $ok;
     }
 
     /**
@@ -626,7 +837,11 @@ class Application extends BaseModel {
      */
     public function unarchive($id) {
         $stmt = $this->db->prepare("UPDATE applications SET is_archived = 0, archived_at = NULL WHERE id = ?");
-        return $stmt->execute([$id]);
+        $ok = $stmt->execute([$id]);
+        if ($ok) {
+            $this->invalidateAdminDashboardCache();
+        }
+        return $ok;
     }
 
     /**

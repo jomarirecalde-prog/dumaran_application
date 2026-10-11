@@ -1,10 +1,10 @@
 /**
- * WPU Reports & Analytics — Executive Dashboard
+ * Dumaran Hiring Reports & Analytics — Executive Dashboard
  * Scoped to body.admin-dashboard.reports-page
  */
 
 body.admin-dashboard.reports-page {
-    --rpt-accent-blue: #0056D2;
+    --rpt-accent-blue: #2050A0;
     --rpt-accent-teal: #0F766E;
     --rpt-accent-purple: #7C3AED;
     --rpt-accent-amber: #D97706;
@@ -329,7 +329,7 @@ body.admin-dashboard.reports-page .rpt-kpi-card::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, var(--kpi-glow, rgba(0, 86, 210, 0.04)) 0%, transparent 60%);
+    background: linear-gradient(135deg, var(--kpi-glow, rgba(32, 80, 160, 0.04)) 0%, transparent 60%);
     pointer-events: none;
 }
 
@@ -357,7 +357,7 @@ body.admin-dashboard.reports-page .rpt-kpi-icon {
     font-size: 1.35rem;
     color: #fff;
     background: linear-gradient(135deg, var(--kpi-accent), var(--kpi-accent-dark, var(--dash-secondary)));
-    box-shadow: 0 6px 16px rgba(0, 86, 210, 0.25);
+    box-shadow: 0 6px 16px rgba(32, 80, 160, 0.25);
 }
 
 body.admin-dashboard.reports-page .rpt-kpi-trend {
@@ -626,7 +626,7 @@ body.admin-dashboard.reports-page .rpt-insight-card {
 body.admin-dashboard.reports-page .rpt-insight-card:hover {
     transform: translateY(-3px);
     box-shadow: var(--dash-shadow);
-    border-color: rgba(0, 86, 210, 0.25);
+    border-color: rgba(32, 80, 160, 0.25);
 }
 
 body.admin-dashboard.reports-page .rpt-insight-icon {
@@ -936,7 +936,7 @@ body.admin-dashboard.reports-page .rpt-export-btn {
 
 body.admin-dashboard.reports-page .rpt-export-btn:hover {
     border-color: var(--dash-primary);
-    background: rgba(0, 86, 210, 0.04);
+    background: rgba(32, 80, 160, 0.04);
     transform: translateY(-3px);
     box-shadow: var(--dash-shadow);
 }
@@ -1080,7 +1080,7 @@ body.admin-dashboard.reports-page .rpt-fab-main {
     border: none;
     font-size: 1.25rem;
     cursor: pointer;
-    box-shadow: 0 8px 24px rgba(0, 86, 210, 0.4);
+    box-shadow: 0 8px 24px rgba(32, 80, 160, 0.4);
     transition: all var(--dash-transition);
 }
 
@@ -1138,7 +1138,7 @@ body.admin-dashboard.reports-page.rpt-fullscreen .content {
 
 /* ── Badges extended ── */
 body.admin-dashboard.reports-page .rpt-badge-processing {
-    background: linear-gradient(135deg, rgba(0, 86, 210, 0.15), rgba(0, 86, 210, 0.08));
+    background: linear-gradient(135deg, rgba(32, 80, 160, 0.15), rgba(32, 80, 160, 0.08));
     color: var(--dash-primary);
 }
 
@@ -1274,7 +1274,7 @@ body.admin-dashboard.reports-page .rpt-badge-cancelled {
     }
 
     body.admin-dashboard.reports-page .rpt-hero {
-        background: #0056D2 !important;
+        background: #2050A0 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }

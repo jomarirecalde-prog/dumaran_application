@@ -1,13 +1,13 @@
 # Database Migrations
 
-This directory contains SQL migration files for the WPU Applicant System.
+This directory contains SQL migration files for the Dumaran Hiring System.
 
 ## How to Apply Migrations
 
 ### Method 1: Using phpMyAdmin (Recommended for Development)
 
 1. Open phpMyAdmin in your browser (usually at `http://localhost/phpmyadmin`)
-2. Select your database (`wpu_applicant_system`)
+2. Select your database (`dumaran_hr`)
 3. Click on the "SQL" tab
 4. Copy the contents of the migration file you want to run
 5. Paste it into the SQL query box
@@ -16,7 +16,7 @@ This directory contains SQL migration files for the WPU Applicant System.
 ### Method 2: Using MySQL Command Line
 
 ```bash
-mysql -u root -p wpu_applicant_system < add_archive_to_applications.sql
+mysql -u root -p dumaran_hr < add_archive_to_applications.sql
 ```
 
 ## Available Migrations

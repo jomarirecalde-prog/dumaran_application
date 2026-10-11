@@ -5,9 +5,9 @@
 (function () {
     'use strict';
 
-    const WIDGETS_KEY = 'wpu_dashboard_widgets';
-    const BOOKMARKS_KEY = 'wpu_saved_jobs';
-    const RECENT_KEY = 'wpu_recent_jobs';
+    const WIDGETS_KEY = 'dumaran_dashboard_widgets';
+    const BOOKMARKS_KEY = 'dumaran_saved_jobs';
+    const RECENT_KEY = 'dumaran_recent_jobs';
 
     document.addEventListener('DOMContentLoaded', init);
 

@@ -205,7 +205,7 @@ $reportsJson = json_encode([
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Reports & Analytics - WPU Applicant System</title>
+    <title>Reports & Analytics - Dumaran Hiring System</title>
     <link rel="icon" type="image/x-icon" href="../../favicon.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="../../assets/css/office-theme.css" rel="stylesheet">
@@ -291,7 +291,7 @@ $reportsJson = json_encode([
                         <select id="filterPosition"><option value="">All Positions</option><?php foreach ($positionFilterOptions as $pos): ?><option value="<?= htmlspecialchars($pos) ?>"><?= htmlspecialchars($pos) ?></option><?php endforeach; ?></select>
                     </div>
                     <div class="rpt-filter-group"><label for="filterDepartment">Department</label><select id="filterDepartment"><option value="">All Departments</option><option value="general">General</option></select></div>
-                    <div class="rpt-filter-group"><label for="filterCampus">Campus</label><select id="filterCampus"><option value="">All Campuses</option><option value="main">Main Campus</option></select></div>
+                    <div class="rpt-filter-group"><label for="filterCampus">Office</label><select id="filterCampus"><option value="">All Offices</option><option value="main">Municipal Hall</option></select></div>
                     <div class="rpt-filter-group"><label for="filterEmployment">Employment Type</label><select id="filterEmployment"><option value="">All Types</option><option value="full-time">Full-time</option><option value="part-time">Part-time</option></select></div>
                     <div class="rpt-filter-group"><label for="filterStatus">Status</label>
                         <select id="filterStatus"><option value="">All Statuses</option><option value="<?= STATUS_PENDING ?>">Pending</option><option value="<?= STATUS_APPROVED ?>">Approved</option><option value="<?= STATUS_REJECTED ?>">Rejected</option></select>
@@ -316,7 +316,7 @@ $reportsJson = json_encode([
             <section id="rptOverview" class="dash-section" aria-labelledby="overviewTitle">
                 <div class="dash-section-header"><h2 class="dash-section-title" id="overviewTitle"><i class="fas fa-gauge-high"></i> Overview</h2></div>
                 <div class="rpt-kpi-grid">
-                    <article class="rpt-kpi-card rpt-animate rpt-animate-d1" style="--kpi-accent:#0056D2;--kpi-accent-dark:#0041a8;--kpi-glow:rgba(0,86,210,0.08)">
+                    <article class="rpt-kpi-card rpt-animate rpt-animate-d1" style="--kpi-accent:#2050A0;--kpi-accent-dark:#193F80;--kpi-glow:rgba(32, 80, 160,0.08)">
                         <div class="rpt-kpi-top">
                             <div class="rpt-kpi-icon"><i class="fas fa-users"></i></div>
                             <span class="rpt-kpi-trend <?= $usersTrend['dir'] ?>"><?php if ($usersTrend['dir']==='up'): ?><i class="fas fa-arrow-up"></i><?php elseif ($usersTrend['dir']==='down'): ?><i class="fas fa-arrow-down"></i><?php endif; ?><?= $usersTrend['dir']==='neutral'?'—':$usersTrend['pct'].'%' ?></span>
@@ -324,7 +324,7 @@ $reportsJson = json_encode([
                         <div class="rpt-kpi-value" data-count="<?= $totalUsers ?>"><?= number_format($totalUsers) ?></div>
                         <div class="rpt-kpi-label">Total Users</div>
                         <div class="rpt-kpi-compare"><?= number_format($totalApplicants) ?> applicants · This month</div>
-                        <div class="rpt-kpi-sparkline"><canvas data-points='<?= json_encode($sparkline) ?>' data-color="#0056D2" data-fill="rgba(0,86,210,0.1)"></canvas></div>
+                        <div class="rpt-kpi-sparkline"><canvas data-points='<?= json_encode($sparkline) ?>' data-color="#2050A0" data-fill="rgba(32, 80, 160,0.1)"></canvas></div>
                     </article>
                     <article class="rpt-kpi-card rpt-animate rpt-animate-d2" style="--kpi-accent:#16A34A;--kpi-accent-dark:#15803d;--kpi-glow:rgba(22,163,74,0.08)">
                         <div class="rpt-kpi-top">
@@ -402,7 +402,7 @@ $reportsJson = json_encode([
             <section id="rptInsightsSection" class="dash-section" aria-labelledby="insightsTitle">
                 <div class="dash-section-header"><h2 class="dash-section-title" id="insightsTitle"><i class="fas fa-lightbulb"></i> Key Insights</h2></div>
                 <div class="rpt-insights-grid">
-                    <div class="rpt-insight-card"><div class="rpt-insight-icon" style="background:rgba(0,86,210,0.12);color:var(--dash-primary)"><i class="fas fa-trophy"></i></div><div><div class="rpt-insight-label">Highest Applied Position</div><div class="rpt-insight-value"><?= htmlspecialchars($highestPos) ?></div></div></div>
+                    <div class="rpt-insight-card"><div class="rpt-insight-icon" style="background:rgba(32, 80, 160,0.12);color:var(--dash-primary)"><i class="fas fa-trophy"></i></div><div><div class="rpt-insight-label">Highest Applied Position</div><div class="rpt-insight-value"><?= htmlspecialchars($highestPos) ?></div></div></div>
                     <div class="rpt-insight-card"><div class="rpt-insight-icon" style="background:rgba(220,38,38,0.12);color:var(--dash-danger)"><i class="fas fa-arrow-down"></i></div><div><div class="rpt-insight-label">Lowest Applied Position</div><div class="rpt-insight-value"><?= htmlspecialchars($lowestPos) ?></div></div></div>
                     <div class="rpt-insight-card"><div class="rpt-insight-icon" style="background:rgba(22,163,74,0.12);color:var(--dash-success)"><i class="fas fa-bolt"></i></div><div><div class="rpt-insight-label">Avg. Processing Time</div><div class="rpt-insight-value"><?= $avgProcessing ?> day<?= $avgProcessing != 1 ? 's' : '' ?></div></div></div>
                     <div class="rpt-insight-card"><div class="rpt-insight-icon" style="background:rgba(22,163,74,0.12);color:var(--dash-success)"><i class="fas fa-check"></i></div><div><div class="rpt-insight-label">Approval Percentage</div><div class="rpt-insight-value"><?= $approvalRate ?>%</div></div></div>
@@ -410,7 +410,7 @@ $reportsJson = json_encode([
                     <div class="rpt-insight-card"><div class="rpt-insight-icon" style="background:rgba(124,58,237,0.12);color:#7C3AED"><i class="fas fa-calendar"></i></div><div><div class="rpt-insight-label">Most Active Month</div><div class="rpt-insight-value"><?= htmlspecialchars($mostActiveMonth) ?></div></div></div>
                     <div class="rpt-insight-card"><div class="rpt-insight-icon" style="background:rgba(245,158,11,0.12);color:var(--dash-warning)"><i class="fas fa-star"></i></div><div><div class="rpt-insight-label">Peak Application Day</div><div class="rpt-insight-value"><?= htmlspecialchars($peakDay) ?></div></div></div>
                     <div class="rpt-insight-card"><div class="rpt-insight-icon" style="background:rgba(15,118,110,0.12);color:#0F766E"><i class="fas fa-file-alt"></i></div><div><div class="rpt-insight-label">Total Applications</div><div class="rpt-insight-value"><?= number_format($totalApplications) ?> · <?= $pendingApplications ?> pending</div></div></div>
-                    <div class="rpt-insight-card"><div class="rpt-insight-icon" style="background:rgba(0,86,210,0.12);color:var(--dash-primary)"><i class="fas fa-briefcase"></i></div><div><div class="rpt-insight-label">Active Positions</div><div class="rpt-insight-value"><?= $activePositions ?> of <?= $totalPositions ?> open</div></div></div>
+                    <div class="rpt-insight-card"><div class="rpt-insight-icon" style="background:rgba(32, 80, 160,0.12);color:var(--dash-primary)"><i class="fas fa-briefcase"></i></div><div><div class="rpt-insight-label">Active Positions</div><div class="rpt-insight-value"><?= $activePositions ?> of <?= $totalPositions ?> open</div></div></div>
                 </div>
                 <?php if (!empty($smartInsights)): ?><div class="rpt-smart-grid"><?php foreach ($smartInsights as $i => $insight): ?><div class="rpt-smart-card" style="animation-delay:<?= $i * 0.08 ?>s"><i class="fas fa-lightbulb"></i><span><?= htmlspecialchars($insight) ?></span></div><?php endforeach; ?></div><?php endif; ?>
             </section>
@@ -504,7 +504,7 @@ $reportsJson = json_encode([
                             <button type="button" class="rpt-schedule-chip" aria-pressed="false">Yearly</button>
                         </div>
                         <label for="rptScheduleEmail" style="font-size:0.8rem;font-weight:600;color:var(--dash-text-muted);display:block;margin-bottom:8px">Email Recipients</label>
-                        <input type="email" id="rptScheduleEmail" placeholder="admin@wpu.edu.ph" aria-label="Email recipients" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--dash-border);margin-bottom:12px;font-family:inherit;background:var(--dash-card);color:var(--dash-text)">
+                        <input type="email" id="rptScheduleEmail" placeholder="admin@dumaran.gov.ph" aria-label="Email recipients" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--dash-border);margin-bottom:12px;font-family:inherit;background:var(--dash-card);color:var(--dash-text)">
                         <button type="button" class="rpt-btn rpt-btn-solid" id="rptScheduleSave" style="width:100%;background:var(--dash-primary);color:#fff"><i class="fas fa-save"></i> Save Schedule</button>
                         <p style="font-size:0.75rem;color:var(--dash-text-muted);margin:12px 0 0">Reports will be generated automatically (frontend preview — connect backend to enable).</p>
                     </div>

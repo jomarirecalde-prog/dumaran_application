@@ -1,5 +1,5 @@
 /**
- * WPU Admin Settings — Client-side UX enhancements
+ * Dumaran Hiring Admin Settings — Client-side UX enhancements
  * Presentation layer only; does not alter form submission logic.
  */
 (function () {

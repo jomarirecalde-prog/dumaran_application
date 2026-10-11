@@ -1,5 +1,5 @@
 /**
- * WPU Jobs - PWA Helper
+ * Dumaran Hiring - PWA Helper
  * Handles service worker registration, install prompts, and update notifications
  */
 
@@ -9,8 +9,8 @@ class PWAManager {
         this.swRegistration = null;
         this.isInstallable = false;
         this.isInstalled = false;
-        this.basePath = window.PWA_BASE_PATH || '/Applicant_WPU/';
-        this.baseUrl = window.PWA_BASE_URL || 'http://localhost/Applicant_WPU/';
+        this.basePath = window.PWA_BASE_PATH || '/dumaran_hiring/';
+        this.baseUrl = window.PWA_BASE_URL || 'http://localhost/dumaran_hiring/';
         
         this.init();
     }
@@ -127,9 +127,9 @@ class PWAManager {
         installBanner.className = 'pwa-install-banner';
         installBanner.innerHTML = `
             <div class="pwa-banner-content">
-                <img src="${this.basePath}assets/logo.png" alt="WPU" class="pwa-banner-icon">
+                <img src="${this.basePath}assets/logo.png" alt="Logo" class="pwa-banner-icon">
                 <div class="pwa-banner-text">
-                    <strong>Install WPU Jobs</strong>
+                    <strong>Install Dumaran Hiring</strong>
                     <span>Add to home screen for quick access</span>
                 </div>
             </div>
@@ -457,8 +457,8 @@ class PWAManager {
         modal.innerHTML = `
             <div class="pwa-ios-content">
                 <button class="pwa-ios-close">×</button>
-                <img src="${this.basePath}assets/logo.png" alt="WPU" class="pwa-ios-icon">
-                <h3>Install WPU Jobs</h3>
+                <img src="${this.basePath}assets/logo.png" alt="Logo" class="pwa-ios-icon">
+                <h3>Install Dumaran Hiring</h3>
                 <p>To install this app on your iPhone/iPad:</p>
                 <ol>
                     <li>Tap the <strong>Share</strong> button <span style="font-size: 18px;">⎋</span></li>

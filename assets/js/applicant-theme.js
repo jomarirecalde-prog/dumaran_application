@@ -1,11 +1,11 @@
 /**
- * WPU Applicant — Unified theme (light / dark / system)
+ * Dumaran Hiring System — Unified theme (light / dark / system)
  */
 (function () {
     'use strict';
 
-    const THEME_KEY = 'wpu-applicant-theme';
-    const LEGACY_KEYS = ['dashboard-theme', 'profile-theme', 'wpu_applicant_jobs_theme'];
+    const THEME_KEY = 'dumaran-applicant-theme';
+    const LEGACY_KEYS = ['dashboard-theme', 'profile-theme', 'wpu_applicant_jobs_theme', 'wpu-applicant-theme'];
 
     function getSavedTheme() {
         let theme = localStorage.getItem(THEME_KEY);

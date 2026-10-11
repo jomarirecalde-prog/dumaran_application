@@ -1,5 +1,5 @@
 /**
- * WPU Reports & Analytics — Executive Dashboard UI
+ * Dumaran Hiring Reports & Analytics — Executive Dashboard UI
  * Preserves existing statusChart and positionChart datasets.
  */
 (function () {
@@ -13,7 +13,7 @@
         return {
             text: dark ? '#94a3b8' : '#64748b',
             grid: dark ? 'rgba(148,163,184,0.1)' : 'rgba(148,163,184,0.18)',
-            primary: '#0056D2',
+            primary: '#2050A0',
             secondary: '#0F4C81',
             accent: '#FFC107',
             success: '#16A34A',
@@ -76,7 +76,7 @@
                     datasets: [{
                         data: pts,
                         borderColor: canvas.dataset.color || colors.primary,
-                        backgroundColor: canvas.dataset.fill || 'rgba(0,86,210,0.08)',
+                        backgroundColor: canvas.dataset.fill || 'rgba(32, 80, 160,0.08)',
                         fill: true,
                         borderWidth: 2,
                         pointRadius: 0,
@@ -180,7 +180,7 @@
                 values: data.monthlyValues,
                 label: 'Applications',
                 color: c.primary,
-                fill: 'rgba(0,86,210,0.12)'
+                fill: 'rgba(32, 80, 160,0.12)'
             },
             {
                 id: 'chartDepartment',
@@ -531,7 +531,7 @@
                 else if (act === 'charts') toast('Use browser save or export tools for chart images', 'info');
                 else if (act === 'share') {
                     if (navigator.share) {
-                        navigator.share({ title: 'WPU Reports', url: location.href }).catch(function () {});
+                        navigator.share({ title: 'Dumaran Hiring Reports', url: location.href }).catch(function () {});
                     } else {
                         toast('Dashboard link copied concept — share: ' + location.href, 'info');
                     }

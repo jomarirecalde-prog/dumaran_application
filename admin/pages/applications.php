@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once '../../config/config.php';
 require_once '../../includes/models.php';
 require_once '../../includes/services/EmailService.php';
@@ -281,49 +281,24 @@ $filterStatus = $_GET['status'] ?? 'all';
 $filterPosition = $_GET['position'] ?? 'all';
 $searchQuery = trim($_GET['q'] ?? '');
 
-// Get all applications with details (include archived so approved/rejected applications remain visible)
-$applications = $applicationModel->getApplicationsWithDetails('', [], true);
-$allApplicationsRaw = $applications;
-
-// Apply status filter
-if ($filterStatus !== 'all') {
-    $applications = array_filter($applications, function($app) use ($filterStatus) {
-        return $app['status'] === $filterStatus;
-    });
-}
-
-if ($filterPosition !== 'all') {
-    $applications = array_filter($applications, function($app) use ($filterPosition) {
-        return $app['position_id'] == $filterPosition;
-    });
-}
-
-if ($searchQuery !== '') {
-    $applications = array_filter($applications, function($app) use ($searchQuery) {
-        $haystacks = [
-            $app['applicant_name'] ?? '',
-            $app['applicant_email'] ?? '',
-            $app['position_title'] ?? '',
-            $app['cover_letter'] ?? ''
-        ];
-        foreach ($haystacks as $haystack) {
-            if (stripos($haystack, $searchQuery) !== false) {
-                return true;
-            }
-        }
-        return false;
-    });
-}
+$listFilters = [
+    'status' => $filterStatus,
+    'position_id' => $filterPosition,
+    'search' => $searchQuery,
+    'include_archived' => true,
+];
 
 // Pagination setup
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $perPage = 5;
 $offset = ($page - 1) * $perPage;
 
-// Calculate pagination
-$totalApplications_filtered = count($applications);
-$totalPages = ceil($totalApplications_filtered / $perPage);
-$applications = array_slice($applications, $offset, $perPage);
+$totalApplications_filtered = $applicationModel->countAdminApplicationsList($listFilters);
+$totalPages = (int) ceil($totalApplications_filtered / $perPage);
+$applications = $applicationModel->getAdminApplicationsList($listFilters, $perPage, $offset);
+
+// Metrics: one joined query; match scores computed in memory (no N+1 DB validation)
+$allApplicationsRaw = $applicationModel->getAdminApplicationMetricRows(true);
 
 // Get all positions for filter dropdown
 $positions = $positionModel->findAll('is_active = 1');
@@ -399,13 +374,7 @@ foreach ($allApplicationsRaw as $metricApp) {
         $pipelineCounts['archived']++;
     }
 
-    try {
-        $metricValidation = $requirementValidatorView->validateRequirements($metricApp['user_id'], $metricApp['position_id']);
-        $matchScore = atsComputeMatchScore($metricValidation);
-    } catch (\Exception $e) {
-        $metricValidation = ['meets_requirements' => false, 'details' => []];
-        $matchScore = 0;
-    }
+    $matchScore = $requirementValidatorView->computeMatchScoreFromMetricRow($metricApp);
 
     if ($status === STATUS_APPROVED) {
         $pipelineCounts['approved']++;
@@ -447,8 +416,14 @@ $departmentChartLabels = array_keys($departmentChartMap);
 $departmentChartValues = array_values($departmentChartMap);
 $avgProcessingDays = $processingDaysCount > 0 ? round($processingDaysTotal / $processingDaysCount, 1) : 0;
 $pipelineTotal = max(1, array_sum($pipelineCounts));
+$approvedMetricCount = 0;
+foreach ($allApplicationsRaw as $metricRow) {
+    if (($metricRow['status'] ?? '') === STATUS_APPROVED) {
+        $approvedMetricCount++;
+    }
+}
 $approvalRate = count($allApplicationsRaw) > 0
-    ? round((count(array_filter($allApplicationsRaw, function ($a) { return ($a['status'] ?? '') === STATUS_APPROVED; })) / count($allApplicationsRaw)) * 100, 1)
+    ? round(($approvedMetricCount / count($allApplicationsRaw)) * 100, 1)
     : 0;
 $adminUser = ['full_name' => $_SESSION['full_name'] ?? 'Admin'];
 
@@ -496,7 +471,7 @@ $documentExtensionIcons = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Applications Management - WPU Applicant System</title>
+    <title>Applications Management - Dumaran Hiring System</title>
     <link rel="icon" type="image/x-icon" href="../../favicon.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="../../assets/css/office-theme.css" rel="stylesheet">

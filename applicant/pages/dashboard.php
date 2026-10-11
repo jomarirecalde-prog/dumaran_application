@@ -238,7 +238,7 @@ $showContinueCard = $profileCompletionPct < 100 || ($totalApplications === 0 && 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard - WPU Applicant System</title>
+    <title>Dashboard - Dumaran Hiring System</title>
     <link rel="icon" type="image/x-icon" href="../../favicon.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="../../assets/css/office-theme.css" rel="stylesheet">
@@ -251,8 +251,8 @@ $showContinueCard = $profileCompletionPct < 100 || ($totalApplications === 0 && 
     <aside class="sidebar" aria-label="Main navigation">
         <div class="sidebar-header">
             <a href="dashboard.php" class="sidebar-brand">
-                <img src="../../assets/logo.png" alt="WPU Logo" style="height: 32px; width: auto;">
-                <span>WPU Jobs</span>
+                <img src="../../assets/logo.webp" alt="Logo" style="height: 32px; width: auto;">
+                <span>Dumaran Hiring</span>
             </a>
         </div>
 
@@ -487,14 +487,14 @@ $showContinueCard = $profileCompletionPct < 100 || ($totalApplications === 0 && 
             <div class="dash-stats-grid" aria-label="Application statistics">
                 <?php
                 $statCards = [
-                    ['value' => $totalApplications, 'label' => 'Applications', 'icon' => 'fa-file-alt', 'color' => '#1e40af', 'trend' => $totalApplications > 0 ? 'Active pipeline' : 'Get started', 'trendClass' => 'neutral'],
+                    ['value' => $totalApplications, 'label' => 'Applications', 'icon' => 'fa-file-alt', 'color' => '#2050A0', 'trend' => $totalApplications > 0 ? 'Active pipeline' : 'Get started', 'trendClass' => 'neutral'],
                     ['value' => $pendingCount, 'label' => 'Pending', 'icon' => 'fa-clock', 'color' => '#f59e0b', 'trend' => $pendingCount > 0 ? 'In review' : 'All clear', 'trendClass' => 'neutral'],
                     ['value' => $approvedCount, 'label' => 'Approved', 'icon' => 'fa-check-circle', 'color' => '#10b981', 'trend' => $approvedCount > 0 ? '+' . $approvedCount . ' success' : 'None yet', 'trendClass' => $approvedCount > 0 ? 'up' : 'neutral'],
                     ['value' => $rejectedCount, 'label' => 'Rejected', 'icon' => 'fa-times-circle', 'color' => '#ef4444', 'trend' => $rejectedCount > 0 ? $rejectedCount . ' closed' : 'None', 'trendClass' => 'neutral'],
                     ['value' => $interviewCount, 'label' => 'Interviews', 'icon' => 'fa-handshake', 'color' => '#6366f1', 'trend' => $interviewCount > 0 ? 'Scheduled' : 'Pending', 'trendClass' => 'neutral'],
                     ['value' => 0, 'label' => 'Saved Jobs', 'icon' => 'fa-bookmark', 'color' => '#8b5cf6', 'trend' => 'Bookmark jobs', 'trendClass' => 'neutral', 'id' => 'savedJobsCount'],
                     ['value' => $totalExperience, 'label' => 'Years Experience', 'icon' => 'fa-briefcase', 'color' => '#0ea5e9', 'trend' => count($userExperiences) . ' record(s)', 'trendClass' => 'neutral', 'decimal' => true],
-                    ['value' => count($activePositions), 'label' => 'Available Jobs', 'icon' => 'fa-building', 'color' => '#1e40af', 'trend' => 'Open now', 'trendClass' => 'up'],
+                    ['value' => count($activePositions), 'label' => 'Available Jobs', 'icon' => 'fa-building', 'color' => '#2050A0', 'trend' => 'Open now', 'trendClass' => 'up'],
                 ];
                 foreach ($statCards as $stat):
                 ?>
@@ -895,11 +895,11 @@ $showContinueCard = $profileCompletionPct < 100 || ($totalApplications === 0 && 
                     <div id="step1Guidelines" class="modal-step">
                         <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--gray-800); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-building" style="color: var(--primary-blue);"></i>
-                            WPU EMPLOYMENT AND SELECTION
+                            <?= htmlspecialchars(strtoupper(SITE_NAME), ENT_QUOTES, 'UTF-8') ?>
                         </h3>
                         <div style="line-height: 1.8; color: var(--gray-700); font-size: 0.95rem; margin-bottom: 24px;">
                             <p style="margin-bottom: 16px;">
-                                Western Philippines University, through the Human Resource Management and Development Office, (WPU-HRMDO), holds its firm commitment to upholding the principles of merit, fitness, and equality of opportunity in all aspects of recruitment and selection. The University strictly adheres to the provisions governing objective, fair, and transparent personnel actions, in full alignment with Civil Service Commission (CSC) guidelines and established recruitment practices observed across State Universities and Colleges.
+                                <?= htmlspecialchars(ORG_NAME, ENT_QUOTES, 'UTF-8') ?>, through its Human Resource Management Office, upholds the principles of merit, fitness, and equality of opportunity in all aspects of recruitment and selection. The local government unit strictly adheres to objective, fair, and transparent personnel actions, in full alignment with Civil Service Commission (CSC) guidelines and applicable local government recruitment practices.
                             </p>
                         </div>
                         
@@ -919,7 +919,7 @@ $showContinueCard = $profileCompletionPct < 100 || ($totalApplications === 0 && 
                         </h3>
                         <div style="line-height: 1.8; color: var(--gray-700); font-size: 0.95rem;">
                             <p style="margin-bottom: 16px;">
-                                The <strong>Western Philippines University</strong> invites interested and qualified applicants on the following vacant positions on permanent status:
+                                The <strong><?= htmlspecialchars(ORG_NAME, ENT_QUOTES, 'UTF-8') ?></strong> invites interested and qualified applicants for the following vacant positions:
                             </p>
                             
                             <?php if (!empty($activePositions)): ?>
@@ -946,9 +946,7 @@ $showContinueCard = $profileCompletionPct < 100 || ($totalApplications === 0 && 
                             </p>
                             
                             <div style="margin-bottom: 16px; padding-left: 20px; font-style: italic; color: var(--gray-700);">
-                                <p style="margin-bottom: 4px;"><strong>DR. AMABEL S. LIAO</strong></p>
-                                <p style="margin-bottom: 4px;">University President</p>
-                                <p style="margin-bottom: 0;">Aborlan, Palawan</p>
+                                <p style="margin-bottom: 0;"><?= ORG_APPLICATION_LETTER_RECIPIENT_HTML ?></p>
                             </div>
                             
                             <p style="margin-bottom: 16px;">
@@ -989,7 +987,7 @@ $showContinueCard = $profileCompletionPct < 100 || ($totalApplications === 0 && 
                         </h3>
                         <div style="line-height: 1.8; color: var(--gray-700); font-size: 0.95rem;">
                             <p style="margin-bottom: 16px;">
-                                In accordance with Republic Act No. 10173, otherwise known as the <strong>Data Privacy Act of 2012</strong>, and its Implementing Rules and Regulations, I hereby authorize <strong>Western Philippines University (WPU)</strong>, through its authorized offices, to collect, process, store, and use my personal information submitted in connection with my application for employment.
+                                In accordance with Republic Act No. 10173, otherwise known as the <strong>Data Privacy Act of 2012</strong>, and its Implementing Rules and Regulations, I hereby authorize <strong><?= htmlspecialchars(ORG_NAME, ENT_QUOTES, 'UTF-8') ?></strong>, through its authorized offices, to collect, process, store, and use my personal information submitted in connection with my application for employment.
                             </p>
                             <p style="margin-bottom: 16px;">
                                 I understand and agree that the personal data I provided, including but not limited to my personal details, educational background, employment history, and other supporting documents, shall be used solely for recruitment, evaluation, selection, and other legitimate human resource–related purposes. I further acknowledge that these data may be shared with authorized personnel and relevant government agencies, as required by law or applicable regulations, including the Civil Service Commission.
@@ -1015,14 +1013,14 @@ $showContinueCard = $profileCompletionPct < 100 || ($totalApplications === 0 && 
                     <div id="step3Employment" class="modal-step" style="display: none;">
                         <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--gray-800); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-briefcase" style="color: var(--primary-blue);"></i>
-                            EMPLOYMENT OPPORTUNITY FOR EXTENSION AND RESEARCH DIVISION
+                            EMPLOYMENT APPLICATION CONFIRMATION
                         </h3>
                         <div style="line-height: 1.8; color: var(--gray-700); font-size: 0.95rem;">
                             <p style="margin-bottom: 16px;">
-                                The Research and Extension Services of Western Philippines University (WPU) serve as a core functional division that advances the University's mandate in instruction, research, and community engagement. It is responsible for promoting a strong culture of research, innovation, and knowledge generation that supports institutional development and national and regional priorities. Through systematic research initiatives and responsive extension programs, the division facilitates the translation of academic expertise into practical solutions that contribute to sustainable development and community empowerment.
+                                The <?= htmlspecialchars(ORG_NAME, ENT_QUOTES, 'UTF-8') ?> is committed to public service, good governance, and responsive local employment. Applicants are expected to support the municipality's programs and comply with all applicable laws, policies, and ethical standards in government service.
                             </p>
                             <p style="margin-bottom: 16px;">
-                                The Research and Extension Services also oversee the formulation, implementation, and monitoring of research and extension projects, ensuring alignment with ethical standards, quality assurance mechanisms, and applicable government policies. Applicants under this division are expected to support and uphold WPU's commitment to scholarly excellence, public service, and evidence-based decision-making in the pursuit of the University's strategic goals.
+                                Please confirm that the contact information below is accurate so the Human Resource Management Office can reach you regarding your application status, interviews, and other recruitment-related updates.
                             </p>
                             
                             <div style="margin-top: 24px; padding: 16px; background: var(--gray-50); border-radius: 6px; border-left: 4px solid var(--primary-blue);">

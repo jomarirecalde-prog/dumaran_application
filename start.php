@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WPU Applicant System - Start Here</title>
+    <title>Dumaran Hiring System - Start Here</title>
     <link href="<?= BASE_URL ?>assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="<?= BASE_URL ?>assets/vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <style>
@@ -77,7 +77,7 @@
                 <div class="card">
                     <div class="card-body p-5">
                         <div class="text-center mb-4">
-                            <h1><i class="fas fa-graduation-cap" style="color: #667eea;"></i> WPU Applicant System</h1>
+                            <h1><i class="fas fa-graduation-cap" style="color: #667eea;"></i> Dumaran Hiring System</h1>
                             <p class="lead">Welcome! Let's get you started.</p>
                         </div>
 
@@ -121,7 +121,7 @@
                                     <p class="mb-2">Use the default admin credentials to login.</p>
                                     <div class="status-box">
                                         <strong>Default Admin Credentials:</strong><br>
-                                        <i class="fas fa-envelope"></i> <strong>Email:</strong> admin@wpu.ac.id<br>
+                                        <i class="fas fa-envelope"></i> <strong>Email:</strong> admin@dumaran.gov.ph<br>
                                         <i class="fas fa-lock"></i> <strong>Password:</strong> password<br>
                                         <i class="fas fa-user-shield"></i> <strong>Role:</strong> Admin
                                     </div>

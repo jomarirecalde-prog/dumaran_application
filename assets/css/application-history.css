@@ -9,9 +9,9 @@ body.application-history-page {
     --border: var(--ats-border, rgba(148, 163, 184, 0.25));
     --text-primary: var(--ats-text, #0f172a);
     --text-secondary: var(--ats-text-muted, #64748b);
-    --primary: var(--ats-primary, #0056D2);
-    --success: var(--ats-success, #16A34A);
-    --warning: var(--ats-warning, #F59E0B);
+    --primary: var(--ats-primary, #2050A0);
+    --success: var(--ats-success, #15803D);
+    --warning: var(--ats-warning, #795900);
     --danger: var(--ats-danger, #DC2626);
 }
 
@@ -296,7 +296,7 @@ body.application-history-page {
 .ats-doc-chip:hover {
     transform: translateY(-2px);
     border-color: var(--primary);
-    box-shadow: 0 6px 16px rgba(0, 86, 210, 0.12);
+    box-shadow: 0 6px 16px rgba(32, 80, 160, 0.12);
 }
 
 .ats-doc-chip__icon {
@@ -385,7 +385,7 @@ body.application-history-page {
     transform: scale(1.06);
     color: var(--primary);
     border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(0, 86, 210, 0.15);
+    box-shadow: 0 4px 12px rgba(32, 80, 160, 0.15);
 }
 
 .ats-icon-btn:focus-visible {
@@ -460,13 +460,13 @@ body.application-history-page {
     min-height: 44px;
     border: none;
     border-radius: 999px;
-    background: linear-gradient(135deg, var(--primary) 0%, #0F4C81 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, #193F80 100%);
     color: #fff;
     font-size: 0.875rem;
     font-weight: 700;
     cursor: pointer;
     font-family: inherit;
-    box-shadow: 0 6px 20px rgba(0, 86, 210, 0.35);
+    box-shadow: 0 6px 20px rgba(32, 80, 160, 0.35);
     transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease;
     position: relative;
     overflow: hidden;
@@ -474,7 +474,7 @@ body.application-history-page {
 
 .ats-btn-restore:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 10px 28px rgba(0, 86, 210, 0.45);
+    box-shadow: 0 10px 28px rgba(32, 80, 160, 0.45);
 }
 
 .ats-btn-restore:disabled,
@@ -540,7 +540,7 @@ body.application-history-page {
     width: 56px;
     height: 56px;
     border-radius: 16px;
-    background: linear-gradient(135deg, var(--primary), #0F4C81);
+    background: linear-gradient(135deg, var(--primary), #193F80);
     color: #fff;
     display: flex;
     align-items: center;
@@ -548,7 +548,7 @@ body.application-history-page {
     font-weight: 800;
     font-size: 1.1rem;
     flex-shrink: 0;
-    box-shadow: 0 4px 14px rgba(0, 86, 210, 0.25);
+    box-shadow: 0 4px 14px rgba(32, 80, 160, 0.25);
 }
 
 .ats-restore-preview__name {
@@ -626,7 +626,7 @@ body.application-history-page {
     background: var(--primary);
     border-color: var(--primary);
     color: #fff;
-    box-shadow: 0 4px 14px rgba(0, 86, 210, 0.3);
+    box-shadow: 0 4px 14px rgba(32, 80, 160, 0.3);
     pointer-events: none;
 }
 

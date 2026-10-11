@@ -14,9 +14,9 @@ return [
     'smtp_password' => 'your-app-password',     // SMTP password or app password
     
     // Email Settings
-    'from_email' => 'noreply@wpuapplicant.com', // From email address
-    'from_name' => 'WPU Applicant System',      // From name
-    'reply_to' => 'support@wpuapplicant.com',   // Reply-to email
+    'from_email' => 'noreply@dumaran.gov.ph', // From email address
+    'from_name' => 'Dumaran Hiring System',      // From name
+    'reply_to' => 'support@dumaran.gov.ph',   // Reply-to email
     
     // Debug Settings (0 = off, 1 = client, 2 = server)
     'debug_level' => 0,
